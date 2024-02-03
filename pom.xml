@@ -89,6 +89,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <finalName>${project.name}-${project.version}.full.jar</finalName>
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">

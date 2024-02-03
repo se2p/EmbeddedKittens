@@ -10,19 +10,19 @@ and the [Didactics of Informatics](https://ddi.fim.uni-passau.de/) of the [Unive
 LitterBox-ML is built using [Maven](https://maven.apache.org/). To
 produce an executable jar-file, run the following command:
 
-```
+```bash
 mvn package
 ```
 
-This will produce `target/Litterbox-ML-1.0.jar`
+This will produce `target/litterbox-ml-1.0.full.jar`
 
 
 ## Using LitterBox
 
 To see an overview of the command line options available in LitterBox type:
 
-```
-java -jar Litterbox-ML-1.0.jar --help
+```bash
+java -jar litterbox-ml-1.0.full.jar --help
 ```
 
 
@@ -31,8 +31,10 @@ java -jar Litterbox-ML-1.0.jar --help
 To be able to use the code2vec model with the programming language Scratch, a scratch parser is needed to generate the required input representation. According to the description on https://github.com/tech-srl/code2vec#extending-to-other-languages,
 Litterbox produces for each Scratch program a file with these rules. It's like a Scratch extractor. Litterbox needs a path to a single file or a folder with multiple projects and produces the output to the declared output folder. 
 
-```
-java -jar Litterbox-ML-1.0.jar code2vec --output <path/to/folder/for/the/output> --path <path/to/json/project/or/folder/with/projects>
+```bash
+java -jar litterbox-ml-1.0.full.jar code2vec \
+  --output "<path/to/folder/for/the/output>" \
+  --path "<path/to/json/project/or/folder/with/projects>"
 ```
 
 There are some differences between Scratch and "normal" programming languages like Java, but the most important is,
@@ -43,8 +45,11 @@ and creates path contexts from every single sprite in a project.
 
 LitterBox can generate the context paths per scripts and procedures. Given a Scratch program as input, it produces for each script and procedure a file containing the needed input representation for the code2vec model. 
 
-```
-java -jar Litterbox-1.8.jar code2vec --output <path/to/folder/for/the/output> --path <path/to/json/project/or/folder/with/projects> --scripts
+```bash
+java -jar litterbox-ml-1.0.full.jar code2vec \
+  --output "<path/to/folder/for/the/output>" \
+  --path "<path/to/json/project/or/folder/with/projects>" \
+  --scripts
 ``` 
 
 
