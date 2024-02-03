@@ -20,6 +20,7 @@ package de.uni_passau.fim.se2.litterbox.ml;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.parallel.Isolated;
 import picocli.CommandLine;
 
 import java.io.ByteArrayOutputStream;
@@ -28,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 
 import static com.google.common.truth.Truth.assertThat;
 
+@Isolated
 public abstract class CliTest {
 
     private PrintStream out = System.out;

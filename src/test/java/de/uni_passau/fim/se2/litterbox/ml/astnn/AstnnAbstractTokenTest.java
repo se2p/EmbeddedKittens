@@ -34,7 +34,7 @@ import java.util.Set;
 
 import static com.google.common.truth.Truth.assertThat;
 
-public class AstnnAbstractTokenTest extends AbstractTokenCheck {
+class AstnnAbstractTokenTest extends AbstractTokenCheck {
 
     @Override
     protected Set<String> getSpecialAllowedTokens() {
