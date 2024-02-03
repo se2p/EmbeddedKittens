@@ -18,14 +18,15 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.shared;
 
-import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
-import de.uni_passau.fim.se2.litterbox.ml.util.NodeNameUtil;
-
 import java.util.Optional;
 import java.util.function.Function;
 
+import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
+import de.uni_passau.fim.se2.litterbox.ml.util.NodeNameUtil;
+
 @FunctionalInterface
 public interface ActorNameNormalizer extends Function<ActorDefinition, Optional<String>> {
+
     Optional<String> normalizeName(ActorDefinition actor);
 
     @Override

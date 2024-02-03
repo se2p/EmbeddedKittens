@@ -18,13 +18,7 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 
-import de.uni_passau.fim.se2.litterbox.ml.MLOutputPath;
-import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
-import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,17 +27,25 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.google.common.truth.Truth.assertThat;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import de.uni_passau.fim.se2.litterbox.ml.MLOutputPath;
+import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
+import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 
 class GgnnGraphAnalyzerTest {
+
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testProduceOutput(boolean toDotGraph, @TempDir Path outputDir) throws IOException {
         MLPreprocessorCommonOptions commonOptions = new MLPreprocessorCommonOptions(
-                Path.of("src/test/fixtures/multipleSprites.json"),
-                MLOutputPath.directory(outputDir),
-                false, true, false, false, true,
-                ActorNameNormalizer.getDefault()
+            Path.of("src/test/fixtures/multipleSprites.json"),
+            MLOutputPath.directory(outputDir),
+            false, true, false, false, true,
+            ActorNameNormalizer.getDefault()
         );
         GgnnGraphAnalyzer analyzer = new GgnnGraphAnalyzer(commonOptions, toDotGraph, null);
         analyzer.analyzeFile();
@@ -56,7 +58,8 @@ class GgnnGraphAnalyzerTest {
             assertThat(output).hasSize(3);
             assertThat(output.get(0)).contains("\"nodeLabelMap\"");
             assertThat(output.get(0)).contains("\"nodeTypeMap\"");
-        } else {
+        }
+        else {
             assertThat(output.get(0)).startsWith("digraph");
         }
     }
@@ -64,7 +67,7 @@ class GgnnGraphAnalyzerTest {
     @Test
     void testInvalidInput() {
         MLPreprocessorCommonOptions commonOptions = new MLPreprocessorCommonOptions(
-                Path.of(""), MLOutputPath.console(), false, false, false, true, false, ActorNameNormalizer.getDefault()
+            Path.of(""), MLOutputPath.console(), false, false, false, true, false, ActorNameNormalizer.getDefault()
         );
         GgnnGraphAnalyzer analyzer = new GgnnGraphAnalyzer(commonOptions, false, null);
 

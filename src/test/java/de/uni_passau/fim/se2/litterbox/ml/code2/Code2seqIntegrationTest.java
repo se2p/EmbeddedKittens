@@ -18,9 +18,8 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.code2;
 
-import de.uni_passau.fim.se2.litterbox.ml.CliTest;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,40 +27,45 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import de.uni_passau.fim.se2.litterbox.ml.CliTest;
 
 class Code2seqIntegrationTest extends CliTest {
+
+    private final String C2S_CMD = "code2seq";
+
     @Test
     void disallowBothWholeProgramAndPerSprite() {
-        int returnCode = commandLine.execute("code2seq", "--whole-program", "--scripts");
+        int returnCode = commandLine.execute(C2S_CMD, "--whole-program", "--scripts");
         assertThat(returnCode).isNotEqualTo(0);
         assertThat(getOutput()).isEmpty();
     }
 
     @Test
     void processEmptyProgram() {
-        commandLine.execute("code2seq", "-p", "src/test/fixtures/emptyProject.json");
+        commandLine.execute(C2S_CMD, "-p", "src/test/fixtures/emptyProject.json");
         assertEmptyStdOut();
     }
 
     @Test
     void processProgramWithMultipleSprites() {
-        commandLine.execute("code2seq", "-p", "src/test/fixtures/multipleSprites.json", "--include-stage");
+        commandLine.execute(C2S_CMD, "-p", "src/test/fixtures/multipleSprites.json", "--include-stage");
         assertEmptyStdErr();
 
         final List<String> outputLines = getOutput().lines().toList();
         assertThat(outputLines).hasSize(3);
         assertThat(outputLines).containsExactly(
-                "cat 39,29|57|41|8|25|153|27,39 39,29|57|41|8|25|156,39 hi|!,27|153|25|156,hi|!",
-                "abby green|flag,67|8|25|153|27,green|flag",
-                "stage green|flag,67|8|25|26|29,green|flag"
+            "cat 39,29|57|41|8|25|153|27,39 39,29|57|41|8|25|156,39 hi|!,27|153|25|156,hi|!",
+            "abby green|flag,67|8|25|153|27,green|flag",
+            "stage green|flag,67|8|25|26|29,green|flag"
         );
     }
 
     @Test
     void processProgramWithMultipleSpritesWholeProgram() {
-        commandLine.execute("code2seq", "-p", "src/test/fixtures/multipleSprites.json", "--whole-program");
+        commandLine.execute(C2S_CMD, "-p", "src/test/fixtures/multipleSprites.json", "--whole-program");
         assertEmptyStdErr();
 
         final String output = getOutput();
@@ -71,17 +75,17 @@ class Code2seqIntegrationTest extends CliTest {
         assertThat(output).startsWith("program ");
 
         final Stream<String> expectedPaths = Stream.of(
-                "39,29|57|41|8|25|153|27,39",
-                "39,29|57|41|8|25|156,39",
-                "hi|!,27|153|25|156,hi|!",
-                "green|flag,67|8|25|153|27,green|flag"
+            "39,29|57|41|8|25|153|27,39",
+            "39,29|57|41|8|25|156,39",
+            "hi|!,27|153|25|156,hi|!",
+            "green|flag,67|8|25|153|27,green|flag"
         );
         assertAll(expectedPaths.map(path -> () -> assertThat(output).contains(path)));
     }
 
     @Test
     void processProgramWithMultipleSpritesPerScript() {
-        commandLine.execute("code2seq", "-p", "src/test/fixtures/multipleSprites.json", "--scripts");
+        commandLine.execute(C2S_CMD, "-p", "src/test/fixtures/multipleSprites.json", "--scripts");
         assertEmptyStdErr();
         assertStdOutContains("scriptId_-481429174");
     }
@@ -89,7 +93,7 @@ class Code2seqIntegrationTest extends CliTest {
     @Test
     void processProgramWithMultipleSpritesPerScriptToFile(@TempDir File tempDir) throws IOException {
         commandLine.execute(
-                "code2seq", "-p", "src/test/fixtures/multipleSprites.json", "--scripts", "-o", tempDir.toString()
+            C2S_CMD, "-p", "src/test/fixtures/multipleSprites.json", "--scripts", "-o", tempDir.toString()
         );
         assertEmptyStdErr();
         assertEmptyStdOut();

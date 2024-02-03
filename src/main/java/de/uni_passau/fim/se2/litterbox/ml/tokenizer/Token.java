@@ -19,6 +19,7 @@
 package de.uni_passau.fim.se2.litterbox.ml.tokenizer;
 
 public enum Token {
+
     UNKNOWN("UNKNOWN"),
     MASK("[MASK]"),
     BEGIN("BEGIN"),

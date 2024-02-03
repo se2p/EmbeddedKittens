@@ -18,14 +18,6 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.code2;
 
-import de.uni_passau.fim.se2.litterbox.ast.model.Program;
-import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessingAnalyzer;
-import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
-import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.PathType;
-import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.ProgramFeatures;
-import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.ProgramRelation;
-import org.apache.commons.io.FilenameUtils;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +29,15 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.FilenameUtils;
+
+import de.uni_passau.fim.se2.litterbox.ast.model.Program;
+import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessingAnalyzer;
+import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
+import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.PathType;
+import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.ProgramFeatures;
+import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.ProgramRelation;
+
 abstract class Code2Analyzer extends MLPreprocessingAnalyzer<ProgramFeatures> {
 
     private static final Logger log = Logger.getLogger(Code2Analyzer.class.getName());
@@ -45,7 +46,7 @@ abstract class Code2Analyzer extends MLPreprocessingAnalyzer<ProgramFeatures> {
     protected final int maxPathLength;
 
     protected Code2Analyzer(
-            final MLPreprocessorCommonOptions commonOptions, final int maxPathLength, final boolean isPerScript
+        final MLPreprocessorCommonOptions commonOptions, final int maxPathLength, final boolean isPerScript
     ) {
         super(commonOptions);
 
@@ -53,9 +54,11 @@ abstract class Code2Analyzer extends MLPreprocessingAnalyzer<ProgramFeatures> {
 
         if (isPerScript) {
             this.pathType = PathType.SCRIPT;
-        } else if (wholeProgram) {
+        }
+        else if (wholeProgram) {
             this.pathType = PathType.PROGRAM;
-        } else {
+        }
+        else {
             this.pathType = PathType.SPRITE;
         }
     }
@@ -72,11 +75,12 @@ abstract class Code2Analyzer extends MLPreprocessingAnalyzer<ProgramFeatures> {
 
     @Override
     protected void writeResultToFile(
-            final Path projectFile, final Program program, final Stream<ProgramFeatures> checkResult
+        final Path projectFile, final Program program, final Stream<ProgramFeatures> checkResult
     ) throws IOException {
         if (pathType == PathType.SCRIPT) {
             writeResultPerScriptToOutput(projectFile.toFile(), checkResult.toList());
-        } else {
+        }
+        else {
             super.writeResultToFile(projectFile, program, checkResult);
         }
     }
@@ -88,7 +92,8 @@ abstract class Code2Analyzer extends MLPreprocessingAnalyzer<ProgramFeatures> {
 
         if (outputPath.isConsoleOutput()) {
             System.out.println(result);
-        } else {
+        }
+        else {
             writeResultPerScriptToFile(inputFile, result);
         }
     }
@@ -109,7 +114,8 @@ abstract class Code2Analyzer extends MLPreprocessingAnalyzer<ProgramFeatures> {
         try (BufferedWriter bw = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8)) {
             bw.write(token.getFeatures().stream().map(ProgramRelation::toString).collect(Collectors.joining(" ")));
             bw.flush();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             log.severe("Exception in writing the file " + outputFile + "Error message " + e.getMessage());
         }
     }

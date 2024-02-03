@@ -18,18 +18,20 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 
-import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
-import de.uni_passau.fim.se2.litterbox.ast.model.Program;
-import org.junit.jupiter.api.Test;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.google.common.truth.Truth.assertThat;
+import org.junit.jupiter.api.Test;
+
+import de.uni_passau.fim.se2.litterbox.ast.model.Program;
+import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
 
 class GgnnGraphBuilderTest implements JsonTest {
+
     @Test
     void testNodeIndicesSequential() throws Exception {
         Program p = getAST("src/test/fixtures/multipleSprites.json");

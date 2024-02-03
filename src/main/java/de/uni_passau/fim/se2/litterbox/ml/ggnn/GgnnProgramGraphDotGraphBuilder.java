@@ -18,16 +18,27 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 
-import de.uni_passau.fim.se2.litterbox.utils.Pair;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import de.uni_passau.fim.se2.litterbox.utils.Pair;
+
 public class GgnnProgramGraphDotGraphBuilder {
+
     private GgnnProgramGraphDotGraphBuilder() {
     }
 
+    /**
+     * Builds a Graphviz DOT-graph representation of the graphs.
+     *
+     * <p>
+     * Creates one overall graph with the given label with each of the given graphs being its own subgraph beneath it.
+     *
+     * @param graphs Some GGNN program graphs.
+     * @param label  The label for the overall graph.
+     * @return A graph in Graphviz DOT-format.
+     */
     public static String asDotGraph(final List<GgnnProgramGraph> graphs, final String label) {
         final StringBuilder sb = new StringBuilder();
         int graphId = 1;
@@ -51,13 +62,16 @@ public class GgnnProgramGraphDotGraphBuilder {
         return asDotGraph(programGraph.contextGraph(), programGraph.label(), graphId, true);
     }
 
-    private static String asDotGraph(final GgnnProgramGraph.ContextGraph graph, final String label, int graphId,
-                                     boolean isSubgraph) {
+    private static String asDotGraph(
+        final GgnnProgramGraph.ContextGraph graph, final String label, int graphId,
+        boolean isSubgraph
+    ) {
         StringBuilder sb = new StringBuilder();
 
         if (isSubgraph) {
             sb.append("subgraph \"cluster_");
-        } else {
+        }
+        else {
             sb.append("digraph \"");
         }
         sb.append(label).append("\" {\n");

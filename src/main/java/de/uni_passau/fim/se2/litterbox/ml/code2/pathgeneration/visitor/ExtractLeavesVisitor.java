@@ -18,6 +18,11 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.visitor;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTLeaf;
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
 import de.uni_passau.fim.se2.litterbox.ast.model.literals.StringLiteral;
@@ -26,12 +31,8 @@ import de.uni_passau.fim.se2.litterbox.ast.parser.symboltable.ProcedureDefinitio
 import de.uni_passau.fim.se2.litterbox.ast.parser.symboltable.ProcedureInfo;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.ScratchVisitor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 abstract class ExtractLeavesVisitor<T extends ASTNode> implements ScratchVisitor {
+
     private final ProcedureDefinitionNameMapping procedures;
 
     protected Map<T, List<ASTNode>> leavesMap = new HashMap<>();
@@ -44,7 +45,8 @@ abstract class ExtractLeavesVisitor<T extends ASTNode> implements ScratchVisitor
     /**
      * Marks a leaf for collection.
      *
-     * <p>Note: To actually persist the leaf as part of a grouping, call {@link #saveLeaves(ASTNode)}.
+     * <p>
+     * Note: To actually persist the leaf as part of a grouping, call {@link #saveLeaves(ASTNode)}.
      *
      * @param leaf Some leaf of the AST.
      */
@@ -73,7 +75,8 @@ abstract class ExtractLeavesVisitor<T extends ASTNode> implements ScratchVisitor
     /**
      * Obtains the name for a procedure.
      *
-     * <p>The {@link ProcedureDefinition#getIdent()} contains only the Scratch block ID, rather than the proper name.
+     * <p>
+     * The {@link ProcedureDefinition#getIdent()} contains only the Scratch block ID, rather than the proper name.
      * Therefore, we need to map that back to the user-defined actual name and wrap that in an AST node to be able to
      * collect it like other leaves.
      *

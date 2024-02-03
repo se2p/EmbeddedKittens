@@ -18,6 +18,12 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
 import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
@@ -28,13 +34,8 @@ import de.uni_passau.fim.se2.litterbox.ml.shared.TokenVisitorFactory;
 import de.uni_passau.fim.se2.litterbox.utils.Pair;
 import de.uni_passau.fim.se2.litterbox.utils.Preconditions;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 public class GgnnGraphBuilder {
+
     private final Program program;
     private final ASTNode astRoot;
 
@@ -53,18 +54,25 @@ public class GgnnGraphBuilder {
         this.astRoot = astRoot;
     }
 
+    /**
+     * Builds the GGNN context graph.
+     *
+     * @return The context graph for a program.
+     */
     public GgnnProgramGraph.ContextGraph build() {
         final List<Pair<ASTNode>> childEdges = GgnnGraphEdgesVisitor.getChildEdges(astRoot);
         final List<Pair<ASTNode>> nextTokenEdges = GgnnGraphEdgesVisitor.getNextTokenEdges(astRoot);
         final List<Pair<ASTNode>> guardedByEdges = GgnnGraphEdgesVisitor.getGuardedByEdges(astRoot);
         final List<Pair<ASTNode>> computedFromEdges = GgnnGraphEdgesVisitor.getComputedFromEdges(astRoot);
-        final List<Pair<ASTNode>> parameterPassingEdges =
-                GgnnGraphEdgesVisitor.getParameterPassingEdges(program, astRoot);
+        final List<Pair<ASTNode>> parameterPassingEdges = GgnnGraphEdgesVisitor
+            .getParameterPassingEdges(program, astRoot);
         final List<Pair<ASTNode>> messagePassingEdges = GgnnGraphEdgesVisitor.getMessagePassingEdges(astRoot);
         final List<Pair<ASTNode>> dataDependencies = getDataDependencies();
 
-        final Set<ASTNode> allNodes = getAllNodes(childEdges, nextTokenEdges, guardedByEdges, computedFromEdges,
-                parameterPassingEdges, messagePassingEdges, dataDependencies);
+        final Set<ASTNode> allNodes = getAllNodes(
+            childEdges, nextTokenEdges, guardedByEdges, computedFromEdges,
+            parameterPassingEdges, messagePassingEdges, dataDependencies
+        );
         final Map<ASTNode, Integer> nodeIndices = getNodeIndices(allNodes);
 
         final Map<GgnnProgramGraph.EdgeType, Set<Pair<Integer>>> edges = new EnumMap<>(GgnnProgramGraph.EdgeType.class);
@@ -88,9 +96,9 @@ public class GgnnGraphBuilder {
         // identity hash set instead of regular set, as variable nodes with the same name have the same hash code
         final Supplier<Set<ASTNode>> allNodesSet = () -> Collections.newSetFromMap(new IdentityHashMap<>());
         return Arrays.stream(nodes)
-                .flatMap(List::stream)
-                .flatMap(Pair::stream)
-                .collect(Collectors.toCollection(allNodesSet));
+            .flatMap(List::stream)
+            .flatMap(Pair::stream)
+            .collect(Collectors.toCollection(allNodesSet));
     }
 
     private Map<ASTNode, Integer> getNodeIndices(final Collection<ASTNode> nodes) {
@@ -102,8 +110,10 @@ public class GgnnGraphBuilder {
         return nodeIndices;
     }
 
-    private Set<Pair<Integer>> getIndexedEdges(final Map<ASTNode, Integer> nodeIndices,
-                                               final List<Pair<ASTNode>> edges) {
+    private Set<Pair<Integer>> getIndexedEdges(
+        final Map<ASTNode, Integer> nodeIndices,
+        final List<Pair<ASTNode>> edges
+    ) {
         return edges.stream().map(edge -> {
             Integer idxFrom = nodeIndices.get(edge.getFst());
             Integer idxTo = nodeIndices.get(edge.getSnd());
@@ -113,14 +123,16 @@ public class GgnnGraphBuilder {
 
     private Set<Integer> getUsedNodes(final Map<GgnnProgramGraph.EdgeType, Set<Pair<Integer>>> edges) {
         return edges.values()
-                .stream()
-                .flatMap(Set::stream)
-                .flatMap(Pair::stream)
-                .collect(Collectors.toSet());
+            .stream()
+            .flatMap(Set::stream)
+            .flatMap(Pair::stream)
+            .collect(Collectors.toSet());
     }
 
-    private Map<Integer, String> getNodeLabels(final Map<ASTNode, Integer> nodeIndices,
-                                               final Set<Integer> usedIndices) {
+    private Map<Integer, String> getNodeLabels(
+        final Map<ASTNode, Integer> nodeIndices,
+        final Set<Integer> usedIndices
+    ) {
         return getNodeInformation(nodeIndices, usedIndices, TokenVisitorFactory::getNormalisedToken);
     }
 
@@ -128,8 +140,10 @@ public class GgnnGraphBuilder {
         return getNodeInformation(nodeIndices, usedIndices, node -> node.getClass().getSimpleName());
     }
 
-    private Map<Integer, String> getNodeInformation(final Map<ASTNode, Integer> nodeMap, final Set<Integer> usedIndices,
-                                                    final Function<ASTNode, String> infoExtractor) {
+    private Map<Integer, String> getNodeInformation(
+        final Map<ASTNode, Integer> nodeMap, final Set<Integer> usedIndices,
+        final Function<ASTNode, String> infoExtractor
+    ) {
         final Map<Integer, String> nodeLabels = new HashMap<>();
 
         for (Map.Entry<ASTNode, Integer> entry : nodeMap.entrySet()) {
@@ -148,12 +162,14 @@ public class GgnnGraphBuilder {
     private List<Pair<ASTNode>> getDataDependencies() {
         if (astRoot instanceof Program programRoot) {
             return programRoot.getActorDefinitionList().getDefinitions()
-                    .stream()
-                    .flatMap(this::getDataDependencies)
-                    .toList();
-        } else if (astRoot instanceof ActorDefinition actorDefinition) {
+                .stream()
+                .flatMap(this::getDataDependencies)
+                .toList();
+        }
+        else if (astRoot instanceof ActorDefinition actorDefinition) {
             return getDataDependencies(actorDefinition).toList();
-        } else {
+        }
+        else {
             throw new UnsupportedOperationException("Can only extract data dependencies from programs and actors!");
         }
     }

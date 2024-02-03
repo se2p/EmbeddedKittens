@@ -18,30 +18,36 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
 import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
 import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.ProgramRelation;
 import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.ProgramRelationFactory;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class ProgramRelationTest implements JsonTest {
+
     private final ProgramRelationFactory programRelationFactory = new ProgramRelationFactory();
     private final ProgramRelationFactory hashingProgramRelationFactory = ProgramRelationFactory.withHashCodeFactory();
 
-    final static String NO_HASH_OUTPUT = "GreenFlag,(GreenFlag)^(Script)_(StmtList)_(Say)_(StringLiteral),Hello!";
+    static final String NO_HASH_OUTPUT = "GreenFlag,(GreenFlag)^(Script)_(StmtList)_(Say)_(StringLiteral),Hello!";
 
     @Test
     void testSetNoHash() {
-        ProgramRelation programRelation = programRelationFactory.build("GreenFlag", "Hello!",
-                "(GreenFlag)^(Script)_(StmtList)_(Say)_(StringLiteral)");
+        ProgramRelation programRelation = programRelationFactory.build(
+            "GreenFlag", "Hello!",
+            "(GreenFlag)^(Script)_(StmtList)_(Say)_(StringLiteral)"
+        );
         assertEquals(NO_HASH_OUTPUT, programRelation.toString());
     }
 
     @Test
     void testToString() {
-        ProgramRelation programRelation = hashingProgramRelationFactory.build("GreenFlag", "Hello!",
-                "(GreenFlag)^(Script)_(StmtList)_(Say)_(StringLiteral)");
+        ProgramRelation programRelation = hashingProgramRelationFactory.build(
+            "GreenFlag", "Hello!",
+            "(GreenFlag)^(Script)_(StmtList)_(Say)_(StringLiteral)"
+        );
         assertEquals("GreenFlag,-2069003229,Hello!", programRelation.toString());
     }
 }

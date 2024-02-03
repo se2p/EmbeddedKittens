@@ -19,6 +19,7 @@
 package de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation;
 
 public class ProgramRelation {
+
     private final String source;
     private final String target;
     private final String path;
@@ -28,7 +29,7 @@ public class ProgramRelation {
      *
      * @param sourceName The terminal at the start of the path.
      * @param targetName The terminal at the end of the path.
-     * @param path The path connecting the two terminals.
+     * @param path       The path connecting the two terminals.
      */
     ProgramRelation(String sourceName, String targetName, String path) {
         source = sourceName;

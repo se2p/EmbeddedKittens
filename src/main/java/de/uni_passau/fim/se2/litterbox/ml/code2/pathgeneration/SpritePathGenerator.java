@@ -18,6 +18,9 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration;
 
+import java.util.*;
+import java.util.stream.Stream;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
 import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
@@ -26,18 +29,15 @@ import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.visitor.ExtractSp
 import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 import de.uni_passau.fim.se2.litterbox.ml.util.NodeNameUtil;
 
-import java.util.*;
-import java.util.stream.Stream;
-
 public final class SpritePathGenerator extends PathGenerator {
 
     private final ActorNameNormalizer actorNameNormalizer;
     private final Map<ActorDefinition, List<ASTNode>> leavesMap;
 
     public SpritePathGenerator(
-            Program program, int maxPathLength, boolean includeStage, boolean includeDefaultSprites,
-            PathFormatOptions pathFormatOptions, ProgramRelationFactory programRelationFactory,
-            ActorNameNormalizer actorNameNormalizer
+        Program program, int maxPathLength, boolean includeStage, boolean includeDefaultSprites,
+        PathFormatOptions pathFormatOptions, ProgramRelationFactory programRelationFactory,
+        ActorNameNormalizer actorNameNormalizer
     ) {
         super(program, maxPathLength, includeStage, includeDefaultSprites, pathFormatOptions, programRelationFactory);
 
@@ -47,7 +47,7 @@ public final class SpritePathGenerator extends PathGenerator {
 
     private Map<ActorDefinition, List<ASTNode>> extractASTLeaves() {
         ExtractSpriteLeavesVisitor spriteVisitor = new ExtractSpriteLeavesVisitor(
-                program.getProcedureMapping(), includeStage
+            program.getProcedureMapping(), includeStage
         );
         program.accept(spriteVisitor);
         return spriteVisitor.getLeaves();
@@ -68,8 +68,8 @@ public final class SpritePathGenerator extends PathGenerator {
     private Optional<ProgramFeatures> generatePathsForSprite(final ActorDefinition sprite, final List<ASTNode> leaves) {
         final Optional<String> spriteName = actorNameNormalizer.normalizeName(sprite);
         return spriteName
-                .filter(name -> includeDefaultSprites || !NodeNameUtil.hasDefaultName(sprite))
-                .map(name -> getProgramFeatures(name, leaves));
+            .filter(name -> includeDefaultSprites || !NodeNameUtil.hasDefaultName(sprite))
+            .map(name -> getProgramFeatures(name, leaves));
     }
 
     @Override

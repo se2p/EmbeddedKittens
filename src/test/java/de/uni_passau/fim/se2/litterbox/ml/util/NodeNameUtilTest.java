@@ -18,6 +18,19 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.util;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.Collections;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
 import de.uni_passau.fim.se2.litterbox.ast.model.ActorType;
 import de.uni_passau.fim.se2.litterbox.ast.model.ScriptList;
@@ -29,23 +42,11 @@ import de.uni_passau.fim.se2.litterbox.ast.model.metadata.astlists.ImageMetadata
 import de.uni_passau.fim.se2.litterbox.ast.model.metadata.astlists.SoundMetadataList;
 import de.uni_passau.fim.se2.litterbox.ast.model.procedure.ProcedureDefinitionList;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.declaration.DeclarationStmtList;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
-
-import java.util.Collections;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class NodeNameUtilTest {
 
     @ParameterizedTest(name = "{displayName} [{index}] actorName={0}")
-    @ValueSource(strings = {" \t\n\r  ", "43789243789", "*&($"})
+    @ValueSource(strings = { " \t\n\r  ", "43789243789", "*&($" })
     void testNormalizedEmpty(final String actorName) {
         final Optional<String> normalized = NodeNameUtil.normalizeSpriteName(buildActor(actorName));
         assertEquals(Optional.empty(), normalized);
@@ -59,14 +60,14 @@ class NodeNameUtilTest {
 
     private static Stream<Arguments> getRegularNormalizedPairs() {
         return Stream.of(
-                Arguments.of("download", "download (48)"),
-                Arguments.of("pinos|de|boliche|removebg|preview", "pinos-de-boliche_1975-89-removebg-preview3"),
-                Arguments.of("test|one", "test ONE"),
-                Arguments.of("test|six|multiple|parts", "test|six{multiple@ parts"),
-                Arguments.of("test|three", "test,\"three'"),
-                Arguments.of("test|two", "test\ntwo"),
-                Arguments.of("testαλfive", "testαλfive"),
-                Arguments.of("αλ|λϝδ|δ", "αλΛϝδΔ")
+            Arguments.of("download", "download (48)"),
+            Arguments.of("pinos|de|boliche|removebg|preview", "pinos-de-boliche_1975-89-removebg-preview3"),
+            Arguments.of("test|one", "test ONE"),
+            Arguments.of("test|six|multiple|parts", "test|six{multiple@ parts"),
+            Arguments.of("test|three", "test,\"three'"),
+            Arguments.of("test|two", "test\ntwo"),
+            Arguments.of("testαλfive", "testαλfive"),
+            Arguments.of("αλ|λϝδ|δ", "αλΛϝδΔ")
         );
     }
 
@@ -78,11 +79,12 @@ class NodeNameUtilTest {
 
     private static Stream<Arguments> latinOnlyNormalizationChecks() {
         return Stream.of(
-                Arguments.of(Optional.of("download"), "download (48)"),
-                Arguments.of(Optional.of("pinos|de|boliche|removebg|preview"), "piños_de-boliche_1975-89-removebg-preview3"),
-                Arguments.of(Optional.of("testfive"), "testαλfive"),
-                Arguments.of(Optional.empty(), "αλΛϝδΔ"),
-                Arguments.of(Optional.of("aa|o|ixi"), "äà3öø_íxì")
+            Arguments.of(Optional.of("download"), "download (48)"),
+            Arguments
+                .of(Optional.of("pinos|de|boliche|removebg|preview"), "piños_de-boliche_1975-89-removebg-preview3"),
+            Arguments.of(Optional.of("testfive"), "testαλfive"),
+            Arguments.of(Optional.empty(), "αλΛϝδΔ"),
+            Arguments.of(Optional.of("aa|o|ixi"), "äà3öø_íxì")
         );
     }
 
@@ -90,37 +92,39 @@ class NodeNameUtilTest {
     @MethodSource("getDefaultNameActors")
     void testHasDefaultName(final ActorDefinition actor, final boolean hasDefaultName) {
         assertEquals(
-                hasDefaultName,
-                NodeNameUtil.hasDefaultName(actor),
-                () -> String.format(
-                        "Expecting '%s' to be a default name: %b",
-                        actor.getIdent().getName(),
-                        hasDefaultName
-                )
+            hasDefaultName,
+            NodeNameUtil.hasDefaultName(actor),
+            () -> String.format(
+                "Expecting '%s' to be a default name: %b",
+                actor.getIdent().getName(),
+                hasDefaultName
+            )
         );
     }
 
     private static Stream<Arguments> getDefaultNameActors() {
         return Stream.of(
-                Arguments.of(buildActor("Sprite1"), true),
-                Arguments.of(buildActor("Sprite13461278"), true),
-                Arguments.of(buildActor("sprite_23"), false),
-                Arguments.of(buildActor(""), false),
-                Arguments.of(buildActor("Figur"), true),
-                Arguments.of(buildActor("Figur2"), true),
-                Arguments.of(buildActor("Αντικείμενο"), true),
-                Arguments.of(buildActor("αντικείμενο"), true),
-                Arguments.of(buildActor("αντικείμενο123"), true)
+            Arguments.of(buildActor("Sprite1"), true),
+            Arguments.of(buildActor("Sprite13461278"), true),
+            Arguments.of(buildActor("sprite_23"), false),
+            Arguments.of(buildActor(""), false),
+            Arguments.of(buildActor("Figur"), true),
+            Arguments.of(buildActor("Figur2"), true),
+            Arguments.of(buildActor("Αντικείμενο"), true),
+            Arguments.of(buildActor("αντικείμενο"), true),
+            Arguments.of(buildActor("αντικείμενο123"), true)
         );
     }
 
     @Test
     void regressionTestTruncatedWithTrailingDelimiter() {
-        final ActorDefinition actor = buildActor("kisspng-digital-cameras-computer-icons-clip-art-encapsulat-photo"
-                + "-camera-png-icons-and-graphics-page-9-png-5cec96d4d759e2");
+        final ActorDefinition actor = buildActor(
+            "kisspng-digital-cameras-computer-icons-clip-art-encapsulat-photo"
+                + "-camera-png-icons-and-graphics-page-9-png-5cec96d4d759e2"
+        );
         // 99 characters long, truncating to 100 would cause a trailing |
         final String expected = "kisspng|digital|cameras|computer|icons|clip|art|encapsulat|photo|camera|png|icons"
-                + "|and|graphics|page";
+            + "|and|graphics|page";
 
         assertEquals(Optional.of(expected), NodeNameUtil.normalizeSpriteName(actor));
     }
@@ -140,9 +144,9 @@ class NodeNameUtilTest {
     @Test
     void regressionTestUnicodeBoldCharacters() {
         final String name = "abcdefghij|".repeat(8)
-                + "\uD835\uDDF1\uD835\uDDF6\uD835\uDDF3\uD835\uDDF3\uD835\uDDF2\uD835\uDDFF\uD835\uDDF2\uD835\uDDFB\uD835\uDDF0\uD835\uDDF2";
+            + "\uD835\uDDF1\uD835\uDDF6\uD835\uDDF3\uD835\uDDF3\uD835\uDDF2\uD835\uDDFF\uD835\uDDF2\uD835\uDDFB\uD835\uDDF0\uD835\uDDF2";
         final Optional<String> expected = Optional.of(
-                "abcdefghij|".repeat(8)
+            "abcdefghij|".repeat(8)
                 + "\uD835\uDDF1\uD835\uDDF6\uD835\uDDF3\uD835\uDDF3\uD835\uDDF2\uD835\uDDFF"
         );
 
@@ -173,10 +177,10 @@ class NodeNameUtilTest {
         final var procDefs = new ProcedureDefinitionList(Collections.emptyList());
         final var scripts = new ScriptList(Collections.emptyList());
         final var metadata = new ActorMetadata(
-                new CommentMetadataList(Collections.emptyList()),
-                0,
-                new ImageMetadataList(Collections.emptyList()),
-                new SoundMetadataList(Collections.emptyList())
+            new CommentMetadataList(Collections.emptyList()),
+            0,
+            new ImageMetadataList(Collections.emptyList()),
+            new SoundMetadataList(Collections.emptyList())
         );
 
         return new ActorDefinition(ActorType.getSprite(), actorId, decls, setStmts, procDefs, scripts, metadata);

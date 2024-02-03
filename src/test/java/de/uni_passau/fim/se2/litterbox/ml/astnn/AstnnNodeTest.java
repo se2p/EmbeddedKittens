@@ -18,14 +18,16 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.astnn;
 
-import de.uni_passau.fim.se2.litterbox.ml.astnn.model.*;
-import org.junit.jupiter.api.Test;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.util.List;
 
-import static com.google.common.truth.Truth.assertThat;
+import org.junit.jupiter.api.Test;
+
+import de.uni_passau.fim.se2.litterbox.ml.astnn.model.*;
 
 class AstnnNodeTest {
+
     @Test
     void emptyLabelLeaf() {
         final AstnnNode node = AstnnAstNodeFactory.build("");

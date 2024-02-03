@@ -21,6 +21,7 @@ package de.uni_passau.fim.se2.litterbox.ml.util;
 import de.uni_passau.fim.se2.litterbox.utils.Preconditions;
 
 public class MaskingStrategy {
+
     private final MaskingType maskingType;
     private final String blockId;
 

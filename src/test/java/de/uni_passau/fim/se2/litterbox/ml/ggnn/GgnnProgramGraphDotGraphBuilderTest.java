@@ -18,25 +18,26 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 
-import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
-import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
-import de.uni_passau.fim.se2.litterbox.ast.model.Program;
-import org.junit.jupiter.api.Test;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
-import static com.google.common.truth.Truth.assertThat;
+import org.junit.jupiter.api.Test;
+
+import de.uni_passau.fim.se2.litterbox.ast.model.Program;
+import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
+import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 
 class GgnnProgramGraphDotGraphBuilderTest implements JsonTest {
 
     @Test
     void testAllElementsPresent() throws Exception {
         Path filePath = Path.of("src", "test", "fixtures", "multipleSprites.json");
-        Program program = getAST(filePath.toString());
+        Program program = getAST(filePath);
         GenerateGgnnGraphTask graphTask = new GenerateGgnnGraphTask(
-                program, true, true, false, null, ActorNameNormalizer.getDefault()
+            program, true, true, false, null, ActorNameNormalizer.getDefault()
         );
         List<GgnnProgramGraph> graphs = graphTask.getProgramGraphs();
         assertThat(graphs).hasSize(3);
@@ -46,17 +47,17 @@ class GgnnProgramGraphDotGraphBuilderTest implements JsonTest {
         assertThat(substringCount(dotGraph, "subgraph")).isEqualTo(3);
 
         long totalEdges = graphs.stream()
-                .flatMapToLong(g -> g.contextGraph().edges().values().stream().mapToLong(Set::size))
-                .sum();
+            .flatMapToLong(g -> g.contextGraph().edges().values().stream().mapToLong(Set::size))
+            .sum();
         assertThat(substringCount(dotGraph, "->")).isEqualTo(totalEdges);
     }
 
     @Test
     void testSingleGraph() throws Exception {
         Path filePath = Path.of("src", "test", "fixtures", "multipleSprites.json");
-        Program program = getAST(filePath.toString());
+        Program program = getAST(filePath);
         GenerateGgnnGraphTask graphTask = new GenerateGgnnGraphTask(
-                program, true, true, true, null, ActorNameNormalizer.getDefault()
+            program, true, true, true, null, ActorNameNormalizer.getDefault()
         );
         List<GgnnProgramGraph> graphs = graphTask.getProgramGraphs();
         assertThat(graphs).hasSize(1);

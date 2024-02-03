@@ -18,16 +18,17 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.util;
 
+import java.text.Normalizer;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+
 import de.uni_passau.fim.se2.litterbox.ast.Constants;
 import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ast.model.ScriptEntity;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.ScriptEntityNameVisitor;
-import org.apache.commons.lang3.StringUtils;
-
-import java.text.Normalizer;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 public final class NodeNameUtil {
 
@@ -46,12 +47,13 @@ public final class NodeNameUtil {
     public static Optional<String> normalizeSpriteName(final ActorDefinition actor) {
         final String spriteName = actor.getIdent().getName();
         final String splitName = StringUtil.splitToNormalisedSubtokenStream(spriteName, "|")
-                .filter(subtoken -> !subtoken.matches("^\\d+$"))
-                .collect(Collectors.joining(String.valueOf(SPLIT_DELIMITER)));
+            .filter(subtoken -> !subtoken.matches("^\\d+$"))
+            .collect(Collectors.joining(String.valueOf(SPLIT_DELIMITER)));
 
         if (splitName.isEmpty()) {
             return Optional.empty();
-        } else {
+        }
+        else {
             final String truncated = truncateName(splitName);
             return Optional.of(truncated);
         }
@@ -60,8 +62,9 @@ public final class NodeNameUtil {
     /**
      * Normalizes the sprite name to only include latin base alphabet characters a-z.
      *
-     * <p>For latin characters with diacritic marks, those are removed and the base character is retained
-     * (e.g., ö to o, á to a).
+     * <p>
+     * For latin characters with diacritic marks, those are removed and the base character is retained (e.g., ö to o, á
+     * to a).
      *
      * @param actor The sprite for which the normalized name should be computed.
      * @return The normalized sprite name. An empty optional instead of an empty name.
@@ -71,13 +74,14 @@ public final class NodeNameUtil {
         final String spriteName = StringUtils.stripAccents(baseSpriteName);
 
         final String splitName = StringUtil.splitToNormalisedSubtokenStream(spriteName, "|")
-                .map(subtoken -> subtoken.replaceAll("[^a-zA-Z]", ""))
-                .filter(subtoken -> !subtoken.isEmpty())
-                .collect(Collectors.joining(String.valueOf(SPLIT_DELIMITER)));
+            .map(subtoken -> subtoken.replaceAll("[^a-zA-Z]", ""))
+            .filter(subtoken -> !subtoken.isEmpty())
+            .collect(Collectors.joining(String.valueOf(SPLIT_DELIMITER)));
 
         if (splitName.isEmpty()) {
             return Optional.empty();
-        } else {
+        }
+        else {
             final String truncated = truncateName(splitName);
             return Optional.of(truncated);
         }
@@ -104,7 +108,8 @@ public final class NodeNameUtil {
     /**
      * Checks if the actor has a default name that was generated upon actor creation by Scratch itself.
      *
-     * <p>A default name is a translation of ‘sprite’ ({@link Constants#DEFAULT_SPRITE_NAMES}), followed by a number.
+     * <p>
+     * A default name is a translation of ‘sprite’ ({@link Constants#DEFAULT_SPRITE_NAMES}), followed by a number.
      *
      * @param actor Some actor.
      * @return True, if the actor has an automatically generated name.
@@ -129,16 +134,17 @@ public final class NodeNameUtil {
     /**
      * Builds a globally unique name for a script.
      *
-     * <p>Combines the name/projectID of the program with the unique name of a script to create a globally unique
+     * <p>
+     * Combines the name/projectID of the program with the unique name of a script to create a globally unique
      * identifier for the script.
      *
-     * @param program The program the script belongs to.
+     * @param program      The program the script belongs to.
      * @param scriptEntity Some script inside {@code program}.
      * @return A unique name based on the program and script ids. Empty if no ID could be generated for the script.
      */
     public static Optional<String> getScriptEntityFullName(Program program, ScriptEntity scriptEntity) {
         return ScriptEntityNameVisitor.getScriptName(scriptEntity)
-                .map(name -> program.getIdent().getName() + "_" + name);
+            .map(name -> program.getIdent().getName() + "_" + name);
     }
 
     public static Optional<String> getScriptEntityName(ScriptEntity node) {

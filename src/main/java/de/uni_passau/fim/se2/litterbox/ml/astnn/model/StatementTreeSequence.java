@@ -18,15 +18,16 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.astnn.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * A sequence of statement trees as required for the ASTNN model together with a label.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public record StatementTreeSequence(String originalLabel, String label, List<AstnnNode> statements) {
+
     public int getMaxDepth() {
         return statements.stream().mapToInt(AstnnNode::getTreeDepth).max().orElse(0);
     }
