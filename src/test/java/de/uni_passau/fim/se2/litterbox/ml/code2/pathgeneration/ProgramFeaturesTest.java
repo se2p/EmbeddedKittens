@@ -18,16 +18,18 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration;
 
-import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.ProgramRelation;
-import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.ProgramRelationFactory;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.ProgramRelation;
+import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.ProgramRelationFactory;
 
 class ProgramFeaturesTest {
+
     private final ProgramRelationFactory programRelationFactory = ProgramRelationFactory.withHashCodeFactory();
 
     ProgramFeatures cat;
@@ -35,21 +37,30 @@ class ProgramFeaturesTest {
     @BeforeEach
     void setUp() {
         cat = new ProgramFeatures("cat", programRelationFactory);
-        cat.addFeature("39.0",
-                "(NumberLiteral)^(Key)^(KeyPressed)^(Script)_(StmtList)_(Say)_(StringLiteral)",
-                "Hi!");
-        cat.addFeature("39.0",
-                "(NumberLiteral)^(Key)^(KeyPressed)^(Script)_(StmtList)_(Show)",
-                "Show");
-        cat.addFeature("Hi!",
-                "(StringLiteral)^(Say)^(StmtList)_(Show)",
-                "Show");
+        cat.addFeature(
+            "39.0",
+            "(NumberLiteral)^(Key)^(KeyPressed)^(Script)_(StmtList)_(Say)_(StringLiteral)",
+            "Hi!"
+        );
+        cat.addFeature(
+            "39.0",
+            "(NumberLiteral)^(Key)^(KeyPressed)^(Script)_(StmtList)_(Show)",
+            "Show"
+        );
+        cat.addFeature(
+            "Hi!",
+            "(StringLiteral)^(Say)^(StmtList)_(Show)",
+            "Show"
+        );
     }
 
     @Test
     void testToString() {
-        assertEquals("cat 39.0,625791294,Hi! 39.0," +
-                "1493538624,Show Hi!,-547448667,Show", cat.toString());
+        assertEquals(
+            "cat 39.0,625791294,Hi! 39.0," +
+                "1493538624,Show Hi!,-547448667,Show",
+            cat.toString()
+        );
     }
 
     @Test

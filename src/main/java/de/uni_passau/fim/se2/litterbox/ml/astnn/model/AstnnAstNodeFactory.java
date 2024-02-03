@@ -18,12 +18,13 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.astnn.model;
 
-import com.google.common.base.Preconditions;
-import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
+import static de.uni_passau.fim.se2.litterbox.ml.astnn.model.AstnnNode.BLOCK_LABEL;
 
 import java.util.*;
 
-import static de.uni_passau.fim.se2.litterbox.ml.astnn.model.AstnnNode.BLOCK_LABEL;
+import com.google.common.base.Preconditions;
+
+import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
 
 public final class AstnnAstNodeFactory {
 
@@ -46,7 +47,8 @@ public final class AstnnAstNodeFactory {
         final String nodeLabel = normalizeLabel(label);
         if (children.isEmpty()) {
             return new AstnnAstLeaf(nodeLabel);
-        } else {
+        }
+        else {
             return new AstnnAstNode(nodeLabel, children);
         }
     }
@@ -69,7 +71,8 @@ public final class AstnnAstNodeFactory {
     public static AstnnNode build(final StatementType statementType, final List<AstnnNode> children) {
         if (children.isEmpty()) {
             return new AstnnAstLeaf(statementType);
-        } else {
+        }
+        else {
             return new AstnnAstNode(statementType, children);
         }
     }
@@ -94,12 +97,13 @@ public final class AstnnAstNodeFactory {
      * @return A tree node or leaf, depending on the number of children.
      */
     public static AstnnNode build(
-            final String label, final StatementType statementType, final List<AstnnNode> children
+        final String label, final StatementType statementType, final List<AstnnNode> children
     ) {
         final String nodeLabel = normalizeLabel(label);
         if (children.isEmpty()) {
             return new AstnnAstLeaf(nodeLabel, statementType);
-        } else {
+        }
+        else {
             return new AstnnAstNode(nodeLabel, statementType, children);
         }
     }
@@ -114,7 +118,8 @@ public final class AstnnAstNodeFactory {
     public static AstnnNode build(final NodeType nodeType, final List<AstnnNode> children) {
         if (children.isEmpty()) {
             return new AstnnAstLeaf(nodeType.toString());
-        } else {
+        }
+        else {
             return new AstnnAstNode(nodeType.toString(), children);
         }
     }
@@ -143,7 +148,8 @@ public final class AstnnAstNodeFactory {
     public static AstnnNode block(final List<AstnnNode> children) {
         if (children.isEmpty()) {
             return block();
-        } else {
+        }
+        else {
             return new AstnnAstNode(BLOCK_LABEL, children);
         }
     }
@@ -161,13 +167,13 @@ public final class AstnnAstNodeFactory {
      * @return An AST node representing the method declaration.
      */
     public static AstnnNode procedureDeclaration(
-            final String name,
-            final List<AstnnNode> parameters,
-            final AstnnNode body
+        final String name,
+        final List<AstnnNode> parameters,
+        final AstnnNode body
     ) {
         Preconditions.checkArgument(
-                BLOCK_LABEL.equals(body.label()),
-                "The body of a method must be a block."
+            BLOCK_LABEL.equals(body.label()),
+            "The body of a method must be a block."
         );
 
         final List<AstnnNode> children = new ArrayList<>();
@@ -189,9 +195,9 @@ public final class AstnnAstNodeFactory {
      * @return An AST node representing the actor.
      */
     public static AstnnNode actorDefinition(
-            final String name,
-            final List<AstnnNode> procedures,
-            final List<AstnnNode> scripts
+        final String name,
+        final List<AstnnNode> procedures,
+        final List<AstnnNode> scripts
     ) {
         final List<AstnnNode> children = new ArrayList<>();
         if (!procedures.isEmpty()) {
@@ -217,7 +223,7 @@ public final class AstnnAstNodeFactory {
      * @return An ASTNN block node.
      */
     public static AstnnAstNode blockStatement(
-            final StatementType statementType, final List<AstnnNode> headerChildren, final AstnnNode blockChild
+        final StatementType statementType, final List<AstnnNode> headerChildren, final AstnnNode blockChild
     ) {
         final List<AstnnNode> children = new ArrayList<>(headerChildren);
         children.add(blockChild);
@@ -233,8 +239,8 @@ public final class AstnnAstNodeFactory {
      */
     public static AstnnAstNode blockStatement(final StatementType statementType, final AstnnNode blockChild) {
         Preconditions.checkArgument(
-                BLOCK_LABEL.equals(blockChild.label()),
-                "The block child of an AstNode must have the block label"
+            BLOCK_LABEL.equals(blockChild.label()),
+            "The block child of an AstNode must have the block label"
         );
 
         return new AstnnAstNode(statementType, blockChild);

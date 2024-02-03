@@ -91,6 +91,7 @@ import de.uni_passau.fim.se2.litterbox.ast.model.variable.Variable;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.ScratchVisitor;
 
 class PathRepresentationVisitor implements ScratchVisitor {
+
     private int representation = -1;
 
     public int getRepresentation() {
@@ -101,7 +102,7 @@ class PathRepresentationVisitor implements ScratchVisitor {
     public void visit(ASTNode node) {
         // if this happens: override the missing `visit` methods
         throw new UnsupportedOperationException(
-                "Cannot generate a path representation for node of type: " + node.getUniqueName()
+            "Cannot generate a path representation for node of type: " + node.getUniqueName()
         );
     }
 

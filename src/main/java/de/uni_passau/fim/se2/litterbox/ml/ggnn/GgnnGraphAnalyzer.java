@@ -18,21 +18,25 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 
-import de.uni_passau.fim.se2.litterbox.ast.model.Program;
-import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessingAnalyzer;
-import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
-import org.apache.commons.io.FilenameUtils;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.FilenameUtils;
+
+import de.uni_passau.fim.se2.litterbox.ast.model.Program;
+import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessingAnalyzer;
+import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
+
 public class GgnnGraphAnalyzer extends MLPreprocessingAnalyzer<String> {
+
     private final boolean isDotStringGraph;
     private final String labelName;
 
-    public GgnnGraphAnalyzer(final MLPreprocessorCommonOptions commonOptions, boolean outputDotStringGraph,
-                             String labelName) {
+    public GgnnGraphAnalyzer(
+        final MLPreprocessorCommonOptions commonOptions, boolean outputDotStringGraph,
+        String labelName
+    ) {
         super(commonOptions);
 
         this.isDotStringGraph = outputDotStringGraph;
@@ -42,12 +46,13 @@ public class GgnnGraphAnalyzer extends MLPreprocessingAnalyzer<String> {
     @Override
     public Stream<String> check(final Program program) {
         GenerateGgnnGraphTask generateGgnnGraphTask = new GenerateGgnnGraphTask(
-                program, includeStage, includeDefaultSprites, wholeProgram, labelName, actorNameNormalizer
+            program, includeStage, includeDefaultSprites, wholeProgram, labelName, actorNameNormalizer
         );
         if (isDotStringGraph) {
             String label = program.getIdent().getName();
             return Stream.of(generateGgnnGraphTask.generateDotGraphData(label));
-        } else {
+        }
+        else {
             return generateGgnnGraphTask.generateJsonGraphData();
         }
     }
@@ -59,7 +64,14 @@ public class GgnnGraphAnalyzer extends MLPreprocessingAnalyzer<String> {
 
     @Override
     protected Path outputFileName(File inputFile) {
-        String format = (isDotStringGraph) ? ".dot" : ".jsonl";
+        final String format;
+        if (isDotStringGraph) {
+            format = ".dot";
+        }
+        else {
+            format = ".jsonl";
+        }
+
         return Path.of("GraphData_" + FilenameUtils.removeExtension(inputFile.getName()) + format);
     }
 }

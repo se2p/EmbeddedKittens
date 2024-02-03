@@ -18,14 +18,6 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.tokenizer;
 
-import de.uni_passau.fim.se2.litterbox.ml.MLOutputPath;
-import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
-import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
-import de.uni_passau.fim.se2.litterbox.ml.util.AbstractTokenCheck;
-import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -34,12 +26,21 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import de.uni_passau.fim.se2.litterbox.ml.MLOutputPath;
+import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
+import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
+import de.uni_passau.fim.se2.litterbox.ml.util.AbstractTokenCheck;
+import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
+
 class TokenizerAbstractTokenTest extends AbstractTokenCheck {
 
     @Override
     protected Set<String> getSpecialAllowedTokens() {
         final Set<String> allowedTokens = new HashSet<>(
-                Set.of("BEGIN", "END", "BEGIN_SCRIPT", "END_SCRIPT", "BEGIN_PROCEDURE", "END_PROCEDURE")
+            Set.of("BEGIN", "END", "BEGIN_SCRIPT", "END_SCRIPT", "BEGIN_PROCEDURE", "END_PROCEDURE")
         );
 
         Arrays.stream(Token.values()).map(Token::getStrRep).forEach(allowedTokens::add);
@@ -48,7 +49,8 @@ class TokenizerAbstractTokenTest extends AbstractTokenCheck {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
+    @ValueSource(
+        strings = {
             "src/test/fixtures/allBlocks.json",
             "src/test/fixtures/customBlocks.json",
             "src/test/fixtures/ml_preprocessing/astnn/custom_block.json",
@@ -56,31 +58,34 @@ class TokenizerAbstractTokenTest extends AbstractTokenCheck {
             "src/test/fixtures/ml_preprocessing/shared/music_blocks.json",
             "src/test/fixtures/ml_preprocessing/shared/pen_blocks.json",
             "src/test/fixtures/ml_preprocessing/shared/tts_blocks.json",
-    })
+        }
+    )
     void testAllBlocksVisitableAbstract(final String filename) {
         final TokenizingAnalyzer analyzer = getAnalyzer();
         final File inputFile = Path.of(filename).toFile();
         final Stream<TokenSequence> output = analyzer.check(inputFile);
 
         output
-                .map(TokenSequence::tokens)
-                .flatMap(List::stream)
-                .flatMap(List::stream)
-                .forEach(this::checkNodeLabel);
+            .map(TokenSequence::tokens)
+            .flatMap(List::stream)
+            .flatMap(List::stream)
+            .forEach(this::checkNodeLabel);
     }
 
     private TokenizingAnalyzer getAnalyzer() {
         final MLPreprocessorCommonOptions common = new MLPreprocessorCommonOptions(
-                Path.of(""),
-                MLOutputPath.console(),
-                false,
-                true,
-                true,
-                true,
-                true,
-                ActorNameNormalizer.getDefault()
+            Path.of(""),
+            MLOutputPath.console(),
+            false,
+            true,
+            true,
+            true,
+            true,
+            ActorNameNormalizer.getDefault()
         );
-        return new TokenizingAnalyzer(common, false, false, false,
-                MaskingStrategy.none());
+        return new TokenizingAnalyzer(
+            common, false, false, false,
+            MaskingStrategy.none()
+        );
     }
 }

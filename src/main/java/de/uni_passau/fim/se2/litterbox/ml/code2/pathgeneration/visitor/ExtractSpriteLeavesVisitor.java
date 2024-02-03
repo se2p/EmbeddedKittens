@@ -25,6 +25,7 @@ import de.uni_passau.fim.se2.litterbox.ast.parser.symboltable.ProcedureDefinitio
 import de.uni_passau.fim.se2.litterbox.ast.util.AstNodeUtil;
 
 public class ExtractSpriteLeavesVisitor extends ExtractLeavesVisitor<ActorDefinition> {
+
     private final boolean includeStage;
 
     private boolean insideActor = false;
@@ -54,12 +55,14 @@ public class ExtractSpriteLeavesVisitor extends ExtractLeavesVisitor<ActorDefini
     public void visit(final ASTNode node) {
         if (insideActor && node instanceof ASTLeaf leaf && !AstNodeUtil.isMetadata(node)) {
             addLeaf(leaf);
-        } else {
+        }
+        else {
             visitChildren(node);
         }
     }
 
     private boolean shouldActorBeIncluded(final ActorDefinition actor) {
-        return actor.isSprite() || (includeStage && actor.isStage());
+        boolean stage = includeStage && actor.isStage();
+        return actor.isSprite() || stage;
     }
 }

@@ -18,10 +18,6 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml;
 
-import de.uni_passau.fim.se2.litterbox.analytics.Analyzer;
-import de.uni_passau.fim.se2.litterbox.ast.model.Program;
-import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +29,12 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import de.uni_passau.fim.se2.litterbox.analytics.Analyzer;
+import de.uni_passau.fim.se2.litterbox.ast.model.Program;
+import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
+
 public abstract class MLPreprocessingAnalyzer<R> extends Analyzer<Stream<R>> {
+
     private static final Logger log = Logger.getLogger(MLPreprocessingAnalyzer.class.getName());
 
     protected final MLOutputPath outputPath;
@@ -66,8 +67,8 @@ public abstract class MLPreprocessingAnalyzer<R> extends Analyzer<Stream<R>> {
     /**
      * {@inheritDoc}
      *
-     * <p>Overwritten to return an empty stream instead of throwing an exception in case the program cannot be
-     * read/parsed.
+     * <p>
+     * Overwritten to return an empty stream instead of throwing an exception in case the program cannot be read/parsed.
      *
      * @param file {@inheritDoc}
      * @return {@inheritDoc}
@@ -85,7 +86,7 @@ public abstract class MLPreprocessingAnalyzer<R> extends Analyzer<Stream<R>> {
 
     @Override
     protected void writeResultToFile(
-            final Path projectFile, final Program program, final Stream<R> checkResult
+        final Path projectFile, final Program program, final Stream<R> checkResult
     ) throws IOException {
         final Stream<String> results = checkResult.map(this::resultToString);
         writeResultToOutput(projectFile.toFile(), results);
@@ -94,7 +95,8 @@ public abstract class MLPreprocessingAnalyzer<R> extends Analyzer<Stream<R>> {
     private void writeResultToOutput(final File inputFile, final Stream<String> result) throws IOException {
         if (outputPath.isConsoleOutput()) {
             writeResultToConsole(inputFile, result);
-        } else {
+        }
+        else {
             writeResultToFile(inputFile, result);
         }
     }
@@ -111,8 +113,8 @@ public abstract class MLPreprocessingAnalyzer<R> extends Analyzer<Stream<R>> {
         final Path outputFile = outputPath.getPath().resolve(outName);
 
         try (
-                BufferedWriter bw = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8);
-                PrintWriter pw = new PrintWriter(bw);
+            BufferedWriter bw = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8);
+            PrintWriter pw = new PrintWriter(bw);
         ) {
             writeResult(inputFile, pw, result);
         }

@@ -30,5 +30,5 @@ public enum AbstractToken {
     PROCEDURE_DEFINITION,
     SPRITE,
     STAGE,
-    VAR;
+    VAR
 }

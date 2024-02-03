@@ -18,32 +18,33 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import de.uni_passau.fim.se2.litterbox.utils.Pair;
-import de.uni_passau.fim.se2.litterbox.utils.Preconditions;
-
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import de.uni_passau.fim.se2.litterbox.utils.Pair;
+import de.uni_passau.fim.se2.litterbox.utils.Preconditions;
+
 public record GgnnProgramGraph(
-        String filename,
-        String label,
-        Set<Integer> labelNodes,
-        ContextGraph contextGraph
+    String filename,
+    String label,
+    Set<Integer> labelNodes,
+    ContextGraph contextGraph
 ) {
+
     public record ContextGraph(
-            Map<EdgeType, Set<Pair<Integer>>> edges,
-            @JsonProperty("nodeLabelMap")
-            Map<Integer, String> nodeLabels,
-            @JsonProperty("nodeTypeMap")
-            Map<Integer, String> nodeTypes
+        Map<EdgeType, Set<Pair<Integer>>> edges,
+        @JsonProperty("nodeLabelMap") Map<Integer, String> nodeLabels,
+        @JsonProperty("nodeTypeMap") Map<Integer, String> nodeTypes
     ) {
+
         public ContextGraph {
             for (EdgeType edgeType : EdgeType.values()) {
                 Preconditions.checkArgument(
-                        edges.containsKey(edgeType),
-                        "The context graph is missing edges of type %s!",
-                        edgeType
+                    edges.containsKey(edgeType),
+                    "The context graph is missing edges of type %s!",
+                    edgeType
                 );
             }
         }

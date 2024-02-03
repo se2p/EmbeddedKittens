@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+<!--
+
+    Copyright (C) 2021-2024 LitterBox-ML contributors
+
+    This file is part of LitterBox-ML.
+
+    LitterBox-ML is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or (at
+    your option) any later version.
+
+    LitterBox-ML is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+    General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with LitterBox-ML. If not, see <http://www.gnu.org/licenses/>.
+
+-->
+
+<!DOCTYPE module PUBLIC "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="warning"/>
+    <property name="fileExtensions" value="java, properties, xml"/>
+
+    <module name="SuppressWarningsFilter"/>
+
+    <module name="NewlineAtEndOfFile"/>
+    <module name="FileLength"/>
+    <module name="FileTabCharacter"/>
+
+    <module name="TreeWalker">
+        <module name="SuppressWarningsHolder"/>
+
+        <!-- Block Checks -->
+        <module name="EmptyBlock"/>
+        <module name="EmptyCatchBlock"/>
+        <module name="NeedBraces">
+            <property name="allowSingleLineStatement" value="false"/>
+            <property name="allowEmptyLoopBody" value="false"/>
+        </module>
+
+        <!-- Class Design -->
+        <module name="HideUtilityClassConstructor"/>
+        <module name="MutableException"/>
+        <module name="OneTopLevelClass"/>
+
+        <!-- Coding -->
+        <module name="AvoidDoubleBraceInitialization"/>
+        <!-- <module name="AvoidInlineConditionals"/> -->
+        <module name="CovariantEquals"/>
+        <module name="DefaultComesLast"/>
+        <module name="EmptyStatement"/>
+        <module name="EqualsAvoidNull"/>
+        <module name="EqualsHashCode"/>
+        <module name="HiddenField">
+            <property name="ignoreConstructorParameter" value="true"/>
+            <property name="ignoreSetter" value="true"/>
+        </module>
+        <module name="InnerAssignment"/>
+        <module name="MultipleStringLiterals">
+            <property name="allowedDuplicates" value="5"/>
+        </module>
+        <module name="MultipleVariableDeclarations"/>
+        <module name="OneStatementPerLine"/>
+        <module name="PackageDeclaration">
+            <property name="matchDirectoryStructure" value="true"/>
+        </module>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+        <module name="StringLiteralEquality"/>
+        <module name="UnnecessaryParentheses"/>
+        <module name="UnnecessarySemicolonAfterOuterTypeDeclaration"/>
+        <module name="UnnecessarySemicolonAfterTypeMemberDeclaration"/>
+        <module name="UnnecessarySemicolonInEnumeration"/>
+        <module name="UnnecessarySemicolonInTryWithResources"/>
+        <module name="UnusedLocalVariable"/>
+
+        <!-- Imports -->
+        <module name="RedundantImport"/>
+        <module name="UnusedImports"/>
+
+        <!-- Javadoc -->
+        <module name="InvalidJavadocPosition"/>
+        <module name="JavadocMethod">
+            <property name="accessModifiers" value="public"/>
+            <property name="tokens" value="METHOD_DEF,ANNOTATION_FIELD_DEF"/>
+            <property name="severity" value="warning"/>
+            <property name="allowedAnnotations"
+                      value="Override,Test,ParameterizedTest,BeforeEach,AfterEach,BeforeAll,AfterAll"/>
+        </module>
+        <module name="JavadocMissingLeadingAsterisk"/>
+        <module name="JavadocMissingWhitespaceAfterAsterisk"/>
+        <module name="MissingJavadocMethod">
+            <property name="scope" value="public"/>
+            <property name="allowMissingPropertyJavadoc" value="true"/>
+            <property name="minLineCount" value="4"/>
+            <property name="tokens" value="METHOD_DEF,ANNOTATION_FIELD_DEF"/>
+            <property name="severity" value="warning"/>
+            <property name="allowedAnnotations"
+                      value="Override,Test,ParameterizedTest,BeforeEach,AfterEach,BeforeAll,AfterAll"/>
+        </module>
+
+        <!-- Metrics -->
+        <module name="BooleanExpressionComplexity"/>
+        <module name="CyclomaticComplexity">
+            <property name="severity" value="info"/>
+        </module>
+        <module name="NPathComplexity"/>
+
+        <!-- Miscellaneous -->
+        <module name="ArrayTypeStyle"/>
+        <module name="TodoComment">
+            <property name="format" value="(TODO)|(todo)|(ToDo)"/>
+        </module>
+        <module name="UpperEll"/>
+
+        <!-- Modifiers -->
+        <module name="ModifierOrder"/>
+        <module name="RedundantModifier"/>
+
+        <!-- Naming Conventions -->
+        <module name="ConstantName">
+            <property name="format" value="^log?$|^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/>
+        </module>
+
+        <!-- Size Violations -->
+        <module name="LambdaBodyLength"/>
+        <module name="MethodLength">
+            <property name="max" value="60"/>
+        </module>
+    </module>
+</module>

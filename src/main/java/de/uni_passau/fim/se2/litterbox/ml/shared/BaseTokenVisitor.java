@@ -18,6 +18,9 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.shared;
 
+import java.util.Locale;
+import java.util.Objects;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
 import de.uni_passau.fim.se2.litterbox.ast.model.event.EventAttribute;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.num.NumFunct;
@@ -43,21 +46,19 @@ import de.uni_passau.fim.se2.litterbox.ast.model.statement.spritemotion.Rotation
 import de.uni_passau.fim.se2.litterbox.ast.model.timecomp.TimeComp;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.*;
 
-import java.util.Locale;
-import java.util.Objects;
-
 /**
  * Visits a single given node of the AST to generate a token for that node.
  *
- * <p>See {@link TokenVisitorFactory} for additional related utilities and a default implementation.
+ * <p>
+ * See {@link TokenVisitorFactory} for additional related utilities and a default implementation.
  */
 public abstract class BaseTokenVisitor implements
-        ScratchVisitor, PenExtensionVisitor, MusicExtensionVisitor, TranslateExtensionVisitor,
-        TextToSpeechExtensionVisitor {
+    ScratchVisitor, PenExtensionVisitor, MusicExtensionVisitor, TranslateExtensionVisitor,
+    TextToSpeechExtensionVisitor {
 
     protected final boolean normalised;
 
-    protected String token = null;
+    protected String finalToken = null;
 
     protected BaseTokenVisitor(final boolean normalised) {
         this.normalised = normalised;
@@ -70,42 +71,44 @@ public abstract class BaseTokenVisitor implements
      * @throws NullPointerException If no AST node has been visited by the visitor before calling this method.
      */
     public final String getToken() {
-        return Objects.requireNonNull(token, "The token visitor has to visit a node first!");
+        return Objects.requireNonNull(finalToken, "The token visitor has to visit a node first!");
     }
 
-    protected abstract String normaliseToken(final String token);
+    protected abstract String normaliseToken(String token);
 
     /**
      * If normalisation is enabled, converts the token using {@link #normaliseToken(String)}, otherwise saves the token
-     * as-is into the {@link #token} attribute.
+     * as-is into the {@link #finalToken} attribute.
      *
      * @param token A token that should be saved.
      */
     protected void saveToken(final String token) {
         if (normalised) {
-            this.token = normaliseToken(token);
-        } else {
-            this.token = token;
+            this.finalToken = normaliseToken(token);
+        }
+        else {
+            this.finalToken = token;
         }
     }
 
     /**
-     * Removes the decimal places from integral numbers, formats others to two decimal places.
-     * Same format with or without normalisation.
+     * Removes the decimal places from integral numbers, formats others to two decimal places. Same format with or
+     * without normalisation.
      *
-     * @param value Some number that should be saved as {@link #token}.
+     * @param value Some number that should be saved as {@link #finalToken}.
      */
     protected void saveNumber(final double value) {
         if (Math.floor(value) == value) {
-            token = Integer.toString((int) value);
-        } else {
-            token = String.format(Locale.ROOT, "%.2f", value);
+            finalToken = Integer.toString((int) value);
+        }
+        else {
+            finalToken = String.format(Locale.ROOT, "%.2f", value);
         }
     }
 
     @Override
     public void visit(ASTNode node) {
-        token = node.getUniqueName();
+        finalToken = node.getUniqueName();
     }
 
     @Override
@@ -120,7 +123,7 @@ public abstract class BaseTokenVisitor implements
 
     @Override
     public void visit(BoolLiteral node) {
-        token = Boolean.toString(node.getValue());
+        finalToken = Boolean.toString(node.getValue());
     }
 
     @Override
@@ -130,57 +133,57 @@ public abstract class BaseTokenVisitor implements
 
     @Override
     public void visit(TimeComp node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(SoundEffect node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(RotationStyle node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(NumFunct node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(NameNum node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(LayerChoice node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(GraphicEffect node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(ForwardBackwardChoice node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(EventAttribute node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(DragMode node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(FixedAttribute node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
@@ -190,31 +193,31 @@ public abstract class BaseTokenVisitor implements
 
     @Override
     public void visit(FixedInstrument node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(FixedDrum node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(TFixedLanguage node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(ColorLiteral node) {
-        token = node.getRGB();
+        finalToken = node.getRGB();
     }
 
     @Override
     public void visit(FixedVoice node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 
     @Override
     public void visit(FixedLanguage node) {
-        token = node.getType().toString();
+        finalToken = node.getType().toString();
     }
 }

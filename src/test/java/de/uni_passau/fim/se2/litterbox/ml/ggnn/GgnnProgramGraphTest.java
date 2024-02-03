@@ -18,20 +18,22 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 
-import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
-import de.uni_passau.fim.se2.litterbox.ast.model.Program;
-import de.uni_passau.fim.se2.litterbox.utils.Pair;
-import org.junit.jupiter.api.Test;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+import de.uni_passau.fim.se2.litterbox.ast.model.Program;
+import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
+import de.uni_passau.fim.se2.litterbox.utils.Pair;
 
 class GgnnProgramGraphTest implements JsonTest {
+
     @Test
     void testConstructionMissingEdgeTypes() {
         final Map<GgnnProgramGraph.EdgeType, Set<Pair<Integer>>> edges = new HashMap<>();
@@ -40,7 +42,9 @@ class GgnnProgramGraphTest implements JsonTest {
         }
         edges.remove(GgnnProgramGraph.EdgeType.CHILD);
 
-        assertThrows(IllegalArgumentException.class, () -> new GgnnProgramGraph.ContextGraph(edges, Map.of(), Map.of()));
+        assertThrows(
+            IllegalArgumentException.class, () -> new GgnnProgramGraph.ContextGraph(edges, Map.of(), Map.of())
+        );
     }
 
     @Test

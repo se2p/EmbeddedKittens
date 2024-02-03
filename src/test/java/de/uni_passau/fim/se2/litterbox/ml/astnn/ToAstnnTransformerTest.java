@@ -18,10 +18,17 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.astnn;
 
-import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
-import de.uni_passau.fim.se2.litterbox.ml.astnn.model.*;
-import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
-import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
+
+import java.util.List;
+import java.util.Locale;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ast.model.Script;
 import de.uni_passau.fim.se2.litterbox.ast.model.StmtList;
@@ -42,18 +49,13 @@ import de.uni_passau.fim.se2.litterbox.ast.model.statement.spritelook.Hide;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.spritelook.Show;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.spritemotion.IfOnEdgeBounce;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.NodeFilteringVisitor;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
-import java.util.List;
-import java.util.Locale;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
+import de.uni_passau.fim.se2.litterbox.ml.astnn.model.*;
+import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
+import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
 
 class ToAstnnTransformerTest implements JsonTest {
+
     private static Program dummyProgram;
 
     @BeforeAll
@@ -73,17 +75,17 @@ class ToAstnnTransformerTest implements JsonTest {
         final AstnnNode node = toAstnnTransformer.transform(dummyProgram, add2);
 
         assertAll(
-                () -> assertThat(node.children()).hasSize(2),
-                () -> assertThat(node.children().get(0).children()).hasSize(2),
-                () -> assertThat(node.children().get(1).isLeaf()).isTrue()
+            () -> assertThat(node.children()).hasSize(2),
+            () -> assertThat(node.children().get(0).children()).hasSize(2),
+            () -> assertThat(node.children().get(1).isLeaf()).isTrue()
         );
     }
 
     @ParameterizedTest(name = "{displayName} abstractTokens={0}")
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testTransformColorLiteral(boolean abstractTokens) {
         final ToAstnnTransformer toAstnnTransformer = new ToAstnnTransformer(
-                ActorNameNormalizer.getDefault(), abstractTokens
+            ActorNameNormalizer.getDefault(), abstractTokens
         );
         final ColorLiteral color = new ColorLiteral(189, 56, 246);
         final AstnnNode node = toAstnnTransformer.transform(dummyProgram, color);
@@ -93,10 +95,10 @@ class ToAstnnTransformerTest implements JsonTest {
     }
 
     @ParameterizedTest(name = "{displayName} abstractTokens={0}")
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testTransformStringLiteral(boolean abstractTokens) {
         final ToAstnnTransformer toAstnnTransformer = new ToAstnnTransformer(
-                ActorNameNormalizer.getDefault(), abstractTokens
+            ActorNameNormalizer.getDefault(), abstractTokens
         );
         final StringLiteral literal = new StringLiteral("some string");
         final AstnnNode node = toAstnnTransformer.transform(dummyProgram, literal);
@@ -106,7 +108,9 @@ class ToAstnnTransformerTest implements JsonTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"some string", "some  string", "Some String", "SOME STRING", "some_string", "some\nstring"})
+    @ValueSource(
+        strings = { "some string", "some  string", "Some String", "SOME STRING", "some_string", "some\nstring" }
+    )
     void testNormaliseStringLiteral(final String literal) {
         final ToAstnnTransformer toAstnnTransformer = new ToAstnnTransformer(ActorNameNormalizer.getDefault(), false);
         final StringLiteral literalNode = new StringLiteral(literal);
@@ -115,10 +119,10 @@ class ToAstnnTransformerTest implements JsonTest {
     }
 
     @ParameterizedTest(name = "{displayName} abstractTokens={0}")
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testTransformNumberLiteral(boolean abstractTokens) {
         final ToAstnnTransformer toAstnnTransformer = new ToAstnnTransformer(
-                ActorNameNormalizer.getDefault(), abstractTokens
+            ActorNameNormalizer.getDefault(), abstractTokens
         );
         final NumberLiteral literal = new NumberLiteral(13D);
         final AstnnNode node = toAstnnTransformer.transform(dummyProgram, literal);
@@ -128,10 +132,10 @@ class ToAstnnTransformerTest implements JsonTest {
     }
 
     @ParameterizedTest(name = "{displayName} abstractTokens={0}")
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testTransformBoolLiteral(boolean abstractTokens) {
         final ToAstnnTransformer toAstnnTransformer = new ToAstnnTransformer(
-                ActorNameNormalizer.getDefault(), abstractTokens
+            ActorNameNormalizer.getDefault(), abstractTokens
         );
         final BoolLiteral literal = new BoolLiteral(true);
         final AstnnNode node = toAstnnTransformer.transform(dummyProgram, literal);
@@ -150,23 +154,23 @@ class ToAstnnTransformerTest implements JsonTest {
         final AstnnNode node = toAstnnTransformer.transform(dummyProgram, untilStmt);
 
         assertAll(
-                () -> assertThat(node.isStatement()).isTrue(),
-                () -> assertThat(node.label()).isEqualTo(StatementType.CONTROL_REPEAT_UNTIL.toString()),
-                () -> assertThat(node.children()).hasSize(2),
-                () -> assertThat(node.children().get(1).label()).isEqualTo("BLOCK")
+            () -> assertThat(node.isStatement()).isTrue(),
+            () -> assertThat(node.label()).isEqualTo(StatementType.CONTROL_REPEAT_UNTIL.toString()),
+            () -> assertThat(node.children()).hasSize(2),
+            () -> assertThat(node.children().get(1).label()).isEqualTo("BLOCK")
         );
 
         final List<AstnnNode> children = node.children();
         assertAll(
-                () -> assertThat(children.get(0)).isInstanceOf(AstnnAstLeaf.class),
-                () -> assertThat(children.get(0).label()).isEqualTo(NodeType.EMPTY_BOOL.toString())
+            () -> assertThat(children.get(0)).isInstanceOf(AstnnAstLeaf.class),
+            () -> assertThat(children.get(0).label()).isEqualTo(NodeType.EMPTY_BOOL.toString())
         );
 
         final List<AstnnNode> statements = node.children().get(1).children();
         assertAll(
-                () -> assertThat(statements).hasSize(1),
-                () -> assertThat(statements.get(0)).isInstanceOf(AstnnAstLeaf.class),
-                () -> assertThat(statements.get(0).label()).isEqualTo(StatementType.MOTION_IFONEDGEBOUNCE.toString())
+            () -> assertThat(statements).hasSize(1),
+            () -> assertThat(statements.get(0)).isInstanceOf(AstnnAstLeaf.class),
+            () -> assertThat(statements.get(0).label()).isEqualTo(StatementType.MOTION_IFONEDGEBOUNCE.toString())
         );
     }
 
@@ -195,18 +199,18 @@ class ToAstnnTransformerTest implements JsonTest {
     }
 
     @ParameterizedTest(name = "{displayName} abstractTokens={0}")
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testTransformCustomBlock(boolean abstractTokens) throws Exception {
         final Program program = getProgram("custom_block.json");
         final var customBlock = program.getActorDefinitionList()
-                .getDefinitions()
-                .get(0)
-                .getProcedureDefinitionList()
-                .getList()
-                .get(0);
+            .getDefinitions()
+            .get(0)
+            .getProcedureDefinitionList()
+            .getList()
+            .get(0);
 
         final ToAstnnTransformer toAstnnTransformer = new ToAstnnTransformer(
-                ActorNameNormalizer.getDefault(), abstractTokens
+            ActorNameNormalizer.getDefault(), abstractTokens
         );
         final AstnnNode customBlockNode = toAstnnTransformer.transform(program, customBlock);
         assertThat(customBlockNode.getStatementType()).isEqualTo(StatementType.PROCEDURES_DEFINITION);
@@ -219,8 +223,9 @@ class ToAstnnTransformerTest implements JsonTest {
 
         final String[] expectedParameterNames;
         if (abstractTokens) {
-            expectedParameterNames= new String[] { "parameter", "parameter" };
-        } else {
+            expectedParameterNames = new String[] { "parameter", "parameter" };
+        }
+        else {
             expectedParameterNames = new String[] { "some_param", "other_param" };
         }
 
@@ -233,13 +238,13 @@ class ToAstnnTransformerTest implements JsonTest {
     }
 
     @ParameterizedTest(name = "{displayName} abstractTokens={0}")
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testTransformCustomBlockCall(boolean abstractTokens) throws Exception {
         final Program program = getProgram("custom_block.json");
         final CallStmt customBlockCall = NodeFilteringVisitor.getBlocks(program, CallStmt.class).get(0);
 
         final ToAstnnTransformer toAstnnTransformer = new ToAstnnTransformer(
-                ActorNameNormalizer.getDefault(), abstractTokens
+            ActorNameNormalizer.getDefault(), abstractTokens
         );
         final AstnnNode customBlockNode = toAstnnTransformer.transform(program, customBlockCall);
         assertThat(customBlockNode.getStatementType()).isEqualTo(StatementType.PROCEDURES_CALL);
@@ -247,37 +252,38 @@ class ToAstnnTransformerTest implements JsonTest {
         final String blockLabel = abstractTokens ? "custom_block" : "astnn_custom_block_label_text";
         final String stringParam = abstractTokens ? AbstractToken.LITERAL_STRING.name() : "EMPTY_STRING";
         assertChildLabels(
-                customBlockNode,
-                blockLabel,
-                stringParam,
-                NodeType.EMPTY_BOOL.name()
+            customBlockNode,
+            blockLabel,
+            stringParam,
+            NodeType.EMPTY_BOOL.name()
         );
     }
 
     @ParameterizedTest(name = "{displayName} abstractTokens={0}")
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testProgramSpriteLabels(boolean abstractTokens) throws Exception {
         final ToAstnnTransformer toAstnnTransformer = new ToAstnnTransformer(
-                ActorNameNormalizer.getDefault(), abstractTokens
+            ActorNameNormalizer.getDefault(), abstractTokens
         );
         final Program program = getAST("src/test/fixtures/multipleSprites.json");
         final AstnnNode node = toAstnnTransformer.transform(program, true, true);
 
         if (abstractTokens) {
             assertChildLabels(node, "stage", "sprite", "sprite");
-        } else {
+        }
+        else {
             assertChildLabels(node, "stage", "cat", "abby");
         }
     }
 
     @ParameterizedTest(name = "{displayName} abstractTokens={0}")
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testTransformMessage(boolean abstractTokens) throws Exception {
         final Program program = getProgram("messages.json");
         final Script script = NodeFilteringVisitor.getBlocks(program, Script.class).get(0);
 
         final ToAstnnTransformer toAstnnTransformer = new ToAstnnTransformer(
-                ActorNameNormalizer.getDefault(), abstractTokens
+            ActorNameNormalizer.getDefault(), abstractTokens
         );
         final AstnnNode node = toAstnnTransformer.transform(program, script);
         assertChildLabels(node, StatementType.EVENT_WHENBROADCASTRECEIVED.name(), AstnnNode.BLOCK_LABEL);
@@ -362,13 +368,13 @@ class ToAstnnTransformerTest implements JsonTest {
     }
 
     @ParameterizedTest(name = "{displayName} abstractTokens={0}")
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testTransformCreateCloneVariable(boolean abstractTokens) throws Exception {
         final Program program = getProgram("control_blocks.json");
         final CreateCloneOf createCloneOf = NodeFilteringVisitor.getBlocks(program, CreateCloneOf.class).get(0);
 
         final ToAstnnTransformer toAstnnTransformer = new ToAstnnTransformer(
-                ActorNameNormalizer.getDefault(), abstractTokens
+            ActorNameNormalizer.getDefault(), abstractTokens
         );
         final AstnnNode node = toAstnnTransformer.transform(program, createCloneOf);
         assertThat(node.getStatementType()).isEqualTo(StatementType.CONTROL_CREATE_CLONE_OF);
@@ -381,13 +387,15 @@ class ToAstnnTransformerTest implements JsonTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
+    @ValueSource(
+        strings = {
             "src/test/fixtures/allBlocks.json",
             "src/test/fixtures/ml_preprocessing/shared/pen_blocks.json",
             "src/test/fixtures/ml_preprocessing/shared/tts_blocks.json",
             "src/test/fixtures/ml_preprocessing/shared/music_blocks.json",
             "src/test/fixtures/ml_preprocessing/shared/translate_blocks.json"
-    })
+        }
+    )
     void testAllBlocksVisitable(final String filename) throws Exception {
         final ToAstnnTransformer toAstnnTransformer = new ToAstnnTransformer(ActorNameNormalizer.getDefault(), false);
 
@@ -400,7 +408,7 @@ class ToAstnnTransformerTest implements JsonTest {
 
     private void assertNoUnknownNode(final AstnnNode node) {
         assertThat(node.label().toLowerCase(Locale.ROOT))
-                .isNotEqualTo(NodeType.UNKNOWN.name().toLowerCase(Locale.ROOT));
+            .isNotEqualTo(NodeType.UNKNOWN.name().toLowerCase(Locale.ROOT));
 
         node.children().forEach(this::assertNoUnknownNode);
     }

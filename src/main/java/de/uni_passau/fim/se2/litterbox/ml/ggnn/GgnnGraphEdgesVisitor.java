@@ -18,6 +18,9 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 
+import java.util.*;
+import java.util.stream.Stream;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ast.model.SetStmtList;
@@ -47,14 +50,12 @@ import de.uni_passau.fim.se2.litterbox.ast.util.AstNodeUtil;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.ScratchVisitor;
 import de.uni_passau.fim.se2.litterbox.utils.Pair;
 
-import java.util.*;
-import java.util.stream.Stream;
-
 abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
+
     private static final Set<Class<? extends ASTNode>> IGNORED_NODE_TYPES = Set.of(
-            DeclarationStmtList.class,
-            DeclarationStmt.class,
-            SetStmtList.class
+        DeclarationStmtList.class,
+        DeclarationStmt.class,
+        SetStmtList.class
     );
 
     protected final List<Pair<ASTNode>> edges = new ArrayList<>();
@@ -122,12 +123,13 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
 
     protected Stream<ASTNode> childrenWithoutIgnored(final ASTNode node) {
         return node.getChildren().stream()
-                .filter(c -> !AstNodeUtil.isMetadata(c))
-                .filter(c -> !shouldBeIgnored(c))
-                .map(ASTNode.class::cast);
+            .filter(c -> !AstNodeUtil.isMetadata(c))
+            .filter(c -> !shouldBeIgnored(c))
+            .map(ASTNode.class::cast);
     }
 
     static class ChildEdgesVisitor extends GgnnGraphEdgesVisitor {
+
         @Override
         public void visit(ASTNode node) {
             childrenWithoutIgnored(node).forEach(child -> edges.add(Pair.of(node, child)));
@@ -136,6 +138,7 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
     }
 
     static class NextTokenVisitor extends GgnnGraphEdgesVisitor {
+
         @Override
         public void visit(ASTNode node) {
             List<? extends ASTNode> children = node.getChildren();
@@ -155,6 +158,7 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
     }
 
     private static class GuardedByVisitor extends GgnnGraphEdgesVisitor {
+
         @Override
         public void visit(IfElseStmt node) {
             DefineableUsesVisitor guardsVisitor = DefineableUsesVisitor.visitNode(node.getBoolExpr());
@@ -191,8 +195,10 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
             connectAttributes(guardExpression, guardsVisitor.getAttributes(), usesVisitor.getAttributes());
         }
 
-        private void connectVars(final Expression guardExpression, final Map<String, List<Variable>> guards,
-                                 final Map<String, List<Variable>> inBlock) {
+        private void connectVars(
+            final Expression guardExpression, final Map<String, List<Variable>> guards,
+            final Map<String, List<Variable>> inBlock
+        ) {
             for (Map.Entry<String, List<Variable>> usedVar : inBlock.entrySet()) {
                 if (!guards.containsKey(usedVar.getKey())) {
                     continue;
@@ -204,8 +210,10 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
             }
         }
 
-        private void connectAttributes(final Expression guardExpression, final List<ASTNode> guards,
-                                       final List<ASTNode> inBlock) {
+        private void connectAttributes(
+            final Expression guardExpression, final List<ASTNode> guards,
+            final List<ASTNode> inBlock
+        ) {
             for (ASTNode guard : guards) {
                 for (ASTNode used : inBlock) {
                     if (guard.equals(used)) {
@@ -217,6 +225,7 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
     }
 
     private static class ComputedFromVisitor extends GgnnGraphEdgesVisitor {
+
         @Override
         public void visit(ChangeVariableBy node) {
             if (node.getIdentifier() instanceof Qualified qualified) {
@@ -237,11 +246,12 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
             Stream<ASTNode> attributes = v.getAttributes().stream();
 
             Stream.concat(variables, attributes)
-                    .forEach(variable -> edges.add(Pair.of(assignTo.getSecond(), variable)));
+                .forEach(variable -> edges.add(Pair.of(assignTo.getSecond(), variable)));
         }
     }
 
     private static class ParameterPassingVisitor extends GgnnGraphEdgesVisitor {
+
         private final ProcedureDefinitionNameMapping procedureMapping;
         private final Map<LocalIdentifier, ProcedureDefinition> procedures = new IdentityHashMap<>();
 
@@ -267,11 +277,11 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
             String sprite = AstNodeUtil.findActor(callStmt).orElseThrow().getIdent().getName();
 
             return procedureMapping.getProceduresForName(sprite, procedureName)
-                    .stream()
-                    .filter(procedure -> hasMatchingParameterCount(callStmt, procedure.getRight()))
-                    .map(org.apache.commons.lang3.tuple.Pair::getKey)
-                    .map(procedures::get)
-                    .findFirst();
+                .stream()
+                .filter(procedure -> hasMatchingParameterCount(callStmt, procedure.getRight()))
+                .map(org.apache.commons.lang3.tuple.Pair::getKey)
+                .map(procedures::get)
+                .findFirst();
         }
 
         private boolean hasMatchingParameterCount(final CallStmt callStmt, final ProcedureInfo procedure) {
@@ -286,7 +296,8 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
 
             if (passedArguments.isEmpty()) {
                 edges.add(Pair.of(callStmt, procedure));
-            } else {
+            }
+            else {
                 for (int i = 0; i < passedArguments.size(); ++i) {
                     edges.add(Pair.of(passedArguments.get(i), parameters.get(i)));
                 }
@@ -295,6 +306,7 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
     }
 
     private static class MessagePassingVisitor extends GgnnGraphEdgesVisitor {
+
         private final Map<String, List<ASTNode>> senders = new HashMap<>();
         private final Map<String, List<ReceptionOfMessage>> receivers = new HashMap<>();
 

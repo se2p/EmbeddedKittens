@@ -18,6 +18,11 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.astnn;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Logger;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.*;
 import de.uni_passau.fim.se2.litterbox.ast.model.elementchoice.Next;
 import de.uni_passau.fim.se2.litterbox.ast.model.elementchoice.Prev;
@@ -92,14 +97,9 @@ import de.uni_passau.fim.se2.litterbox.ml.shared.TokenVisitorFactory;
 import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
 import de.uni_passau.fim.se2.litterbox.ml.util.StringUtil;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.logging.Logger;
-
 class AstnnTransformationVisitor implements
-        ScratchVisitor, MusicExtensionVisitor, PenExtensionVisitor, TextToSpeechExtensionVisitor,
-        TranslateExtensionVisitor {
+    ScratchVisitor, MusicExtensionVisitor, PenExtensionVisitor, TextToSpeechExtensionVisitor,
+    TranslateExtensionVisitor {
 
     private static final Logger log = Logger.getLogger(AstnnTransformationVisitor.class.getName());
 
@@ -115,15 +115,14 @@ class AstnnTransformationVisitor implements
     private final boolean abstractTokens;
 
     /**
-     * Emulates the return type of the visit methods since the visitor is
-     * defined to use {@code void} methods instead of being generic on the
-     * return type.
+     * Emulates the return type of the visit methods since the visitor is defined to use {@code void} methods instead of
+     * being generic on the return type.
      */
     private Optional<AstnnNode> nodeTracker = Optional.empty();
 
     AstnnTransformationVisitor(
-            final ProcedureDefinitionNameMapping procedureNameMapping, final ActorNameNormalizer actorNameNormalizer,
-            final boolean abstractTokens
+        final ProcedureDefinitionNameMapping procedureNameMapping, final ActorNameNormalizer actorNameNormalizer,
+        final boolean abstractTokens
     ) {
         this.procedureNameMapping = procedureNameMapping;
         this.actorNameNormalizer = actorNameNormalizer;
@@ -164,10 +163,12 @@ class AstnnTransformationVisitor implements
         if (abstractTokens) {
             if (node.isStage()) {
                 return AbstractToken.STAGE.name();
-            } else {
+            }
+            else {
                 return AbstractToken.SPRITE.name();
             }
-        } else {
+        }
+        else {
             return actorNameNormalizer.normalizeName(node).orElse(NodeType.EMPTY_STRING.toString());
         }
     }
@@ -669,9 +670,9 @@ class AstnnTransformationVisitor implements
         final AstnnNode stmtBlock = transformStmtListBlock(node.getStmtList());
 
         final AstnnNode result = AstnnAstNodeFactory.blockStatement(
-                StatementType.CONTROL_REPEAT_UNTIL,
-                List.of(condition),
-                stmtBlock
+            StatementType.CONTROL_REPEAT_UNTIL,
+            List.of(condition),
+            stmtBlock
         );
         finishVisit(result);
     }
@@ -948,8 +949,6 @@ class AstnnTransformationVisitor implements
         finishVisit(AstnnAstNodeFactory.build(nodeType, child));
     }
 
-
-
     // endregion operators
 
     // region variables
@@ -1076,7 +1075,8 @@ class AstnnTransformationVisitor implements
     private String getProcedureName(final CallStmt node) {
         if (abstractTokens) {
             return AbstractToken.CUSTOM_BLOCK.name();
-        } else {
+        }
+        else {
             return node.getIdent().getName();
         }
     }
@@ -1093,7 +1093,8 @@ class AstnnTransformationVisitor implements
     private String getProcedureName(final ProcedureDefinition procedureDefinition) {
         if (abstractTokens) {
             return AbstractToken.PROCEDURE_DEFINITION.name();
-        } else {
+        }
+        else {
             final String name = procedureNameMapping.getProcedureInfo(procedureDefinition).getName();
             final String actualName = AstNodeUtil.replaceProcedureParams(name, PROCEDURE_PARAM_REPLACEMENT);
             return StringUtil.normaliseString(actualName);
@@ -1110,7 +1111,8 @@ class AstnnTransformationVisitor implements
         final AstnnNode name;
         if (abstractTokens) {
             name = AstnnAstNodeFactory.build(AbstractToken.PARAMETER.name());
-        } else {
+        }
+        else {
             name = transformNode(node.getIdent());
         }
         finishVisit(AstnnAstNodeFactory.build(NodeType.PROCEDURE_PARAMETER, type, name));
@@ -1411,7 +1413,8 @@ class AstnnTransformationVisitor implements
     private AstnnNode ifAbstractElseLabel(final AbstractToken token, final String label) {
         if (abstractTokens) {
             return AstnnAstNodeFactory.build(token);
-        } else {
+        }
+        else {
             return AstnnAstNodeFactory.build(label);
         }
     }

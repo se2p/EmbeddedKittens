@@ -18,11 +18,12 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.tokenizer;
 
-import de.uni_passau.fim.se2.litterbox.ml.util.StringUtil;
-
 import java.util.List;
 
+import de.uni_passau.fim.se2.litterbox.ml.util.StringUtil;
+
 public final class TokenSequenceBuilder {
+
     private TokenSequenceBuilder() {
         throw new IllegalCallerException("utility class");
     }
@@ -35,8 +36,8 @@ public final class TokenSequenceBuilder {
 
     private static List<String> asSubTokenSequence(final List<String> tokenSequence) {
         return tokenSequence
-                .stream()
-                .flatMap(tokens -> StringUtil.splitToNormalisedSubtokenStream(tokens, "_"))
-                .toList();
+            .stream()
+            .flatMap(tokens -> StringUtil.splitToNormalisedSubtokenStream(tokens, "_"))
+            .toList();
     }
 }

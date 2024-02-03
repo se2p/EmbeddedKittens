@@ -18,29 +18,31 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml;
 
-import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
-
 import java.nio.file.Path;
+
+import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 
 /**
  * Combines some options used for all machine learning preprocessing analyzers.
  *
- * @param inputPath The path to the file that should be analysed.
- * @param outputPath The path which the results should be written to.
- * @param deleteAfterwards If the input path should be deleted after processing has finished.
- * @param includeStage If the stage should be included like a regular sprite in the processing steps.
- * @param wholeProgram If the whole program should be treated as a single entity instead of performing the analysis per
- *                     sprite.
+ * @param inputPath             The path to the file that should be analysed.
+ * @param outputPath            The path which the results should be written to.
+ * @param deleteAfterwards      If the input path should be deleted after processing has finished.
+ * @param includeStage          If the stage should be included like a regular sprite in the processing steps.
+ * @param wholeProgram          If the whole program should be treated as a single entity instead of performing the
+ *                              analysis per sprite.
  * @param includeDefaultSprites If output should be generated for sprites that have the default name, e.g. ‘Sprite1’.
- * @param abstractTokens If literals and variable names should be replaced by generic placeholders, e.g. {@code var}.
+ * @param abstractTokens        If literals and variable names should be replaced by generic placeholders, e.g.
+ *                              {@code var}.
  */
 public record MLPreprocessorCommonOptions(
-        Path inputPath,
-        MLOutputPath outputPath,
-        boolean deleteAfterwards,
-        boolean includeStage,
-        boolean wholeProgram,
-        boolean includeDefaultSprites,
-        boolean abstractTokens,
-        ActorNameNormalizer actorNameNormalizer
-) {}
+    Path inputPath,
+    MLOutputPath outputPath,
+    boolean deleteAfterwards,
+    boolean includeStage,
+    boolean wholeProgram,
+    boolean includeDefaultSprites,
+    boolean abstractTokens,
+    ActorNameNormalizer actorNameNormalizer
+) {
+}

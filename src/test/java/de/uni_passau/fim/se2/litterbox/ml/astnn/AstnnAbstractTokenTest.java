@@ -18,21 +18,22 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.astnn;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ml.astnn.model.AstnnAstNode;
 import de.uni_passau.fim.se2.litterbox.ml.astnn.model.AstnnNode;
 import de.uni_passau.fim.se2.litterbox.ml.astnn.model.NodeType;
 import de.uni_passau.fim.se2.litterbox.ml.astnn.model.StatementType;
 import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 import de.uni_passau.fim.se2.litterbox.ml.util.AbstractTokenCheck;
-import de.uni_passau.fim.se2.litterbox.ast.model.Program;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static com.google.common.truth.Truth.assertThat;
 
 class AstnnAbstractTokenTest extends AbstractTokenCheck {
 
@@ -52,7 +53,8 @@ class AstnnAbstractTokenTest extends AbstractTokenCheck {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
+    @ValueSource(
+        strings = {
             "src/test/fixtures/allBlocks.json",
             "src/test/fixtures/customBlocks.json",
             "src/test/fixtures/ml_preprocessing/astnn/custom_block.json",
@@ -60,7 +62,8 @@ class AstnnAbstractTokenTest extends AbstractTokenCheck {
             "src/test/fixtures/ml_preprocessing/shared/music_blocks.json",
             "src/test/fixtures/ml_preprocessing/shared/pen_blocks.json",
             "src/test/fixtures/ml_preprocessing/shared/tts_blocks.json",
-    })
+        }
+    )
     void testAllBlocksVisitableAbstract(final String filename) throws Exception {
         final ToAstnnTransformer toAstnnTransformer = new ToAstnnTransformer(ActorNameNormalizer.getDefault(), true);
 

@@ -18,10 +18,10 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.astnn.model;
 
-import com.google.common.base.Preconditions;
-
 import java.util.List;
 import java.util.Objects;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Represents an AST node that has children.
@@ -50,7 +50,12 @@ public final class AstnnAstNode implements AstnnNode {
     AstnnAstNode(final String label, final StatementType statementType, final List<AstnnNode> children) {
         Preconditions.checkArgument(!children.isEmpty(), "An AstNode must have at least one child");
 
-        this.label = label.isBlank() ? EMPTY : label;
+        if (label.isBlank()) {
+            this.label = EMPTY;
+        }
+        else {
+            this.label = label;
+        }
         this.statementType = statementType;
         this.children = children;
         this.treeDepth = computeDepth();
@@ -101,19 +106,20 @@ public final class AstnnAstNode implements AstnnNode {
     @Override
     public AstnnNode asStatementTree() {
         final List<AstnnNode> newChildren = children.stream()
-                .filter(c -> !c.isStatement() && isLegitimateNode(c))
-                .map(AstnnNode::asStatementTree)
-                .toList();
+            .filter(c -> !c.isStatement() && isLegitimateNode(c))
+            .map(AstnnNode::asStatementTree)
+            .toList();
 
         return AstnnAstNodeFactory.build(label, statementType, newChildren);
     }
 
     /**
-     * Because we are summarizing both `if` and `else` branches as `children` in
-     * a superfluous node labeled "if" tends to be created when mapping with {@link AstnnNode#asStatementTree()}.
+     * Because we are summarizing both `if` and `else` branches as `children` in a superfluous node labeled "if" tends
+     * to be created when mapping with {@link AstnnNode#asStatementTree()}.
      *
-     * <p>To remove these nodes, we filter with the following predicate in a post-processing step. Beware: this is just
-     * a heuristic, it can also remove legitimate nodes (e.g., if your code uses the String literals "if" and "try").
+     * <p>
+     * To remove these nodes, we filter with the following predicate in a post-processing step. Beware: this is just a
+     * heuristic, it can also remove legitimate nodes (e.g., if your code uses the String literals "if" and "try").
      */
     private boolean isLegitimateNode(final AstnnNode node) {
         return !("if".equals(node.label()) && node.isLeaf());
@@ -123,9 +129,11 @@ public final class AstnnAstNode implements AstnnNode {
     public boolean equals(Object o) {
         if (this == o) {
             return true;
-        } else if (o instanceof AstnnAstNode node) {
+        }
+        else if (o instanceof AstnnAstNode node) {
             return label.equals(node.label) && children.equals(node.children);
-        } else {
+        }
+        else {
             return false;
         }
     }
@@ -138,6 +146,6 @@ public final class AstnnAstNode implements AstnnNode {
     @Override
     public String toString() {
         return "AstNode{" + "label='" + label + '\'' + ", statementType=" + statementType + ", children=" + children
-                + '}';
+            + '}';
     }
 }

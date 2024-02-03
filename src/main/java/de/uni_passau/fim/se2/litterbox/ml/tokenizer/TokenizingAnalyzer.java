@@ -18,8 +18,18 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.tokenizer;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.stream.Stream;
+
+import org.apache.commons.io.FilenameUtils;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
 import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
@@ -28,16 +38,9 @@ import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessingAnalyzer;
 import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
 import de.uni_passau.fim.se2.litterbox.utils.Preconditions;
-import org.apache.commons.io.FilenameUtils;
-
-import java.io.File;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiFunction;
-import java.util.stream.Stream;
 
 public class TokenizingAnalyzer extends MLPreprocessingAnalyzer<TokenSequence> {
+
     private final ObjectMapper objectMapper;
 
     private final boolean sequencePerScript;
@@ -54,16 +57,17 @@ public class TokenizingAnalyzer extends MLPreprocessingAnalyzer<TokenSequence> {
      * @param maskingStrategy         The masking strategy to use.
      */
     public TokenizingAnalyzer(
-            final MLPreprocessorCommonOptions commonOptions,
-            final boolean sequencePerScript,
-            final boolean abstractFixedNodeOption,
-            final boolean statementLevel,
-            final MaskingStrategy maskingStrategy) {
+        final MLPreprocessorCommonOptions commonOptions,
+        final boolean sequencePerScript,
+        final boolean abstractFixedNodeOption,
+        final boolean statementLevel,
+        final MaskingStrategy maskingStrategy
+    ) {
         super(commonOptions);
 
         Preconditions.checkArgument(
-                !(commonOptions.wholeProgram() && sequencePerScript),
-                "Cannot generate one sequence for the whole program and sequences per script at the same time."
+            !(commonOptions.wholeProgram() && sequencePerScript),
+            "Cannot generate one sequence for the whole program and sequences per script at the same time."
         );
 
         this.objectMapper = new ObjectMapper();
@@ -71,12 +75,16 @@ public class TokenizingAnalyzer extends MLPreprocessingAnalyzer<TokenSequence> {
         this.sequencePerScript = sequencePerScript;
 
         if (statementLevel) {
-            tokenizeFunction = (program, astNode) -> StatementLevelTokenizer.tokenize(program, astNode,
-                    this.abstractTokens, maskingStrategy);
-        } else {
-            tokenizeFunction = ((program, astNode) ->
-                    Tokenizer.tokenize(program, astNode, this.abstractTokens, abstractFixedNodeOption,
-                            maskingStrategy));
+            tokenizeFunction = (program, astNode) -> StatementLevelTokenizer.tokenize(
+                program, astNode,
+                this.abstractTokens, maskingStrategy
+            );
+        }
+        else {
+            tokenizeFunction = (program, astNode) -> Tokenizer.tokenize(
+                program, astNode, this.abstractTokens, abstractFixedNodeOption,
+                maskingStrategy
+            );
         }
     }
 
@@ -87,11 +95,12 @@ public class TokenizingAnalyzer extends MLPreprocessingAnalyzer<TokenSequence> {
         final Stream<TokenSequence> result;
         if (wholeProgram) {
             final List<String> tokens = actors
-                    .flatMap(actor -> getTokenSequencesForActor(program, actor))
-                    .flatMap(List::stream)
-                    .toList();
+                .flatMap(actor -> getTokenSequencesForActor(program, actor))
+                .flatMap(List::stream)
+                .toList();
             result = Stream.of(TokenSequenceBuilder.build(program.getIdent().getName(), List.of(tokens)));
-        } else {
+        }
+        else {
             result = actors.flatMap(actor -> generateSequenceForActor(program, actor).stream());
         }
 
@@ -101,7 +110,8 @@ public class TokenizingAnalyzer extends MLPreprocessingAnalyzer<TokenSequence> {
     private Stream<ActorDefinition> getActors(final Program program) {
         if (includeDefaultSprites) {
             return AstNodeUtil.getActors(program, includeStage);
-        } else {
+        }
+        else {
             return AstNodeUtil.getActorsWithoutDefaultSprites(program, includeStage);
         }
     }
@@ -121,13 +131,14 @@ public class TokenizingAnalyzer extends MLPreprocessingAnalyzer<TokenSequence> {
     private Stream<List<String>> getTokenSequencesForActor(final Program program, final ActorDefinition actor) {
         if (sequencePerScript) {
             final Stream<ASTNode> scripts = actor.getScripts().getScriptList()
-                    .stream().map(ASTNode.class::cast);
+                .stream().map(ASTNode.class::cast);
             final Stream<ASTNode> procedures = actor.getProcedureDefinitionList()
-                    .getList().stream().map(ASTNode.class::cast);
+                .getList().stream().map(ASTNode.class::cast);
 
             return Stream.concat(procedures, scripts)
-                    .map(node -> tokenizeFunction.apply(program, node));
-        } else {
+                .map(node -> tokenizeFunction.apply(program, node));
+        }
+        else {
             return Stream.of(tokenizeFunction.apply(program, actor));
         }
     }
@@ -136,7 +147,8 @@ public class TokenizingAnalyzer extends MLPreprocessingAnalyzer<TokenSequence> {
     private String toJson(final TokenSequence items) {
         try {
             return objectMapper.writeValueAsString(items);
-        } catch (JsonProcessingException e) {
+        }
+        catch (JsonProcessingException e) {
             // should never happen
             throw new RuntimeException(e);
         }

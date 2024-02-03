@@ -18,6 +18,9 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration;
 
+import java.util.*;
+import java.util.stream.Stream;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.*;
 import de.uni_passau.fim.se2.litterbox.ast.model.procedure.ProcedureDefinition;
 import de.uni_passau.fim.se2.litterbox.ast.util.AstNodeUtil;
@@ -25,16 +28,13 @@ import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.
 import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.visitor.ExtractScriptLeavesVisitor;
 import de.uni_passau.fim.se2.litterbox.ml.util.NodeNameUtil;
 
-import java.util.*;
-import java.util.stream.Stream;
-
 public final class ScriptEntityPathGenerator extends PathGenerator {
 
     private final Map<ScriptEntity, List<ASTNode>> leavesMap;
 
     public ScriptEntityPathGenerator(
-            Program program, int maxPathLength, boolean includeStage, boolean includeDefaultSprites,
-            PathFormatOptions pathFormatOptions, ProgramRelationFactory programRelationFactory
+        Program program, int maxPathLength, boolean includeStage, boolean includeDefaultSprites,
+        PathFormatOptions pathFormatOptions, ProgramRelationFactory programRelationFactory
     ) {
         super(program, maxPathLength, includeStage, includeDefaultSprites, pathFormatOptions, programRelationFactory);
 

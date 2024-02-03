@@ -18,22 +18,26 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
-import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
-import de.uni_passau.fim.se2.litterbox.ast.model.Program;
-import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
-import de.uni_passau.fim.se2.litterbox.ml.util.NodeNameUtil;
-
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
+import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
+import de.uni_passau.fim.se2.litterbox.ast.model.Program;
+import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
+import de.uni_passau.fim.se2.litterbox.ml.util.NodeNameUtil;
+
 public class GenerateGgnnGraphTask {
+
     private static final Logger log = Logger.getLogger(GenerateGgnnGraphTask.class.getName());
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Program program;
     private final boolean includeStage;
@@ -42,15 +46,22 @@ public class GenerateGgnnGraphTask {
     private final ActorNameNormalizer actorNameNormalizer;
     private final String labelName;
 
-    public GenerateGgnnGraphTask(Program program, boolean includeStage, boolean includeDefaultSprites,
-                                 boolean wholeProgramAsSingleGraph, String labelName,
-                                 ActorNameNormalizer actorNameNormalizer) {
+    public GenerateGgnnGraphTask(
+        Program program, boolean includeStage, boolean includeDefaultSprites,
+        boolean wholeProgramAsSingleGraph, String labelName,
+        ActorNameNormalizer actorNameNormalizer
+    ) {
         this.program = program;
         this.includeStage = includeStage;
         this.includeDefaultSprites = includeDefaultSprites;
         this.wholeProgramAsSingleGraph = wholeProgramAsSingleGraph;
         this.actorNameNormalizer = actorNameNormalizer;
-        this.labelName = labelName == null || labelName.isBlank() ? null : labelName;
+        if (labelName == null || labelName.isBlank()) {
+            this.labelName = null;
+        }
+        else {
+            this.labelName = labelName;
+        }
     }
 
     String generateDotGraphData(final String label) {
@@ -59,23 +70,24 @@ public class GenerateGgnnGraphTask {
     }
 
     Stream<String> generateJsonGraphData() {
-        final ObjectMapper objectMapper = new ObjectMapper();
         final List<GgnnProgramGraph> graphs = getProgramGraphs();
+        return graphs.stream().flatMap(this::graphToJson);
+    }
 
-        return graphs.stream().flatMap(graph -> {
-            try {
-                return Stream.of(objectMapper.writeValueAsString(graph));
-            } catch (JsonProcessingException e) {
-                // can only happen in case LitterBox is used as a dependency and e.g., due to
-                // multiple competing Jackson versions in the classpath the conversion fails
-                log.log(
-                        Level.SEVERE,
-                        "Jackson could not convert the GGNN graph to JSON. Probable misconfiguration.",
-                        e
-                );
-                return Stream.empty();
-            }
-        });
+    private Stream<String> graphToJson(GgnnProgramGraph graph) {
+        try {
+            return Stream.of(objectMapper.writeValueAsString(graph));
+        }
+        catch (JsonProcessingException e) {
+            // can only happen in case LitterBox is used as a dependency and e.g., due to
+            // multiple competing Jackson versions in the classpath the conversion fails
+            log.log(
+                Level.SEVERE,
+                "Jackson could not convert the GGNN graph to JSON. Probable misconfiguration.",
+                e
+            );
+            return Stream.empty();
+        }
     }
 
     List<GgnnProgramGraph> getProgramGraphs() {
@@ -84,50 +96,51 @@ public class GenerateGgnnGraphTask {
         if (wholeProgramAsSingleGraph) {
             String label = Objects.requireNonNullElseGet(labelName, () -> program.getIdent().getName());
             graphs = List.of(buildProgramGraph(program, label));
-        } else {
+        }
+        else {
             graphs = buildGraphs(program);
         }
 
         return graphs;
     }
 
-    private List<GgnnProgramGraph> buildGraphs(final Program program) {
-        return program.getActorDefinitionList().getDefinitions()
-                .stream()
-                .filter(actor -> includeStage || !actor.isStage())
-                .filter(actor -> includeDefaultSprites || !NodeNameUtil.hasDefaultName(actor))
-                .map(actor -> {
-                    final String actorLabel = getActorLabel(actor);
-                    return buildProgramGraph(program, actor, actorLabel);
-                })
-                .toList();
+    private List<GgnnProgramGraph> buildGraphs(final Program targetProgram) {
+        return targetProgram.getActorDefinitionList().getDefinitions()
+            .stream()
+            .filter(actor -> includeStage || !actor.isStage())
+            .filter(actor -> includeDefaultSprites || !NodeNameUtil.hasDefaultName(actor))
+            .map(actor -> {
+                final String actorLabel = getActorLabel(actor);
+                return buildProgramGraph(targetProgram, actor, actorLabel);
+            })
+            .toList();
     }
 
     private String getActorLabel(final ActorDefinition actor) {
         return Optional.ofNullable(labelName)
-                .or(() -> actorNameNormalizer.normalizeName(actor))
-                .orElse("");
+            .or(() -> actorNameNormalizer.normalizeName(actor))
+            .orElse("");
     }
 
-    private GgnnProgramGraph buildProgramGraph(final Program program, String label) {
-        final GgnnProgramGraph.ContextGraph contextGraph = new GgnnGraphBuilder(program).build();
+    private GgnnProgramGraph buildProgramGraph(final Program targetProgram, String label) {
+        final GgnnProgramGraph.ContextGraph contextGraph = new GgnnGraphBuilder(targetProgram).build();
         final Set<Integer> labelNodes = findNodesOfType(contextGraph, Program.class);
-        return new GgnnProgramGraph(program.getIdent().getName(), label, labelNodes, contextGraph);
+        return new GgnnProgramGraph(targetProgram.getIdent().getName(), label, labelNodes, contextGraph);
     }
 
-    private GgnnProgramGraph buildProgramGraph(final Program program, final ActorDefinition actor, String label) {
-        final GgnnProgramGraph.ContextGraph contextGraph = new GgnnGraphBuilder(program, actor).build();
+    private GgnnProgramGraph buildProgramGraph(final Program targetProgram, final ActorDefinition actor, String label) {
+        final GgnnProgramGraph.ContextGraph contextGraph = new GgnnGraphBuilder(targetProgram, actor).build();
         final Set<Integer> labelNodes = findNodesOfType(contextGraph, ActorDefinition.class);
-        return new GgnnProgramGraph(program.getIdent().getName(), label, labelNodes, contextGraph);
+        return new GgnnProgramGraph(targetProgram.getIdent().getName(), label, labelNodes, contextGraph);
     }
 
     private Set<Integer> findNodesOfType(
-            final GgnnProgramGraph.ContextGraph contextGraph,
-            final Class<? extends ASTNode> type
+        final GgnnProgramGraph.ContextGraph contextGraph,
+        final Class<? extends ASTNode> type
     ) {
         return contextGraph.nodeTypes().entrySet().stream()
-                .filter(entry -> entry.getValue().equals(type.getSimpleName()))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toUnmodifiableSet());
+            .filter(entry -> entry.getValue().equals(type.getSimpleName()))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toUnmodifiableSet());
     }
 }

@@ -18,7 +18,13 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.util;
 
-import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.event.EventAttribute;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.num.NumFunct;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.string.NameNum;
@@ -34,22 +40,17 @@ import de.uni_passau.fim.se2.litterbox.ast.model.statement.spritelook.LayerChoic
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.spritemotion.DragMode;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.spritemotion.RotationStyle;
 import de.uni_passau.fim.se2.litterbox.ast.model.timecomp.TimeComp;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
 
 public abstract class AbstractTokenCheck implements JsonTest {
+
     private final Set<String> ALLOWED_ABSTRACT_TOKENS = allowedAbstractTokens();
 
     protected final void checkNodeLabel(final String label) {
         final String normalisedLabel = label.toLowerCase();
         assertTrue(
-                ALLOWED_ABSTRACT_TOKENS.contains(normalisedLabel) || ALLOWED_ABSTRACT_TOKENS.contains(label),
-                "Got disallowed token: '" + label + "'"
+            ALLOWED_ABSTRACT_TOKENS.contains(normalisedLabel) || ALLOWED_ABSTRACT_TOKENS.contains(label),
+            "Got disallowed token: '" + label + "'"
         );
     }
 
@@ -67,43 +68,43 @@ public abstract class AbstractTokenCheck implements JsonTest {
         addEnumValuesToSet(allowedTokens, AbstractToken.class);
 
         Arrays.stream(DragMode.DragModeType.values())
-                .map(DragMode.DragModeType::toString).forEach(allowedTokens::add);
+            .map(DragMode.DragModeType::toString).forEach(allowedTokens::add);
         Arrays.stream(EventAttribute.EventAttributeType.values())
-                .map(EventAttribute.EventAttributeType::toString).forEach(allowedTokens::add);
+            .map(EventAttribute.EventAttributeType::toString).forEach(allowedTokens::add);
         Arrays.stream(FixedAttribute.FixedAttributeType.values())
-                .map(FixedAttribute.FixedAttributeType::toString).forEach(allowedTokens::add);
+            .map(FixedAttribute.FixedAttributeType::toString).forEach(allowedTokens::add);
         Arrays.stream(FixedDrum.FixedDrumType.values())
-                .map(FixedDrum.FixedDrumType::toString).forEach(allowedTokens::add);
+            .map(FixedDrum.FixedDrumType::toString).forEach(allowedTokens::add);
         Arrays.stream(FixedInstrument.FixedInstrumentType.values())
-                .map(FixedInstrument.FixedInstrumentType::toString).forEach(allowedTokens::add);
+            .map(FixedInstrument.FixedInstrumentType::toString).forEach(allowedTokens::add);
         Arrays.stream(FixedLanguage.FixedLanguageType.values())
-                .map(FixedLanguage.FixedLanguageType::toString).forEach(allowedTokens::add);
+            .map(FixedLanguage.FixedLanguageType::toString).forEach(allowedTokens::add);
         Arrays.stream(FixedVoice.FixedVoiceType.values())
-                .map(FixedVoice.FixedVoiceType::toString).forEach(allowedTokens::add);
+            .map(FixedVoice.FixedVoiceType::toString).forEach(allowedTokens::add);
         Arrays.stream(ForwardBackwardChoice.ForwardBackwardChoiceType.values())
-                .map(ForwardBackwardChoice.ForwardBackwardChoiceType::toString).forEach(allowedTokens::add);
+            .map(ForwardBackwardChoice.ForwardBackwardChoiceType::toString).forEach(allowedTokens::add);
         Arrays.stream(GraphicEffect.GraphicEffectType.values())
-                .map(GraphicEffect.GraphicEffectType::toString).forEach(allowedTokens::add);
+            .map(GraphicEffect.GraphicEffectType::toString).forEach(allowedTokens::add);
         Arrays.stream(LayerChoice.LayerChoiceType.values())
-                .map(LayerChoice.LayerChoiceType::toString).forEach(allowedTokens::add);
+            .map(LayerChoice.LayerChoiceType::toString).forEach(allowedTokens::add);
         Arrays.stream(NameNum.NameNumType.values())
-                .map(NameNum.NameNumType::toString).forEach(allowedTokens::add);
+            .map(NameNum.NameNumType::toString).forEach(allowedTokens::add);
         Arrays.stream(NumFunct.NumFunctType.values())
-                .map(NumFunct.NumFunctType::toString).forEach(allowedTokens::add);
+            .map(NumFunct.NumFunctType::toString).forEach(allowedTokens::add);
         Arrays.stream(RotationStyle.RotationStyleType.values())
-                .map(RotationStyle.RotationStyleType::toString).forEach(allowedTokens::add);
+            .map(RotationStyle.RotationStyleType::toString).forEach(allowedTokens::add);
         Arrays.stream(SoundEffect.SoundEffectType.values())
-                .map(SoundEffect.SoundEffectType::toString).forEach(allowedTokens::add);
+            .map(SoundEffect.SoundEffectType::toString).forEach(allowedTokens::add);
         Arrays.stream(TimeComp.TimeCompType.values())
-                .map(TimeComp.TimeCompType::toString).forEach(allowedTokens::add);
+            .map(TimeComp.TimeCompType::toString).forEach(allowedTokens::add);
 
         return allowedTokens.stream().map(String::toLowerCase).collect(Collectors.toUnmodifiableSet());
     }
 
     protected static void addEnumValuesToSet(final Set<String> set, final Class<? extends Enum<?>> enumType) {
         Arrays.stream(enumType.getEnumConstants())
-                .map(Enum::name)
-                .map(String::toLowerCase)
-                .forEach(set::add);
+            .map(Enum::name)
+            .map(String::toLowerCase)
+            .forEach(set::add);
     }
 }

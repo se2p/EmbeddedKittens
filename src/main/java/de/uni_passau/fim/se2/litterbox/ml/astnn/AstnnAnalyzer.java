@@ -18,21 +18,24 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.astnn;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.uni_passau.fim.se2.litterbox.ast.model.Program;
-import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessingAnalyzer;
-import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
-import de.uni_passau.fim.se2.litterbox.ml.astnn.model.AstnnNode;
-import de.uni_passau.fim.se2.litterbox.ml.astnn.model.StatementTreeSequence;
-import org.apache.commons.io.FilenameUtils;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.FilenameUtils;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import de.uni_passau.fim.se2.litterbox.ast.model.Program;
+import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessingAnalyzer;
+import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
+import de.uni_passau.fim.se2.litterbox.ml.astnn.model.AstnnNode;
+import de.uni_passau.fim.se2.litterbox.ml.astnn.model.StatementTreeSequence;
+
 public class AstnnAnalyzer extends MLPreprocessingAnalyzer<StatementTreeSequence> {
+
     private static final Logger log = Logger.getLogger(AstnnAnalyzer.class.getName());
 
     private final ObjectMapper objectMapper;
@@ -48,7 +51,7 @@ public class AstnnAnalyzer extends MLPreprocessingAnalyzer<StatementTreeSequence
 
         objectMapper = new ObjectMapper();
         statementTreeSequenceBuilder = new StatementTreeSequenceBuilder(
-                commonOptions.actorNameNormalizer(), commonOptions.abstractTokens()
+            commonOptions.actorNameNormalizer(), commonOptions.abstractTokens()
         );
     }
 
@@ -57,9 +60,10 @@ public class AstnnAnalyzer extends MLPreprocessingAnalyzer<StatementTreeSequence
         final Stream<StatementTreeSequence> nodes;
         if (wholeProgram) {
             nodes = Stream.of(
-                    statementTreeSequenceBuilder.build(program, includeStage, includeDefaultSprites)
+                statementTreeSequenceBuilder.build(program, includeStage, includeDefaultSprites)
             );
-        } else {
+        }
+        else {
             nodes = statementTreeSequenceBuilder.buildPerActor(program, includeStage, includeDefaultSprites);
         }
 
@@ -81,7 +85,7 @@ public class AstnnAnalyzer extends MLPreprocessingAnalyzer<StatementTreeSequence
         final boolean hasEmptyName = sequence.label().isBlank();
         // the actor definition might be the top-most "statement", so we check for actual blocks inside the actor, too
         final boolean hasNoStatements = sequence.statements().isEmpty()
-                || sequence.statements().stream().allMatch(AstnnNode::isLeaf);
+            || sequence.statements().stream().allMatch(AstnnNode::isLeaf);
 
         return !hasEmptyName && !hasNoStatements;
     }
@@ -89,7 +93,8 @@ public class AstnnAnalyzer extends MLPreprocessingAnalyzer<StatementTreeSequence
     private String sequenceToString(final StatementTreeSequence sequence) {
         try {
             return objectMapper.writeValueAsString(sequence);
-        } catch (JsonProcessingException ex) {
+        }
+        catch (JsonProcessingException ex) {
             // If this breaks: check that Jackson has reflection access to the classes
             log.warning("The ASTNN node cannot be converted to JSON. Please report this bug to the developers.");
             ex.printStackTrace();

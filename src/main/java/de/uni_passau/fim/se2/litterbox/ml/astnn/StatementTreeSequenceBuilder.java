@@ -18,6 +18,10 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.astnn;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ast.util.AstNodeUtil;
@@ -27,11 +31,8 @@ import de.uni_passau.fim.se2.litterbox.ml.astnn.model.NodeType;
 import de.uni_passau.fim.se2.litterbox.ml.astnn.model.StatementTreeSequence;
 import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
-
 class StatementTreeSequenceBuilder {
+
     private final ActorNameNormalizer actorNameNormalizer;
     private final ToAstnnTransformer toAstnnTransformer;
 
@@ -41,7 +42,7 @@ class StatementTreeSequenceBuilder {
     }
 
     public StatementTreeSequence build(
-            final Program program, boolean includeStage, boolean includeDefaultSprites
+        final Program program, boolean includeStage, boolean includeDefaultSprites
     ) {
         final String label = program.getIdent().getName();
         final AstnnNode node = toAstnnTransformer.transform(program, includeStage, includeDefaultSprites);
@@ -51,12 +52,13 @@ class StatementTreeSequenceBuilder {
     }
 
     public Stream<StatementTreeSequence> buildPerActor(
-            final Program program, boolean includeStage, boolean includeDefaultSprites
+        final Program program, boolean includeStage, boolean includeDefaultSprites
     ) {
         final Stream<ActorDefinition> actors;
         if (includeDefaultSprites) {
             actors = AstNodeUtil.getActors(program, includeStage);
-        } else {
+        }
+        else {
             actors = AstNodeUtil.getActorsWithoutDefaultSprites(program, includeStage);
         }
 
@@ -67,7 +69,7 @@ class StatementTreeSequenceBuilder {
      * Builds the statement tree sequence for the given actor node.
      *
      * @param program The program the actor belongs to. Required to be able to resolve custom procedure names.
-     * @param actor The actor for which the statement trees should be generated.
+     * @param actor   The actor for which the statement trees should be generated.
      * @return The statement tree sequence for the actor.
      */
     public StatementTreeSequence build(final Program program, final ActorDefinition actor) {

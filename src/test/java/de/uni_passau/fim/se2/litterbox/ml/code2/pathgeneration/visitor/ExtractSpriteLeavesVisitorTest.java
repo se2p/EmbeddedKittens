@@ -18,19 +18,20 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.visitor;
 
-import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
-import de.uni_passau.fim.se2.litterbox.ast.ParsingException;
-import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
-import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
-import de.uni_passau.fim.se2.litterbox.ast.model.Program;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+import de.uni_passau.fim.se2.litterbox.ast.ParsingException;
+import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
+import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
+import de.uni_passau.fim.se2.litterbox.ast.model.Program;
+import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
 
 class ExtractSpriteLeavesVisitorTest implements JsonTest {
 
@@ -38,7 +39,7 @@ class ExtractSpriteLeavesVisitorTest implements JsonTest {
     void testVisit() throws ParsingException, IOException {
         Program program = getAST("src/test/fixtures/multipleSprites.json");
         ExtractSpriteLeavesVisitor spriteVisitor = new ExtractSpriteLeavesVisitor(
-                program.getProcedureMapping(), false
+            program.getProcedureMapping(), false
         );
         program.accept(spriteVisitor);
         Map<ActorDefinition, List<ASTNode>> leavesMap = spriteVisitor.getLeaves();
@@ -47,16 +48,16 @@ class ExtractSpriteLeavesVisitorTest implements JsonTest {
 
         ActorDefinition[] sprites = getSpriteArrayFromLeavesMap(leavesMap);
 
-        //check sprite abby
+        // check sprite abby
         ActorDefinition firstSprite = sprites[0];
-        assertEquals("abby", (firstSprite).getIdent().getName());
+        assertEquals("abby", firstSprite.getIdent().getName());
         assertEquals(2, leavesMap.get(firstSprite).size());
         assertEquals("GreenFlag", leavesMap.get(firstSprite).get(0).getUniqueName());
         assertEquals("StringLiteral", leavesMap.get(firstSprite).get(1).getUniqueName());
 
-        //check sprite cat
+        // check sprite cat
         ActorDefinition secondSprite = sprites[1];
-        assertEquals("cat", (secondSprite).getIdent().getName());
+        assertEquals("cat", secondSprite.getIdent().getName());
         assertEquals(3, leavesMap.get(secondSprite).size());
         assertEquals("NumberLiteral", leavesMap.get(secondSprite).get(0).getUniqueName());
         assertEquals("StringLiteral", leavesMap.get(secondSprite).get(1).getUniqueName());
@@ -67,7 +68,7 @@ class ExtractSpriteLeavesVisitorTest implements JsonTest {
     void testVisitIncludeStage() throws ParsingException, IOException {
         Program program = getAST("src/test/fixtures/multipleSprites.json");
         ExtractSpriteLeavesVisitor spriteVisitor = new ExtractSpriteLeavesVisitor(
-                program.getProcedureMapping(), true
+            program.getProcedureMapping(), true
         );
         program.accept(spriteVisitor);
 
@@ -83,9 +84,11 @@ class ExtractSpriteLeavesVisitorTest implements JsonTest {
         for (ActorDefinition sprite : leavesMap.keySet()) {
             if (sprite.getIdent().getName().equals("abby")) {
                 sprites[0] = sprite;
-            } else if (sprite.getIdent().getName().equals("cat")){
+            }
+            else if (sprite.getIdent().getName().equals("cat")) {
                 sprites[1] = sprite;
-            } else {
+            }
+            else {
                 fail("Expected were 'abby' or 'cat' but was " + sprite.getIdent().getName());
             }
         }

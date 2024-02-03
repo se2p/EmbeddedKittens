@@ -18,20 +18,20 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.code2;
 
+import java.util.logging.Logger;
+import java.util.stream.Stream;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
 import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.*;
 import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.ProgramRelationFactory;
-
-import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 public class Code2SeqAnalyzer extends Code2Analyzer {
 
     private static final Logger log = Logger.getLogger(Code2SeqAnalyzer.class.getName());
 
     public Code2SeqAnalyzer(
-            final MLPreprocessorCommonOptions commonOptions, final int maxPathLength, final boolean isPerScript
+        final MLPreprocessorCommonOptions commonOptions, final int maxPathLength, final boolean isPerScript
     ) {
         super(commonOptions, maxPathLength, isPerScript);
     }
@@ -41,8 +41,8 @@ public class Code2SeqAnalyzer extends Code2Analyzer {
         final ProgramRelationFactory programRelationFactory = new ProgramRelationFactory();
         final PathFormatOptions pathFormatOptions = new PathFormatOptions("|", "|", "|", "", "", true, true);
         PathGenerator pathGenerator = PathGeneratorFactory.createPathGenerator(
-                pathType, maxPathLength, includeStage, program, includeDefaultSprites, pathFormatOptions,
-                programRelationFactory, actorNameNormalizer
+            pathType, maxPathLength, includeStage, program, includeDefaultSprites, pathFormatOptions,
+            programRelationFactory, actorNameNormalizer
         );
         final GeneratePathTask generatePathTask = new GeneratePathTask(pathGenerator);
 

@@ -18,7 +18,13 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.shared;
 
-import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ast.model.extensions.translate.tlanguage.TFixedLanguage;
@@ -29,23 +35,18 @@ import de.uni_passau.fim.se2.litterbox.ast.model.literals.StringLiteral;
 import de.uni_passau.fim.se2.litterbox.ast.model.metadata.block.NoBlockMetadata;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.spritemotion.RotationStyle;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.ScratchVisitor;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
 
 class TokenVisitorFactoryTest implements JsonTest {
 
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testErrorWithoutVisit(final boolean normalising) {
         final BaseTokenVisitor visitor = TokenVisitorFactory.getDefaultTokenVisitor(normalising);
         assertThrows(
-                NullPointerException.class,
-                visitor::getToken,
-                "The token visitor has to visit a node first!"
+            NullPointerException.class,
+            visitor::getToken,
+            "The token visitor has to visit a node first!"
         );
     }
 
@@ -102,14 +103,14 @@ class TokenVisitorFactoryTest implements JsonTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"_", "__", "___"})
+    @ValueSource(strings = { "_", "__", "___" })
     void testRemoveSequentialUnderscores(final String s) {
         final StringLiteral literal = new StringLiteral("abc" + s + "def");
         assertThat(TokenVisitorFactory.getNormalisedToken(literal)).isEqualTo("abc_def");
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"_--.", "__", "_-__-", "{_},)-_+"})
+    @ValueSource(strings = { "_--.", "__", "_-__-", "{_},)-_+" })
     void testReplaceMultiplePunctuation(final String s) {
         final StrId id = new StrId("ab" + s + "def[]");
         assertThat(TokenVisitorFactory.getNormalisedToken(id)).isEqualTo("ab_def");
@@ -132,7 +133,7 @@ class TokenVisitorFactoryTest implements JsonTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testColorLiteral(final boolean normalised) {
         final ColorLiteral color = new ColorLiteral(34, 7, 78);
 
@@ -142,7 +143,7 @@ class TokenVisitorFactoryTest implements JsonTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testRotationStyle(final boolean normalised) {
         final RotationStyle rotationStyle = new RotationStyle(RotationStyle.RotationStyleType.dont_rotate.getToken());
 
@@ -152,10 +153,11 @@ class TokenVisitorFactoryTest implements JsonTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testFixedLanguage(final boolean normalised) {
         final TFixedLanguage language = new TFixedLanguage(
-                TFixedLanguage.TFixedLanguageType.FINNISH.getType(), new NoBlockMetadata());
+            TFixedLanguage.TFixedLanguageType.FINNISH.getType(), new NoBlockMetadata()
+        );
 
         final String actual = getToken(language, normalised);
 
@@ -165,18 +167,21 @@ class TokenVisitorFactoryTest implements JsonTest {
     private String getToken(final ASTNode node, final boolean normalised) {
         if (normalised) {
             return TokenVisitorFactory.getNormalisedToken(node);
-        } else {
+        }
+        else {
             return TokenVisitorFactory.getToken(node);
         }
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
+    @ValueSource(
+        strings = {
             "src/test/fixtures/allBlocks.json",
             "src/test/fixtures/ml_preprocessing/shared/pen_blocks.json",
             "src/test/fixtures/ml_preprocessing/shared/tts_blocks.json",
             "src/test/fixtures/ml_preprocessing/shared/music_blocks.json"
-    })
+        }
+    )
     void testAllBlocksNoSpaces(final String filename) throws Exception {
         final Program program = getAST(filename);
         final NoSpacesChecker noSpacesChecker = new NoSpacesChecker();
@@ -184,6 +189,7 @@ class TokenVisitorFactoryTest implements JsonTest {
     }
 
     static class NoSpacesChecker implements ScratchVisitor {
+
         @Override
         public void visit(ASTNode node) {
             final String token = TokenVisitorFactory.getNormalisedToken(node);

@@ -18,10 +18,10 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.astnn.model;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-
-import java.util.List;
 
 /**
  * Represents a node in the simplified abstract syntax tree.
@@ -45,7 +45,8 @@ public sealed interface AstnnNode permits AstnnAstNode, AstnnAstLeaf {
     /**
      * Checks if the node has no further children.
      *
-     * <p>Can be ignored for the JSON, as there the children list is just empty.
+     * <p>
+     * Can be ignored for the JSON, as there the children list is just empty.
      *
      * @return Ture, if the node has no children.
      */
@@ -55,7 +56,8 @@ public sealed interface AstnnNode permits AstnnAstNode, AstnnAstLeaf {
     /**
      * Checks if the AST node is a statement.
      *
-     * <p>Only included in the JSON if {@code true}.
+     * <p>
+     * Only included in the JSON if {@code true}.
      *
      * @return True, if the node is a statement.
      */
@@ -87,11 +89,9 @@ public sealed interface AstnnNode permits AstnnAstNode, AstnnAstLeaf {
     }
 
     /**
-     * Turns a tree into a statement tree by removing all direct and transitive
-     * children that are statements.
+     * Turns a tree into a statement tree by removing all direct and transitive children that are statements.
      *
-     * @return A new AST node that does not contain statements further down in
-     *         the tree.
+     * @return A new AST node that does not contain statements further down in the tree.
      */
     AstnnNode asStatementTree();
 

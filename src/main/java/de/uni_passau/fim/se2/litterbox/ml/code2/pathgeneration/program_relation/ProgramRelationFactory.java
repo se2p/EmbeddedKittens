@@ -21,6 +21,7 @@ package de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation
 import java.util.function.UnaryOperator;
 
 public final class ProgramRelationFactory {
+
     private final UnaryOperator<String> hasher;
 
     public ProgramRelationFactory() {

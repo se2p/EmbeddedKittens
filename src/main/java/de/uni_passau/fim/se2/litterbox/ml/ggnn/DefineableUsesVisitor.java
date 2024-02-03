@@ -18,21 +18,22 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.num.*;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.string.*;
 import de.uni_passau.fim.se2.litterbox.ast.model.variable.Variable;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.ScratchVisitor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
  * Finds all {@link Variable Variables} and attributes that are used in the AST.
  */
 class DefineableUsesVisitor implements ScratchVisitor {
+
     private final Map<String, List<Variable>> variables = new HashMap<>();
     private final List<ASTNode> attributes = new ArrayList<>();
 

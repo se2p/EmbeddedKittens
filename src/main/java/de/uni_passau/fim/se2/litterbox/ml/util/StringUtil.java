@@ -40,15 +40,15 @@ public class StringUtil {
     private static final String SPECIAL_WITHOUT_QUESTION_EXCLAMATION_MARK = "[\\p{P}\\p{S}&&[^?!]]";
 
     private static final Pattern SPLIT_PATTERN = Pattern.compile(
-            // digit followed by non-digit or other way round
-            "(?<=\\d)(?=\\D)|(?<=\\D)(?=\\d)"
-                    // lowercase followed by uppercase
-                    + "|(?<=\\p{Ll})(?=\\p{Lu})"
-                    + "|" + SPECIAL_WITHOUT_QUESTION_EXCLAMATION_MARK
-                    // uppercase, if followed by one uppercase and one lowercase letter
-                    // i.e. do not split all-caps words
-                    + "|(?<=\\p{Lu})(?=\\p{Lu}\\p{Ll})"
-                    + "|" + SPACES
+        // digit followed by non-digit or other way round
+        "(?<=\\d)(?=\\D)|(?<=\\D)(?=\\d)"
+            // lowercase followed by uppercase
+            + "|(?<=\\p{Ll})(?=\\p{Lu})"
+            + "|" + SPECIAL_WITHOUT_QUESTION_EXCLAMATION_MARK
+            // uppercase, if followed by one uppercase and one lowercase letter
+            // i.e. do not split all-caps words
+            + "|(?<=\\p{Lu})(?=\\p{Lu}\\p{Ll})"
+            + "|" + SPACES
     );
 
     private static final Pattern PUNCTUATION_SPLIT_PATTERN = Pattern.compile("(?<=[^?!])(?=[?!])");
@@ -67,28 +67,35 @@ public class StringUtil {
 
     public static Stream<String> splitToNormalisedSubtokenStream(final String token, final String delimiter) {
         return splitToSubtokenStream(token)
-                .map(subtoken -> StringUtil.normaliseSubtoken(subtoken, delimiter))
-                .filter(s -> !s.isEmpty() && !isOnlyDelimiter(s, delimiter));
+            .map(subtoken -> StringUtil.normaliseSubtoken(subtoken, delimiter))
+            .filter(s -> !s.isEmpty() && !isOnlyDelimiter(s, delimiter));
     }
 
     private static boolean isOnlyDelimiter(final String token, final String delimiter) {
         return token.matches(Pattern.quote(delimiter) + "+");
     }
 
+    /**
+     * Splits a token into subtokens.
+     *
+     * @param token Some token.
+     * @return A sequence of subtokens.
+     */
     public static Stream<String> splitToSubtokenStream(final String token) {
         final String[] split = SPLIT_PATTERN.split(token.trim());
         return Stream.of(split)
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .flatMap(s -> Arrays.stream(PUNCTUATION_SPLIT_PATTERN.split(s)))
-                .filter(s -> !s.isEmpty());
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .flatMap(s -> Arrays.stream(PUNCTUATION_SPLIT_PATTERN.split(s)))
+            .filter(s -> !s.isEmpty());
     }
 
     /**
      * Splits the string into subtokens first and then normalises each one using
      * {@link #normaliseSubtoken(String, String)}.
      *
-     * <p>Subtokens are joined together with underscores to form the final result.
+     * <p>
+     * Subtokens are joined together with underscores to form the final result.
      *
      * @param token Some string.
      * @return The normalised string.
@@ -101,30 +108,32 @@ public class StringUtil {
      * Splits the string into subtokens first and then normalises each one using
      * {@link #normaliseSubtoken(String, String)}.
      *
-     * <p>Subtokens are joined together with the given delimiter to form the final result.
+     * <p>
+     * Subtokens are joined together with the given delimiter to form the final result.
      *
-     * @param token Some string.
+     * @param token     Some string.
      * @param delimiter The delimiter.
      * @return The normalised string.
      */
     public static String normaliseString(final String token, final String delimiter) {
         return splitToNormalisedSubtokenStream(token, delimiter)
-                .collect(Collectors.joining(delimiter))
-                .replaceAll(Pattern.quote(delimiter) + "+", delimiter);
+            .collect(Collectors.joining(delimiter))
+            .replaceAll(Pattern.quote(delimiter) + "+", delimiter);
     }
 
     /**
      * Converts tokens into a normalised form without special characters.
      *
-     * <p>Applied normalisations:
+     * <p>
+     * Applied normalisations:
      * <ul>
-     *     <li>Converts to lowercase.</li>
-     *     <li>Replaces whitespace with the delimiter.</li>
-     *     <li>Replaces punctuation except {@code ?} and {@code !} with {@code delimiter}.</li>
-     *     <li>Replaces repeated {@code delimiter} with a single one.</li>
+     * <li>Converts to lowercase.</li>
+     * <li>Replaces whitespace with the delimiter.</li>
+     * <li>Replaces punctuation except {@code ?} and {@code !} with {@code delimiter}.</li>
+     * <li>Replaces repeated {@code delimiter} with a single one.</li>
      * </ul>
      *
-     * @param s Some string.
+     * @param s         Some string.
      * @param delimiter The delimiter.
      * @return The input string in its normalised form.
      */
@@ -132,13 +141,13 @@ public class StringUtil {
         final String quotedDelimiter = Pattern.quote(delimiter);
 
         return s.trim()
-                .toLowerCase(Locale.ROOT)
-                .replaceAll(SPACES + "+", delimiter)
-                .replaceAll(SPECIAL_WITHOUT_QUESTION_EXCLAMATION_MARK + "+", delimiter)
-                // remove repeated delimiter to remove empty subtokens
-                .replaceAll(quotedDelimiter + "+", delimiter)
-                // remove delimiter from start/end to remove empty leading/trailing subtokens
-                .replaceAll("^" + quotedDelimiter, "")
-                .replaceAll(quotedDelimiter + "$", "");
+            .toLowerCase(Locale.ROOT)
+            .replaceAll(SPACES + "+", delimiter)
+            .replaceAll(SPECIAL_WITHOUT_QUESTION_EXCLAMATION_MARK + "+", delimiter)
+            // remove repeated delimiter to remove empty subtokens
+            .replaceAll(quotedDelimiter + "+", delimiter)
+            // remove delimiter from start/end to remove empty leading/trailing subtokens
+            .replaceAll("^" + quotedDelimiter, "")
+            .replaceAll(quotedDelimiter + "$", "");
     }
 }

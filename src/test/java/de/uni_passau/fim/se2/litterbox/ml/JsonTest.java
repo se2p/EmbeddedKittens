@@ -18,20 +18,25 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml;
 
+import java.io.IOException;
+import java.nio.file.Path;
+
 import de.uni_passau.fim.se2.litterbox.ast.ParsingException;
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ast.parser.Scratch3Parser;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
 public interface JsonTest {
+
     default Program getAST(String fileName) throws IOException, ParsingException {
         Scratch3Parser parser = new Scratch3Parser();
         return parser.parseFile(Path.of(fileName).toFile());
     }
 
-    // TODO: This is a bit redundant wrt getAST (it is added for the tests that have a static test fixture)
+    default Program getAST(Path fileName) throws IOException, ParsingException {
+        Scratch3Parser parser = new Scratch3Parser();
+        return parser.parseFile(fileName.toFile());
+    }
+
     static Program parseProgram(String fileName) throws IOException, ParsingException {
         Scratch3Parser parser = new Scratch3Parser();
         return parser.parseFile(Path.of(fileName).toFile());

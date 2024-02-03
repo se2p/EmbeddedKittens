@@ -18,6 +18,8 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.tokenizer;
 
+import java.util.List;
+
 import de.uni_passau.fim.se2.litterbox.ast.model.*;
 import de.uni_passau.fim.se2.litterbox.ast.model.elementchoice.Next;
 import de.uni_passau.fim.se2.litterbox.ast.model.elementchoice.Prev;
@@ -75,38 +77,45 @@ import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingType;
 import de.uni_passau.fim.se2.litterbox.ml.util.StringUtil;
 
-import java.util.List;
-
 public class Tokenizer extends AbstractTokenizer {
+
     private final BaseTokenVisitor tokenVisitor = TokenVisitorFactory.getDefaultTokenVisitor(true);
     private final boolean abstractFixedNodeOptions;
 
-    private Tokenizer(final ProcedureDefinitionNameMapping procedureNameMapping,
-                      final boolean abstractTokens,
-                      final boolean abstractFixedNodeOptions,
-                      final MaskingStrategy maskingStrategy) {
+    private Tokenizer(
+        final ProcedureDefinitionNameMapping procedureNameMapping,
+        final boolean abstractTokens,
+        final boolean abstractFixedNodeOptions,
+        final MaskingStrategy maskingStrategy
+    ) {
         super(procedureNameMapping, abstractTokens, maskingStrategy);
         this.abstractFixedNodeOptions = abstractFixedNodeOptions;
     }
 
-    public static List<String> tokenize(final Program program,
-                                        final ASTNode node,
-                                        final boolean abstractTokens,
-                                        final boolean abstractFixedNodeOptions,
-                                        final MaskingStrategy maskingStrategy) {
-        return tokenize(program.getProcedureMapping(), node, abstractTokens, abstractFixedNodeOptions,
-                maskingStrategy);
+    public static List<String> tokenize(
+        final Program program,
+        final ASTNode node,
+        final boolean abstractTokens,
+        final boolean abstractFixedNodeOptions,
+        final MaskingStrategy maskingStrategy
+    ) {
+        return tokenize(
+            program.getProcedureMapping(), node, abstractTokens, abstractFixedNodeOptions,
+            maskingStrategy
+        );
     }
 
     private static List<String> tokenize(
-            final ProcedureDefinitionNameMapping procedureNameMapping,
-            final ASTNode node,
-            final boolean abstractTokens,
-            final boolean abstractFixedNodeOptions,
-            final MaskingStrategy maskingStrategy
+        final ProcedureDefinitionNameMapping procedureNameMapping,
+        final ASTNode node,
+        final boolean abstractTokens,
+        final boolean abstractFixedNodeOptions,
+        final MaskingStrategy maskingStrategy
     ) {
-        final Tokenizer v = new Tokenizer(procedureNameMapping, abstractTokens, abstractFixedNodeOptions,
-                maskingStrategy);
+        final Tokenizer v = new Tokenizer(
+            procedureNameMapping, abstractTokens, abstractFixedNodeOptions,
+            maskingStrategy
+        );
         node.accept(v);
         return v.getTokens();
     }
@@ -115,7 +124,8 @@ public class Tokenizer extends AbstractTokenizer {
     protected void visit(final ASTNode node, final Token opcode) {
         if (shouldBeMasked(node)) {
             addToken(Token.MASK);
-        } else {
+        }
+        else {
             addToken(opcode);
             visitChildren(node);
         }
@@ -124,7 +134,7 @@ public class Tokenizer extends AbstractTokenizer {
     private boolean shouldBeMasked(final ASTNode node) {
         final MaskingType maskingType = getMaskingStrategy().getMaskingType();
         final boolean shouldMask = MaskingType.Expression.equals(maskingType)
-                || MaskingType.Statement.equals(maskingType);
+            || MaskingType.Statement.equals(maskingType);
 
         return shouldMask && getMaskingStrategy().getBlockId().equals(getBlockId(node));
     }
@@ -267,7 +277,8 @@ public class Tokenizer extends AbstractTokenizer {
     public void visit(RepeatForeverStmt node) {
         if (shouldBeMasked(node)) {
             addToken(Token.MASK);
-        } else {
+        }
+        else {
             addToken(Token.CONTROL_FOREVER);
         }
         visitControlBlockBody(node.getStmtList());
@@ -296,7 +307,8 @@ public class Tokenizer extends AbstractTokenizer {
     private void visitControlBlockHead(final Stmt stmt, final Token opcode, final Expression condition) {
         if (shouldBeMasked(stmt)) {
             addToken(Token.MASK);
-        } else {
+        }
+        else {
             addToken(opcode);
             condition.accept(this);
         }
@@ -327,7 +339,8 @@ public class Tokenizer extends AbstractTokenizer {
         addToken(Token.CONTROL_STOP);
         if (abstractFixedNodeOptions) {
             addToken("stop_target");
-        } else {
+        }
+        else {
             addToken(target);
         }
     }
@@ -421,7 +434,8 @@ public class Tokenizer extends AbstractTokenizer {
         // TODO: Use 'abstractFixedNodeOptions' parameter here
         if (isAbstractTokens()) {
             addToken(Token.KEY);
-        } else {
+        }
+        else {
             visit(node, Token.KEY);
         }
     }
@@ -617,7 +631,8 @@ public class Tokenizer extends AbstractTokenizer {
     public void visit(Parameter node) {
         if (isAbstractTokens()) {
             addToken(AbstractToken.PARAMETER);
-        } else {
+        }
+        else {
             node.getName().accept(this);
         }
     }
@@ -705,9 +720,11 @@ public class Tokenizer extends AbstractTokenizer {
     private String getBlockId(final ASTNode node) {
         if (node.getMetadata() instanceof DataBlockMetadata block) {
             return block.getBlockId();
-        } else if (node.getMetadata() instanceof NonDataBlockMetadata block) {
+        }
+        else if (node.getMetadata() instanceof NonDataBlockMetadata block) {
             return block.getBlockId();
-        } else if (node instanceof AttributeFromFixed attribute) {
+        }
+        else if (node instanceof AttributeFromFixed attribute) {
             return getBlockId(attribute.getParentNode());
         }
 
@@ -715,13 +732,17 @@ public class Tokenizer extends AbstractTokenizer {
     }
 
     private void visitFixedNodeOption(final FixedNodeOption option, final Token opcode) {
-        if (MaskingType.FixedOption.equals(getMaskingStrategy().getMaskingType())
-                && getMaskingStrategy().getBlockId().equals(getBlockId(option.getParentNode()))) {
+        if (
+            MaskingType.FixedOption.equals(getMaskingStrategy().getMaskingType())
+                && getMaskingStrategy().getBlockId().equals(getBlockId(option.getParentNode()))
+        ) {
             addToken(Token.MASK);
-        } else {
+        }
+        else {
             if (abstractFixedNodeOptions) {
                 visit(option, opcode);
-            } else {
+            }
+            else {
                 visit(option, getNormalisedToken(option));
             }
         }
@@ -730,7 +751,8 @@ public class Tokenizer extends AbstractTokenizer {
     private void ifAbstractElse(final Token opcode, final String token) {
         if (isAbstractTokens()) {
             addToken(opcode);
-        } else {
+        }
+        else {
             addToken(token);
         }
     }
@@ -738,7 +760,8 @@ public class Tokenizer extends AbstractTokenizer {
     private void ifAbstractElse(final AbstractToken abstractToken, final String token) {
         if (isAbstractTokens()) {
             addToken(abstractToken);
-        } else {
+        }
+        else {
             addToken(token);
         }
     }

@@ -23,37 +23,52 @@ import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.
 import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 
 public class PathGeneratorFactory {
+
     private PathGeneratorFactory() {
         throw new IllegalCallerException("utility class");
     }
 
     public static PathGenerator createPathGenerator(
-            PathType type, int maxPathLength, boolean includeStage, Program program, boolean includeDefaultSprites,
-            ProgramRelationFactory programRelationFactory, ActorNameNormalizer actorNameNormalizer
+        PathType type, int maxPathLength, boolean includeStage, Program program, boolean includeDefaultSprites,
+        ProgramRelationFactory programRelationFactory, ActorNameNormalizer actorNameNormalizer
     ) {
         return createPathGenerator(
-                type, maxPathLength, includeStage, program, includeDefaultSprites, new PathFormatOptions(),
-                programRelationFactory, actorNameNormalizer
+            type, maxPathLength, includeStage, program, includeDefaultSprites, new PathFormatOptions(),
+            programRelationFactory, actorNameNormalizer
         );
     }
 
+    /**
+     * Builds a new path generator.
+     *
+     * @param type                   The kind of paths that should be generated.
+     * @param maxPathLength          The maximum lengths for AST paths.
+     * @param includeStage           True, if the stage sprite should be included when generating paths.
+     * @param program                The program for which paths should be generated.
+     * @param includeDefaultSprites  True, if sprites that have default names should be included when generating paths.
+     * @param pathFormatOptions      Additional options on how the path should be formatted when converting into the
+     *                               output format.
+     * @param programRelationFactory Defines how the paths should be represented.
+     * @param actorNameNormalizer    A normalisation step that defines how the actor name should be processed.
+     * @return A path generator.
+     */
     public static PathGenerator createPathGenerator(
-            PathType type, int maxPathLength, boolean includeStage, Program program, boolean includeDefaultSprites,
-            PathFormatOptions pathFormatOptions, ProgramRelationFactory programRelationFactory,
-            ActorNameNormalizer actorNameNormalizer
+        PathType type, int maxPathLength, boolean includeStage, Program program, boolean includeDefaultSprites,
+        PathFormatOptions pathFormatOptions, ProgramRelationFactory programRelationFactory,
+        ActorNameNormalizer actorNameNormalizer
     ) {
         return switch (type) {
             case SCRIPT -> new ScriptEntityPathGenerator(
-                    program, maxPathLength, includeStage, includeDefaultSprites, pathFormatOptions,
-                    programRelationFactory
+                program, maxPathLength, includeStage, includeDefaultSprites, pathFormatOptions,
+                programRelationFactory
             );
             case PROGRAM -> new ProgramPathGenerator(
-                    program, maxPathLength, includeStage, includeDefaultSprites, pathFormatOptions,
-                    programRelationFactory
+                program, maxPathLength, includeStage, includeDefaultSprites, pathFormatOptions,
+                programRelationFactory
             );
             default -> new SpritePathGenerator(
-                    program, maxPathLength, includeStage, includeDefaultSprites, pathFormatOptions,
-                    programRelationFactory, actorNameNormalizer
+                program, maxPathLength, includeStage, includeDefaultSprites, pathFormatOptions,
+                programRelationFactory, actorNameNormalizer
             );
         };
     }

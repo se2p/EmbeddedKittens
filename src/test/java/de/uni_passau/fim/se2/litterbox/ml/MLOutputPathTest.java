@@ -18,15 +18,16 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml;
 
-import org.junit.jupiter.api.Test;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.file.Path;
 import java.util.UUID;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
 
 class MLOutputPathTest {
+
     @Test
     void testDisallowDirectories() {
         Path f = Path.of("src", "test", "fixtures", "emptyProject.json");
