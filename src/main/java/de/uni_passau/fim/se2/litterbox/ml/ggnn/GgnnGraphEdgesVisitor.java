@@ -19,6 +19,7 @@
 package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
@@ -26,12 +27,12 @@ import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ast.model.SetStmtList;
 import de.uni_passau.fim.se2.litterbox.ast.model.event.ReceptionOfMessage;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.Expression;
-import de.uni_passau.fim.se2.litterbox.ast.model.identifier.LocalIdentifier;
 import de.uni_passau.fim.se2.litterbox.ast.model.identifier.Qualified;
+import de.uni_passau.fim.se2.litterbox.ast.model.identifier.StrId;
+import de.uni_passau.fim.se2.litterbox.ast.model.literals.StringLiteral;
 import de.uni_passau.fim.se2.litterbox.ast.model.metadata.Metadata;
 import de.uni_passau.fim.se2.litterbox.ast.model.procedure.ParameterDefinition;
 import de.uni_passau.fim.se2.litterbox.ast.model.procedure.ProcedureDefinition;
-import de.uni_passau.fim.se2.litterbox.ast.model.procedure.ProcedureDefinitionList;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.CallStmt;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.common.Broadcast;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.common.BroadcastAndWait;
@@ -44,10 +45,9 @@ import de.uni_passau.fim.se2.litterbox.ast.model.statement.control.UntilStmt;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.declaration.DeclarationStmt;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.declaration.DeclarationStmtList;
 import de.uni_passau.fim.se2.litterbox.ast.model.variable.Variable;
-import de.uni_passau.fim.se2.litterbox.ast.parser.symboltable.ProcedureDefinitionNameMapping;
-import de.uni_passau.fim.se2.litterbox.ast.parser.symboltable.ProcedureInfo;
 import de.uni_passau.fim.se2.litterbox.ast.util.AstNodeUtil;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.ScratchVisitor;
+import de.uni_passau.fim.se2.litterbox.ml.util.ProcedureMapping;
 import de.uni_passau.fim.se2.litterbox.utils.Pair;
 
 abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
@@ -125,6 +125,14 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
         return node.getChildren().stream()
             .filter(c -> !AstNodeUtil.isMetadata(c))
             .filter(c -> !shouldBeIgnored(c))
+            .filter(c -> {
+                if (node instanceof StrId) {
+                    return !(c instanceof StringLiteral);
+                }
+                else {
+                    return true;
+                }
+            })
             .map(ASTNode.class::cast);
     }
 
@@ -146,14 +154,19 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
                 ASTNode curr = children.get(i);
                 ASTNode next = children.get(i + 1);
 
-                boolean isMetadata = AstNodeUtil.isMetadata(curr) || AstNodeUtil.isMetadata(next);
-                boolean isIgnored = shouldBeIgnored(curr) || shouldBeIgnored(next);
-                if (!isMetadata && !isIgnored) {
+                if (!ignore(curr, next)) {
                     edges.add(Pair.of(curr, next));
                 }
             }
 
             super.visit(node);
+        }
+
+        private boolean ignore(final ASTNode curr, final ASTNode next) {
+            boolean isMetadata = AstNodeUtil.isMetadata(curr) || AstNodeUtil.isMetadata(next);
+            boolean isIgnored = shouldBeIgnored(curr) || shouldBeIgnored(next);
+
+            return isMetadata || isIgnored;
         }
     }
 
@@ -252,42 +265,27 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
 
     private static class ParameterPassingVisitor extends GgnnGraphEdgesVisitor {
 
-        private final ProcedureDefinitionNameMapping procedureMapping;
-        private final Map<LocalIdentifier, ProcedureDefinition> procedures = new IdentityHashMap<>();
+        private static final Logger log = Logger.getLogger(ParameterPassingVisitor.class.getName());
+
+        private final ProcedureMapping procedureMapping;
 
         ParameterPassingVisitor(final Program program) {
-            this.procedureMapping = program.getProcedureMapping();
-        }
-
-        @Override
-        public void visit(ProcedureDefinitionList node) {
-            for (ProcedureDefinition procedureDefinition : node.getList()) {
-                procedures.put(procedureDefinition.getIdent(), procedureDefinition);
-            }
-            super.visit(node);
+            this.procedureMapping = new ProcedureMapping(program);
         }
 
         @Override
         public void visit(CallStmt node) {
-            findCalledProcedure(node).ifPresent(procedure -> connectParameters(node, procedure));
-        }
+            final Optional<ProcedureDefinition> procedure = procedureMapping.findCalledProcedure(node);
+            if (procedure.isEmpty()) {
+                // note: This might happen in case the call stmt block was
+                // dragged to another sprite. In this case the scratch-vm does
+                // not call the procedure in the other sprite, but instead does
+                // nothing. Therefore, ignoring this case by not adding an edge
+                // is fine.
+                log.info("No procedure for calling custom block statement: " + node.getIdent().getName());
+            }
 
-        private Optional<ProcedureDefinition> findCalledProcedure(final CallStmt callStmt) {
-            String procedureName = callStmt.getIdent().getName();
-            String sprite = AstNodeUtil.findActor(callStmt).orElseThrow().getIdent().getName();
-
-            return procedureMapping.getProceduresForName(sprite, procedureName)
-                .stream()
-                .filter(procedure -> hasMatchingParameterCount(callStmt, procedure.getRight()))
-                .map(org.apache.commons.lang3.tuple.Pair::getKey)
-                .map(procedures::get)
-                .findFirst();
-        }
-
-        private boolean hasMatchingParameterCount(final CallStmt callStmt, final ProcedureInfo procedure) {
-            int passedArgumentCount = callStmt.getExpressions().getExpressions().size();
-            int acceptingArgumentCount = procedure.getArguments().length;
-            return passedArgumentCount == acceptingArgumentCount;
+            procedure.ifPresent(p -> connectParameters(node, p));
         }
 
         private void connectParameters(final CallStmt callStmt, final ProcedureDefinition procedure) {

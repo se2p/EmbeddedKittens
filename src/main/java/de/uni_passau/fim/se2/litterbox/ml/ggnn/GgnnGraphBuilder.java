@@ -21,23 +21,37 @@ package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
 import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
+import de.uni_passau.fim.se2.litterbox.ast.model.identifier.StrId;
+import de.uni_passau.fim.se2.litterbox.ast.model.procedure.ProcedureDefinition;
+import de.uni_passau.fim.se2.litterbox.ast.model.statement.CallStmt;
+import de.uni_passau.fim.se2.litterbox.ast.util.AstNodeUtil;
 import de.uni_passau.fim.se2.litterbox.cfg.ControlFlowGraph;
 import de.uni_passau.fim.se2.litterbox.cfg.ControlFlowGraphVisitor;
 import de.uni_passau.fim.se2.litterbox.dependency.DataDependenceGraph;
 import de.uni_passau.fim.se2.litterbox.ml.shared.TokenVisitorFactory;
+import de.uni_passau.fim.se2.litterbox.ml.util.ProcedureMapping;
 import de.uni_passau.fim.se2.litterbox.utils.Pair;
 import de.uni_passau.fim.se2.litterbox.utils.Preconditions;
 
 public class GgnnGraphBuilder {
 
+    private static final Logger log = Logger.getLogger(GgnnGraphBuilder.class.getName());
+
+    /**
+     * Remove the parameters from the procedure definition and call block names.
+     */
+    private static final String PROCEDURE_PARAM_REPLACEMENT = "";
+
     private final Program program;
     private final ASTNode astRoot;
+    private final ProcedureMapping procedureMapping;
 
     public GgnnGraphBuilder(final Program program) {
         this(program, program);
@@ -52,6 +66,7 @@ public class GgnnGraphBuilder {
 
         this.program = program;
         this.astRoot = astRoot;
+        this.procedureMapping = new ProcedureMapping(program);
     }
 
     /**
@@ -133,7 +148,28 @@ public class GgnnGraphBuilder {
         final Map<ASTNode, Integer> nodeIndices,
         final Set<Integer> usedIndices
     ) {
-        return getNodeInformation(nodeIndices, usedIndices, TokenVisitorFactory::getNormalisedToken);
+        return getNodeInformation(nodeIndices, usedIndices, this::getNodeLabel);
+    }
+
+    private String getNodeLabel(final ASTNode node) {
+        if (node instanceof StrId && node.getParentNode() instanceof ProcedureDefinition procedureDefinition) {
+            final String name = procedureMapping.getName(procedureDefinition);
+            return AstNodeUtil.replaceProcedureParams(name, PROCEDURE_PARAM_REPLACEMENT);
+        }
+        else if (node instanceof StrId && node.getParentNode() instanceof CallStmt callStmt) {
+            final Optional<ProcedureDefinition> definition = procedureMapping.findCalledProcedure(callStmt);
+            if (definition.isEmpty()) {
+                log.info("Could not find procedure for custom block call: " + callStmt.getIdent().getName());
+                return TokenVisitorFactory.getNormalisedToken(node);
+            }
+            else {
+                final String name = procedureMapping.getName(definition.get());
+                return AstNodeUtil.replaceProcedureParams(name, PROCEDURE_PARAM_REPLACEMENT);
+            }
+        }
+        else {
+            return TokenVisitorFactory.getNormalisedToken(node);
+        }
     }
 
     private Map<Integer, String> getNodeTypes(final Map<ASTNode, Integer> nodeIndices, final Set<Integer> usedIndices) {
