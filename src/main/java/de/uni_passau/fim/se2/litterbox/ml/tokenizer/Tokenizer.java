@@ -25,6 +25,7 @@ import de.uni_passau.fim.se2.litterbox.ast.model.elementchoice.Next;
 import de.uni_passau.fim.se2.litterbox.ast.model.elementchoice.Prev;
 import de.uni_passau.fim.se2.litterbox.ast.model.elementchoice.Random;
 import de.uni_passau.fim.se2.litterbox.ast.model.event.EventAttribute;
+import de.uni_passau.fim.se2.litterbox.ast.model.expression.AsExprType;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.Expression;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.UnspecifiedExpression;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.bool.*;
@@ -70,6 +71,7 @@ import de.uni_passau.fim.se2.litterbox.ast.model.variable.Parameter;
 import de.uni_passau.fim.se2.litterbox.ast.model.variable.ScratchList;
 import de.uni_passau.fim.se2.litterbox.ast.model.variable.Variable;
 import de.uni_passau.fim.se2.litterbox.ast.parser.symboltable.ProcedureDefinitionNameMapping;
+import de.uni_passau.fim.se2.litterbox.ast.util.AstNodeUtil;
 import de.uni_passau.fim.se2.litterbox.ml.shared.BaseTokenVisitor;
 import de.uni_passau.fim.se2.litterbox.ml.shared.TokenVisitorFactory;
 import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
@@ -79,6 +81,24 @@ import de.uni_passau.fim.se2.litterbox.ml.util.StringUtil;
 
 public class Tokenizer extends AbstractTokenizer {
 
+    /**
+     * Add parentheses around literals and variable names when they occur inside other expressions.
+     *
+     * <h2>Example when {@code true}</h2>
+     * <ul>
+     * <li>{@code movesteps (2)}, but no additional parentheses when inside expression: {@code movesteps (add 2 5)}</li>
+     * <li>{@code movesteps (my_variable)} but no additional parentheses when inside expression:
+     * {@code movesteps (div my_variable 3)}</li>
+     * </ul>
+     *
+     * <h2>Example when {@code false}</h2>
+     * <ul>
+     * <li>{@code movesteps (2)} and {@code movesteps (add (2) (5))}</li>
+     * <li>{@code movesteps (my_variable)} and {@code movesteps (div (my_variable) (3))}</li>
+     * </ul>
+     */
+    private final boolean parenthesiseAtoms;
+
     private final BaseTokenVisitor tokenVisitor = TokenVisitorFactory.getDefaultTokenVisitor(true);
     private final boolean abstractFixedNodeOptions;
 
@@ -86,22 +106,44 @@ public class Tokenizer extends AbstractTokenizer {
         final ProcedureDefinitionNameMapping procedureNameMapping,
         final boolean abstractTokens,
         final boolean abstractFixedNodeOptions,
+        final boolean parenthesiseAtoms,
         final MaskingStrategy maskingStrategy
     ) {
         super(procedureNameMapping, abstractTokens, maskingStrategy);
         this.abstractFixedNodeOptions = abstractFixedNodeOptions;
+        this.parenthesiseAtoms = parenthesiseAtoms;
     }
 
     public static List<String> tokenize(
-        final Program program,
-        final ASTNode node,
-        final boolean abstractTokens,
-        final boolean abstractFixedNodeOptions,
+        final Program program, final ASTNode node, final boolean abstractTokens, final boolean abstractFixedNodeOptions,
         final MaskingStrategy maskingStrategy
     ) {
         return tokenize(
-            program.getProcedureMapping(), node, abstractTokens, abstractFixedNodeOptions,
-            maskingStrategy
+            program.getProcedureMapping(), node, abstractTokens, abstractFixedNodeOptions, true, maskingStrategy
+        );
+    }
+
+    /**
+     * Does not add parentheses around literals and variable names that occur inside other expressions.
+     *
+     * <p>
+     * For example, in {@code move_steps (2)} the parentheses remain since it is the outermost expression of the
+     * argument to the {@code move_steps} block. However, {@code move steps (3 + my_variable)} will be tokenized like
+     * {@code move_steps (add 3 5)} without the additional parentheses around {@code 3} and {@code my_variable}.
+     *
+     * @param program                  Some Scratch program.
+     * @param node                     The node inside the program that should be tokenized.
+     * @param abstractTokens           True, if literals and names should be replaced by fixed abstract tokens.
+     * @param abstractFixedNodeOptions True, if fixed node options should be replaced by a fixed abstract token.
+     * @param maskingStrategy          The masking strategy that should be applied during tokenization.
+     * @return A sequence of tokens obtained when traversing the AST of {@code node}.
+     */
+    public static List<String> tokenizeWithReducedParentheses(
+        final Program program, final ASTNode node, final boolean abstractTokens, final boolean abstractFixedNodeOptions,
+        final MaskingStrategy maskingStrategy
+    ) {
+        return tokenize(
+            program.getProcedureMapping(), node, abstractTokens, abstractFixedNodeOptions, false, maskingStrategy
         );
     }
 
@@ -110,11 +152,11 @@ public class Tokenizer extends AbstractTokenizer {
         final ASTNode node,
         final boolean abstractTokens,
         final boolean abstractFixedNodeOptions,
+        final boolean parenthesiseAtoms,
         final MaskingStrategy maskingStrategy
     ) {
         final Tokenizer v = new Tokenizer(
-            procedureNameMapping, abstractTokens, abstractFixedNodeOptions,
-            maskingStrategy
+            procedureNameMapping, abstractTokens, abstractFixedNodeOptions, parenthesiseAtoms, maskingStrategy
         );
         node.accept(v);
         return v.getTokens();
@@ -142,6 +184,22 @@ public class Tokenizer extends AbstractTokenizer {
     private void visit(final ASTNode node, final String token) {
         addToken(token);
         visitChildren(node);
+    }
+
+    @Override
+    public void visitChildren(ASTNode node) {
+        for (final ASTNode child : node.getChildren()) {
+            if (AstNodeUtil.isMetadata(child)) {
+                continue;
+            }
+
+            if (child instanceof Expression childExpr) {
+                visitExpression(childExpr);
+            }
+            else {
+                child.accept(this);
+            }
+        }
     }
 
     // region motion
@@ -310,14 +368,12 @@ public class Tokenizer extends AbstractTokenizer {
         }
         else {
             addToken(opcode);
-            condition.accept(this);
+            visitExpression(condition);
         }
     }
 
     private void visitControlBlockBody(final StmtList stmtList) {
-        addToken(Token.BEGIN);
-        stmtList.accept(this);
-        addToken(Token.END);
+        visitSurrounded(Token.BEGIN_SUBSTACK, stmtList, Token.END_SUBSTACK);
     }
 
     @Override
@@ -431,9 +487,11 @@ public class Tokenizer extends AbstractTokenizer {
 
     @Override
     public void visit(Key node) {
-        // TODO: Use 'abstractFixedNodeOptions' parameter here
-        if (isAbstractTokens()) {
+        if (abstractFixedNodeOptions) {
             addToken(Token.KEY);
+            addToken(Token.BEGIN_NUM_STR_EXPR);
+            addToken("keyid");
+            addToken(Token.END_NUM_STR_EXPR);
         }
         else {
             visit(node, Token.KEY);
@@ -571,6 +629,55 @@ public class Tokenizer extends AbstractTokenizer {
     // endregion variables
 
     // region expressions
+
+    private void visitExpression(final Expression expr) {
+        if (!parenthesiseAtoms && isLiteralInsideExpression(expr)) {
+            expr.accept(this);
+        }
+        else if (expr instanceof AsExprType asExprType) {
+            visitExpressionTypeWrapper(asExprType);
+        }
+        else if (expr instanceof BoolExpr) {
+            visitBoolExpr(expr);
+        }
+        else {
+            visitNumOrStringExpr(expr);
+        }
+    }
+
+    private boolean isLiteralInsideExpression(final Expression expr) {
+        if (!(expr.getParentNode() instanceof Expression)) {
+            return false;
+        }
+
+        if (expr instanceof AsExprType asExprType) {
+            return isLiteralInsideExpression(asExprType.getOperand1());
+        }
+
+        return expr instanceof NumberLiteral
+            || expr instanceof ColorLiteral
+            || expr instanceof StringLiteral
+            || expr instanceof BoolLiteral
+            || expr instanceof Qualified
+            || expr instanceof Parameter;
+    }
+
+    private void visitExpressionTypeWrapper(final AsExprType expr) {
+        if (expr instanceof AsBool) {
+            visitBoolExpr(expr.getOperand1());
+        }
+        else {
+            visitNumOrStringExpr(expr.getOperand1());
+        }
+    }
+
+    private void visitBoolExpr(final Expression expr) {
+        visitSurrounded(Token.BEGIN_BOOL_EXPR, expr, Token.END_BOOL_EXPR);
+    }
+
+    private void visitNumOrStringExpr(final Expression expr) {
+        visitSurrounded(Token.BEGIN_NUM_STR_EXPR, expr, Token.END_NUM_STR_EXPR);
+    }
 
     @Override
     public void visit(NumberLiteral node) {
@@ -729,6 +836,12 @@ public class Tokenizer extends AbstractTokenizer {
         }
 
         return null;
+    }
+
+    private void visitSurrounded(final Token left, final ASTNode node, final Token right) {
+        addToken(left);
+        node.accept(this);
+        addToken(right);
     }
 
     private void visitFixedNodeOption(final FixedNodeOption option, final Token opcode) {

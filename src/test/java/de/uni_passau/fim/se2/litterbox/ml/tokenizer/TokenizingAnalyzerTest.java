@@ -36,6 +36,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import de.uni_passau.fim.se2.litterbox.ast.ParsingException;
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
+import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ast.parser.Scratch3Parser;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.ScratchVisitor;
@@ -50,20 +51,33 @@ class TokenizingAnalyzerTest implements JsonTest {
 
     private final String STAGE_LABEL = "stage";
     private final String SPRITE_LABEL = "sprite";
+
+    private final String BEGIN_SUBSTACK_TOKEN = "BEGIN_SUBSTACK";
+    private final String END_SUBSTACK_TOKEN = "END_SUBSTACK";
+    private final String BEGIN_SPRITE_TOKEN = "BEGIN_SPRITE";
+    private final String END_SPRITE_TOKEN = "END_SPRITE";
     private final String BEGIN_SCRIPT_TOKEN = "BEGIN_SCRIPT";
     private final String END_SCRIPT_TOKEN = "END_SCRIPT";
     private final String BEGIN_PROCEDURE_TOKEN = "BEGIN_PROCEDURE";
     private final String END_PROCEDURE_TOKEN = "END_PROCEDURE";
-    private final String LOOKS_SAY_TOKEN = "looks_say";
+    private final String LPAREN = "(";
+    private final String RPAREN = ")";
+    private final String LANGLE = "<";
+    private final String RANGLE = ">";
+
     private final String EVENT_WHENFLAG_TOKEN = "event_whenflagclicked";
+    private final String LOOKS_SAY_TOKEN = "looks_say";
+    private final String MOTION_MOVESTEPS_TOKEN = "motion_movesteps";
+    private final String OPERATOR_ADD_TOKEN = "operator_add";
+    private final String SOUND_CHANGEVOLUMEBY_TOKEN = "sound_changevolumeby";
 
     private final List<TokenSequence> concreteScriptSequences = List.of(
         TokenSequenceBuilder.build(
             STAGE_LABEL,
             List.of(
                 List.of(
-                    BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "control_repeat", "10", "BEGIN", "END",
-                    END_SCRIPT_TOKEN
+                    BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "control_repeat", LPAREN, "10", RPAREN,
+                    BEGIN_SUBSTACK_TOKEN, END_SUBSTACK_TOKEN, END_SCRIPT_TOKEN
                 )
             )
         ),
@@ -71,14 +85,19 @@ class TokenizingAnalyzerTest implements JsonTest {
             "cat",
             List.of(
                 List.of(
-                    BEGIN_SCRIPT_TOKEN, "event_whenkeypressed", "key", "39", LOOKS_SAY_TOKEN, "hi_!",
-                    "looks_show", END_SCRIPT_TOKEN
+                    BEGIN_SCRIPT_TOKEN, "event_whenkeypressed", "key", LPAREN, "39", RPAREN, LOOKS_SAY_TOKEN, LPAREN,
+                    "hi_!", RPAREN, "looks_show", END_SCRIPT_TOKEN
                 )
             )
         ),
         TokenSequenceBuilder.build(
             "abby",
-            List.of(List.of(BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, "hello_!", END_SCRIPT_TOKEN))
+            List.of(
+                List.of(
+                    BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, LPAREN, "hello_!", RPAREN,
+                    END_SCRIPT_TOKEN
+                )
+            )
         )
     );
 
@@ -87,8 +106,8 @@ class TokenizingAnalyzerTest implements JsonTest {
             STAGE_LABEL,
             List.of(
                 List.of(
-                    "BEGIN_SPRITE", BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "control_repeat", "10",
-                    "BEGIN", "END", END_SCRIPT_TOKEN, "END_SPRITE"
+                    BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "control_repeat", LPAREN, "10",
+                    RPAREN, BEGIN_SUBSTACK_TOKEN, END_SUBSTACK_TOKEN, END_SCRIPT_TOKEN, END_SPRITE_TOKEN
                 )
             )
         ),
@@ -97,14 +116,15 @@ class TokenizingAnalyzerTest implements JsonTest {
             List.of("cat"),
             List.of(
                 List.of(
-                    "BEGIN_SPRITE", BEGIN_SCRIPT_TOKEN, "event_whenkeypressed", "key", "39", LOOKS_SAY_TOKEN,
-                    "hi_!", "looks_show", END_SCRIPT_TOKEN, "END_SPRITE"
+                    BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, "event_whenkeypressed", "key", LPAREN, "39", RPAREN,
+                    LOOKS_SAY_TOKEN, LPAREN, "hi_!", RPAREN, "looks_show", END_SCRIPT_TOKEN, END_SPRITE_TOKEN
                 )
             ),
             List.of(
                 List.of(
-                    "begin", SPRITE_LABEL, "begin", "script", "event", "whenkeypressed", "key", "39",
-                    "looks", "say", "hi", "!", "looks", "show", "end", "script", "end", SPRITE_LABEL
+                    BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, "event", "whenkeypressed", "key", LPAREN, "39",
+                    RPAREN, "looks", "say", LPAREN, "hi", "!", RPAREN, "looks", "show", END_SCRIPT_TOKEN,
+                    END_SPRITE_TOKEN
                 )
             )
         ),
@@ -112,8 +132,8 @@ class TokenizingAnalyzerTest implements JsonTest {
             "abby",
             List.of(
                 List.of(
-                    "BEGIN_SPRITE", BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, "hello_!",
-                    END_SCRIPT_TOKEN, "END_SPRITE"
+                    BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, LPAREN, "hello_!",
+                    RPAREN, END_SCRIPT_TOKEN, END_SPRITE_TOKEN
                 )
             )
         )
@@ -125,14 +145,14 @@ class TokenizingAnalyzerTest implements JsonTest {
             List.of(STAGE_LABEL),
             List.of(
                 List.of(
-                    BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "control_repeat", "LITERAL_NUMBER",
-                    "BEGIN", "END", END_SCRIPT_TOKEN
+                    BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "control_repeat", LPAREN, "LITERAL_NUMBER", RPAREN,
+                    BEGIN_SUBSTACK_TOKEN, END_SUBSTACK_TOKEN, END_SCRIPT_TOKEN
                 )
             ),
             List.of(
                 List.of(
-                    "begin", "script", "event", "whenflagclicked", "control", "repeat", "literal",
-                    "number", "begin", "end", "end", "script"
+                    BEGIN_SCRIPT_TOKEN, "event", "whenflagclicked", "control", "repeat", LPAREN, "literal", "number",
+                    RPAREN, BEGIN_SUBSTACK_TOKEN, END_SUBSTACK_TOKEN, END_SCRIPT_TOKEN
                 )
             )
         ),
@@ -140,8 +160,8 @@ class TokenizingAnalyzerTest implements JsonTest {
             "cat",
             List.of(
                 List.of(
-                    BEGIN_SCRIPT_TOKEN, "event_whenkeypressed", "key", LOOKS_SAY_TOKEN, "LITERAL_STRING",
-                    "looks_show", END_SCRIPT_TOKEN
+                    BEGIN_SCRIPT_TOKEN, "event_whenkeypressed", "key", LPAREN, "keyid", RPAREN, LOOKS_SAY_TOKEN, LPAREN,
+                    "LITERAL_STRING", RPAREN, "looks_show", END_SCRIPT_TOKEN
                 )
             )
         ),
@@ -149,7 +169,7 @@ class TokenizingAnalyzerTest implements JsonTest {
             "abby",
             List.of(
                 List.of(
-                    BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, "LITERAL_STRING",
+                    BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, LPAREN, "LITERAL_STRING", RPAREN,
                     END_SCRIPT_TOKEN
                 )
             )
@@ -176,6 +196,76 @@ class TokenizingAnalyzerTest implements JsonTest {
 
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
+    void testLiteralTokenization(boolean fewerParentheses) throws ParsingException, IOException {
+        final var output = tokenizeFirstSprite("ml_preprocessing/tokenizer/literals.json", fewerParentheses);
+
+        final List<String> expected;
+        if (fewerParentheses) {
+            expected = List.of(
+                BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, LPAREN,
+                OPERATOR_ADD_TOKEN, "2", "5", RPAREN, SOUND_CHANGEVOLUMEBY_TOKEN, LPAREN, "-10", RPAREN,
+                END_SCRIPT_TOKEN, END_SPRITE_TOKEN
+            );
+        }
+        else {
+            expected = List.of(
+                BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, LPAREN,
+                OPERATOR_ADD_TOKEN, LPAREN, "2", RPAREN, LPAREN, "5", RPAREN, RPAREN, SOUND_CHANGEVOLUMEBY_TOKEN,
+                LPAREN, "-10", RPAREN, END_SCRIPT_TOKEN, END_SPRITE_TOKEN
+            );
+        }
+
+        assertThat(output).containsExactlyElementsIn(expected);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testVariableTokenization(boolean fewerParentheses) throws ParsingException, IOException {
+        final var output = tokenizeFirstSprite("ml_preprocessing/tokenizer/variables.json", fewerParentheses);
+
+        final List<String> expected;
+        if (fewerParentheses) {
+            expected = List.of(
+                BEGIN_SPRITE_TOKEN, BEGIN_PROCEDURE_TOKEN, "custom_block", "motion_turnright", LPAREN,
+                OPERATOR_ADD_TOKEN, "2", "block_param", RPAREN, "motion_turnleft", LPAREN, "block_param", RPAREN,
+                END_PROCEDURE_TOKEN, BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, LPAREN,
+                OPERATOR_ADD_TOKEN, "my_variable", "5", RPAREN, SOUND_CHANGEVOLUMEBY_TOKEN, LPAREN, "my_variable",
+                RPAREN, SOUND_CHANGEVOLUMEBY_TOKEN, LPAREN, "list_var", RPAREN, END_SCRIPT_TOKEN, END_SPRITE_TOKEN
+            );
+        }
+        else {
+            expected = List.of(
+                BEGIN_SPRITE_TOKEN, BEGIN_PROCEDURE_TOKEN, "custom_block", "motion_turnright", LPAREN,
+                OPERATOR_ADD_TOKEN, LPAREN, "2", RPAREN, LPAREN, "block_param", RPAREN, RPAREN, "motion_turnleft",
+                LPAREN, "block_param", RPAREN, END_PROCEDURE_TOKEN, BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN,
+                MOTION_MOVESTEPS_TOKEN, LPAREN, OPERATOR_ADD_TOKEN, LPAREN, "my_variable", RPAREN, LPAREN, "5", RPAREN,
+                RPAREN, SOUND_CHANGEVOLUMEBY_TOKEN, LPAREN, "my_variable", RPAREN, SOUND_CHANGEVOLUMEBY_TOKEN, LPAREN,
+                "list_var", RPAREN, END_SCRIPT_TOKEN, END_SPRITE_TOKEN
+            );
+        }
+
+        assertThat(output).containsExactlyElementsIn(expected);
+    }
+
+    private List<String> tokenizeFirstSprite(
+        final String fixturePath, final boolean fewerParentheses
+    ) throws ParsingException, IOException {
+        final Program program = getAST("src/test/fixtures/" + fixturePath);
+        final ActorDefinition sprite = program.getActorDefinitionList().getDefinitions().stream()
+            .filter(ActorDefinition::isSprite)
+            .findFirst()
+            .orElseThrow();
+
+        if (fewerParentheses) {
+            return Tokenizer.tokenizeWithReducedParentheses(program, sprite, false, false, MaskingStrategy.none());
+        }
+        else {
+            return Tokenizer.tokenize(program, sprite, false, false, MaskingStrategy.none());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
     void testWholeProgramSingleSequence(boolean includeStage) throws ParsingException, IOException {
         final var analyzer = getAnalyzer(includeStage, true, false, false);
 
@@ -185,7 +275,7 @@ class TokenizingAnalyzerTest implements JsonTest {
 
         final List<String> tokens = output.get(0).tokens().get(0);
 
-        int expectedSize = includeStage ? 26 : 17;
+        int expectedSize = includeStage ? 34 : 23;
         assertThat(tokens).hasSize(expectedSize);
 
         int expectedSpriteCount = includeStage ? 3 : 2;
@@ -235,8 +325,6 @@ class TokenizingAnalyzerTest implements JsonTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void testSequencePerProcedureDefinition(boolean abstractTokens) throws ParsingException, IOException {
-        final String motionMoveSteps = "motion_movesteps";
-
         final var analyzer = getAnalyzer(true, false, abstractTokens, true);
 
         final var output = analyzer.process(inputFile("customBlocks.json")).collect(Collectors.toList());
@@ -250,13 +338,14 @@ class TokenizingAnalyzerTest implements JsonTest {
                 TokenSequenceBuilder.build(
                     SPRITE_LABEL, List.of(
                         List.of(
-                            BEGIN_PROCEDURE_TOKEN, "PROCEDURE_DEFINITION", LOOKS_SAY_TOKEN, "LITERAL_STRING",
-                            motionMoveSteps, "LITERAL_NUMBER", "control_stop", "stop_target",
-                            END_PROCEDURE_TOKEN
+                            BEGIN_PROCEDURE_TOKEN, "PROCEDURE_DEFINITION", "looks_say", LPAREN, "LITERAL_STRING",
+                            RPAREN, MOTION_MOVESTEPS_TOKEN, LPAREN, "LITERAL_NUMBER", RPAREN, "control_stop",
+                            "stop_target", END_PROCEDURE_TOKEN
                         ),
                         List.of(
-                            BEGIN_PROCEDURE_TOKEN, "PROCEDURE_DEFINITION", motionMoveSteps, "PARAMETER",
-                            "control_if", "PARAMETER", "BEGIN", motionMoveSteps, "LITERAL_NUMBER", "END",
+                            BEGIN_PROCEDURE_TOKEN, "PROCEDURE_DEFINITION", MOTION_MOVESTEPS_TOKEN, LPAREN, "PARAMETER",
+                            RPAREN, "control_if", LANGLE, "PARAMETER", RANGLE, BEGIN_SUBSTACK_TOKEN,
+                            MOTION_MOVESTEPS_TOKEN, LPAREN, "LITERAL_NUMBER", RPAREN, END_SUBSTACK_TOKEN,
                             "control_stop", "stop_target", END_PROCEDURE_TOKEN
                         )
                     )
@@ -269,13 +358,15 @@ class TokenizingAnalyzerTest implements JsonTest {
                 TokenSequenceBuilder.build(
                     SPRITE_LABEL, List.of(
                         List.of(
-                            BEGIN_PROCEDURE_TOKEN, "block_no_inputs", LOOKS_SAY_TOKEN, "hello_!", motionMoveSteps,
-                            "10", "control_stop", "this_script", END_PROCEDURE_TOKEN
+                            BEGIN_PROCEDURE_TOKEN, "block_no_inputs", "looks_say", LPAREN, "hello_!", RPAREN,
+                            MOTION_MOVESTEPS_TOKEN, LPAREN, "10", RPAREN, "control_stop", "this_script",
+                            END_PROCEDURE_TOKEN
                         ),
                         List.of(
-                            BEGIN_PROCEDURE_TOKEN, "block_with_inputs", motionMoveSteps, "num_input", "control_if",
-                            "boolean", "BEGIN", motionMoveSteps, "10", "END", "control_stop", "this_script",
-                            END_PROCEDURE_TOKEN
+                            BEGIN_PROCEDURE_TOKEN, "block_with_inputs", MOTION_MOVESTEPS_TOKEN, LPAREN, "num_input",
+                            RPAREN, "control_if", LANGLE, "boolean", RANGLE, BEGIN_SUBSTACK_TOKEN,
+                            MOTION_MOVESTEPS_TOKEN, LPAREN, "10", RPAREN, END_SUBSTACK_TOKEN, "control_stop",
+                            "this_script", END_PROCEDURE_TOKEN
                         )
                     )
                 )
@@ -298,12 +389,12 @@ class TokenizingAnalyzerTest implements JsonTest {
             expectedOutput = TokenSequenceBuilder.build(
                 SPRITE_LABEL, List.of(
                     List.of(
-                        BEGIN_PROCEDURE_TOKEN, "PROCEDURE_DEFINITION", "control_wait", "LITERAL_NUMBER",
+                        BEGIN_PROCEDURE_TOKEN, "PROCEDURE_DEFINITION", "control_wait", LPAREN, "LITERAL_NUMBER", RPAREN,
                         END_PROCEDURE_TOKEN
                     ),
                     List.of(
-                        BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "CUSTOM_BLOCK", "sound_volume",
-                        "sensing_mousedown", "sensing_mousey", END_SCRIPT_TOKEN
+                        BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "CUSTOM_BLOCK", LPAREN, "sound_volume", RPAREN,
+                        LANGLE, "sensing_mousedown", RANGLE, LPAREN, "sensing_mousey", RPAREN, "END_SCRIPT"
                     )
                 )
             );
@@ -311,10 +402,12 @@ class TokenizingAnalyzerTest implements JsonTest {
         else {
             expectedOutput = TokenSequenceBuilder.build(
                 SPRITE_LABEL, List.of(
-                    List.of(BEGIN_PROCEDURE_TOKEN, "my_proc_defn", "control_wait", "1", END_PROCEDURE_TOKEN),
                     List.of(
-                        BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "my_proc_defn", "sound_volume",
-                        "sensing_mousedown", "sensing_mousey", END_SCRIPT_TOKEN
+                        BEGIN_PROCEDURE_TOKEN, "my_proc_defn", "control_wait", LPAREN, "1", RPAREN, END_PROCEDURE_TOKEN
+                    ),
+                    List.of(
+                        BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "my_proc_defn", LPAREN, "sound_volume", RPAREN,
+                        LANGLE, "sensing_mousedown", RANGLE, LPAREN, "sensing_mousey", RPAREN, "END_SCRIPT"
                     )
                 )
             );
@@ -331,7 +424,7 @@ class TokenizingAnalyzerTest implements JsonTest {
         final var output = analyzer.process(input).collect(Collectors.toList());
 
         assertThat(output).hasSize(1);
-        assertThat(output.get(0).tokens().get(0)).hasSize(27);
+        assertThat(output.get(0).tokens().get(0)).hasSize(47);
         assertThat(output.get(0).tokens().get(0)).containsAtLeast(
             "pen_clear", "pen_stamp", "pen_pendown", "pen_penup", "pen_setpencolortocolor", "LITERAL_COLOR",
             "pen_changecolorby", "pen_setcolorto", "pen_changepensizeby", "pen_setpensizeto"
@@ -347,7 +440,7 @@ class TokenizingAnalyzerTest implements JsonTest {
 
         assertThat(output).hasSize(1);
         assertThat(output.get(0).tokens()).hasSize(1);
-        assertThat(output.get(0).tokens().get(0)).hasSize(13);
+        assertThat(output.get(0).tokens().get(0)).hasSize(15);
         assertThat(output.get(0).tokens().get(0))
             .containsAtLeast("tts_speak", "tts_setvoice", "tts_voice", "tts_setlanguage", "tts_language");
     }
@@ -362,7 +455,7 @@ class TokenizingAnalyzerTest implements JsonTest {
 
         assertThat(output).hasSize(1);
         assertThat(output.get(0).tokens()).hasSize(1);
-        assertThat(output.get(0).tokens().get(0)).hasSize(22);
+        assertThat(output.get(0).tokens().get(0)).hasSize(36);
         assertThat(output.get(0).tokens().get(0))
             .containsAtLeast(
                 "music_playdrumforbeats", "music_restforbeats", "music_playnoteforbeats",
@@ -410,8 +503,8 @@ class TokenizingAnalyzerTest implements JsonTest {
         assertThat(tokens.isPresent()).isTrue();
         assertThat(tokens.get()).isEqualTo(
             List.of(
-                "BEGIN_SPRITE", BEGIN_SCRIPT_TOKEN, "event_never", "operator_and", Token.MASK.getStrRep(), "NOTHING",
-                END_SCRIPT_TOKEN, "END_SPRITE"
+                BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, "event_never", LANGLE, "operator_and", LANGLE,
+                Token.MASK.getStrRep(), RANGLE, LANGLE, "NOTHING", RANGLE, RANGLE, END_SCRIPT_TOKEN, END_SPRITE_TOKEN
             )
         );
     }
