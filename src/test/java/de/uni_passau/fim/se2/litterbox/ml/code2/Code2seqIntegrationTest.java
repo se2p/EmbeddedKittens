@@ -98,7 +98,9 @@ class Code2seqIntegrationTest extends CliTest {
         assertEmptyStdErr();
         assertEmptyStdOut();
 
-        final String output = Files.readString(tempDir.toPath().resolve("multipleSprites_scriptId_-481429174"));
-        assertThat(output).isEqualTo("39,29|57|41|8|25|153|27,39 39,29|57|41|8|25|156,39 hi|!,27|153|25|156,hi|!");
+        final String output = Files.readString(tempDir.toPath().resolve("multipleSprites.script.txt"));
+        assertThat(output)
+            .contains("scriptId_-481429174 39,29|57|41|8|25|153|27,39 39,29|57|41|8|25|156,39 hi|!,27|153|25|156,hi|!");
+        assertThat(output).contains("scriptId_1341144038 green|flag,67|8|25|153|27,green|flag");
     }
 }

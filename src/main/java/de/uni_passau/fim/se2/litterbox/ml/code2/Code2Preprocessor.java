@@ -28,14 +28,26 @@ import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.ProgramFeatures;
 
 abstract class Code2Preprocessor extends MLFilePreprocessor<ProgramFeatures> {
 
+    private final boolean isPerScript;
+
     protected Code2Preprocessor(
         final Code2ProgramPreprocessor programAnalyzer, final MLPreprocessorCommonOptions commonOptions
     ) {
         super(programAnalyzer, commonOptions.outputPath());
+
+        this.isPerScript = programAnalyzer.isPerScriptOutput();
     }
 
     @Override
     protected Path outputFileName(Path inputFile) {
-        return Path.of(FilenameUtils.removeExtension(inputFile.getFileName().toString()));
+        final String extension;
+        if (isPerScript) {
+            extension = ".script.txt";
+        }
+        else {
+            extension = ".txt";
+        }
+
+        return Path.of(FilenameUtils.removeExtension(inputFile.getFileName().toString()) + extension);
     }
 }

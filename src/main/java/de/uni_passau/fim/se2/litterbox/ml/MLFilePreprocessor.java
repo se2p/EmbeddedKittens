@@ -73,7 +73,7 @@ public abstract class MLFilePreprocessor<R> {
     private void processFile(final Path programPath) {
         try {
             final Stream<R> results = readProgram(programPath).stream().flatMap(programAnalyzer::process);
-            writeResultToOutput(programPath, results.map(programAnalyzer::resultToString));
+            writeResultToOutput(programPath, results);
         }
         catch (IOException e) {
             log.warning("Could not process file '" + programPath + "'!");
@@ -103,7 +103,7 @@ public abstract class MLFilePreprocessor<R> {
         }
     }
 
-    private void writeResultToOutput(final Path inputFile, final Stream<String> result) throws IOException {
+    private void writeResultToOutput(final Path inputFile, final Stream<R> result) throws IOException {
         if (outputPath.isConsoleOutput()) {
             writeResultToConsole(inputFile, result);
         }
@@ -112,13 +112,13 @@ public abstract class MLFilePreprocessor<R> {
         }
     }
 
-    private void writeResultToConsole(final Path inputFile, final Stream<String> result) {
+    private void writeResultToConsole(final Path inputFile, final Stream<R> result) {
         // intentionally not in try-with-resources, as we do not want to close System.out
         final PrintWriter pw = new PrintWriter(System.out, true);
         writeResult(inputFile, pw, result);
     }
 
-    private void writeResultToFile(final Path inputFile, final Stream<String> result) throws IOException {
+    private void writeResultToFile(final Path inputFile, final Stream<R> result) throws IOException {
         final Path outName = outputFileName(inputFile);
         final Path outputFile = outputPath.getPath().resolve(outName);
 
@@ -134,15 +134,16 @@ public abstract class MLFilePreprocessor<R> {
         log.info("Wrote processing result of " + inputFile + " to file " + outputFile);
     }
 
-    private void writeResult(final Path inputFile, final PrintWriter printWriter, final Stream<String> result) {
-        final Iterator<String> lines = result.iterator();
+    private void writeResult(final Path inputFile, final PrintWriter printWriter, final Stream<R> result) {
+        final Iterator<R> lines = result.iterator();
         if (!lines.hasNext()) {
             log.warning("Processing " + inputFile + " resulted in no output!");
             return;
         }
 
         while (lines.hasNext()) {
-            printWriter.println(lines.next());
+            final String output = programAnalyzer.resultToString(lines.next());
+            printWriter.println(output);
         }
     }
 }

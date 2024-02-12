@@ -45,4 +45,8 @@ public abstract class Code2ProgramPreprocessor extends MLProgramPreprocessor<Pro
             this.pathType = PathType.SPRITE;
         }
     }
+
+    boolean isPerScriptOutput() {
+        return PathType.SCRIPT.equals(pathType);
+    }
 }

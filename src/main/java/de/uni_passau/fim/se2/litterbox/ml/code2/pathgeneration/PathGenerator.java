@@ -129,6 +129,18 @@ public abstract class PathGenerator {
         final List<ASTNode> sourceStack = getTreeStack(source);
         final List<ASTNode> targetStack = getTreeStack(target);
 
+        int commonPrefix = getCommonPrefix(sourceStack, targetStack);
+
+        // manage too long path length
+        int pathLength = sourceStack.size() + targetStack.size() - 2 * commonPrefix;
+        if (maxPathLength > 0 && pathLength > maxPathLength) {
+            return null;
+        }
+
+        return buildPath(sourceStack, targetStack, commonPrefix);
+    }
+
+    private static int getCommonPrefix(final List<ASTNode> sourceStack, final List<ASTNode> targetStack) {
         int commonPrefix = 0;
         int currentSourceAncestorIndex = sourceStack.size() - 1;
         int currentTargetAncestorIndex = targetStack.size() - 1;
@@ -143,13 +155,7 @@ public abstract class PathGenerator {
             currentTargetAncestorIndex--;
         }
 
-        // manage too long path length
-        int pathLength = sourceStack.size() + targetStack.size() - 2 * commonPrefix;
-        if (maxPathLength > 0 && pathLength > maxPathLength) {
-            return null;
-        }
-
-        return buildPath(sourceStack, targetStack, commonPrefix);
+        return commonPrefix;
     }
 
     private String buildPath(final List<ASTNode> sourceStack, final List<ASTNode> targetStack, final int commonPrefix) {

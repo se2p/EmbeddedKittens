@@ -48,6 +48,6 @@ public class Code2SeqProgramPreprocessor extends Code2ProgramPreprocessor {
 
     @Override
     protected String resultToString(ProgramFeatures result) {
-        return null;
+        return result.toString();
     }
 }
