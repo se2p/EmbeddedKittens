@@ -45,7 +45,7 @@ public final class TokenVisitorFactory {
      * @param normalise If true, {@link StringUtil#normaliseString(String, String)} is used to normalise user-defined
      *                  values with the given delimiter.
      * @param delimiter Places the given delimiter between subtokens. The default is {@link #DEFAULT_DELIMITER}, use
-     *                  {@link #getDefaultTokenVisitor(boolean)} if no special one is required..
+     *                  {@link #getDefaultTokenVisitor(boolean)} if no special one is required.
      * @return A token visitor that can be used in {@link #getToken(BaseTokenVisitor, ASTNode)}.
      */
     public static BaseTokenVisitor getDefaultTokenVisitorWithDelimiter(final boolean normalise, String delimiter) {

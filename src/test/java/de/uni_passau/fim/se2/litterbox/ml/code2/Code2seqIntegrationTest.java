@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -35,6 +36,7 @@ import de.uni_passau.fim.se2.litterbox.ml.CliTest;
 class Code2seqIntegrationTest extends CliTest {
 
     private final String C2S_CMD = "code2seq";
+    private final String INPUT_FLAG = "-p";
 
     @Test
     void disallowBothWholeProgramAndPerSprite() {
@@ -45,27 +47,43 @@ class Code2seqIntegrationTest extends CliTest {
 
     @Test
     void processEmptyProgram() {
-        commandLine.execute(C2S_CMD, "-p", "src/test/fixtures/emptyProject.json");
+        commandLine.execute(C2S_CMD, INPUT_FLAG, "src/test/fixtures/emptyProject.json");
         assertEmptyStdOut();
     }
 
     @Test
     void processProgramWithMultipleSprites() {
-        commandLine.execute(C2S_CMD, "-p", "src/test/fixtures/multipleSprites.json", "--include-stage");
+        commandLine.execute(C2S_CMD, INPUT_FLAG, "src/test/fixtures/multipleSprites.json", "--include-stage");
         assertEmptyStdErr();
 
         final List<String> outputLines = getOutput().lines().toList();
         assertThat(outputLines).hasSize(3);
         assertThat(outputLines).containsExactly(
-            "cat 39,29|57|41|8|25|153|27,39 39,29|57|41|8|25|156,39 hi|!,27|153|25|156,hi|!",
-            "abby green|flag,67|8|25|153|27,green|flag",
-            "stage green|flag,67|8|25|26|29,green|flag"
+            "cat 39,29|57|41|8|25|153|27,hi|! 39,29|57|41|8|25|156,show hi|!,27|153|25|156,show",
+            "abby green|flag,67|8|25|153|27,hello|!",
+            "stage green|flag,67|8|25|26|29,10"
+        );
+    }
+
+    @Test
+    void processProgramWithMultipleSpritesToFile(@TempDir Path tempDir) throws IOException {
+        commandLine.execute(
+            C2S_CMD, INPUT_FLAG, "src/test/fixtures/multipleSprites.json", "--include-stage", "-o", tempDir.toString()
+        );
+        assertEmptyStdErr();
+
+        final List<String> outputLines = Files.readAllLines(tempDir.resolve("multipleSprites.txt"));
+        assertThat(outputLines).hasSize(3);
+        assertThat(outputLines).containsExactly(
+            "cat 39,29|57|41|8|25|153|27,hi|! 39,29|57|41|8|25|156,show hi|!,27|153|25|156,show",
+            "abby green|flag,67|8|25|153|27,hello|!",
+            "stage green|flag,67|8|25|26|29,10"
         );
     }
 
     @Test
     void processProgramWithMultipleSpritesWholeProgram() {
-        commandLine.execute(C2S_CMD, "-p", "src/test/fixtures/multipleSprites.json", "--whole-program");
+        commandLine.execute(C2S_CMD, INPUT_FLAG, "src/test/fixtures/multipleSprites.json", "--whole-program");
         assertEmptyStdErr();
 
         final String output = getOutput();
@@ -75,17 +93,17 @@ class Code2seqIntegrationTest extends CliTest {
         assertThat(output).startsWith("program ");
 
         final Stream<String> expectedPaths = Stream.of(
-            "39,29|57|41|8|25|153|27,39",
-            "39,29|57|41|8|25|156,39",
-            "hi|!,27|153|25|156,hi|!",
-            "green|flag,67|8|25|153|27,green|flag"
+            "39,29|57|41|8|25|153|27,hi|!",
+            "39,29|57|41|8|25|156,show",
+            "hi|!,27|153|25|156,show",
+            "green|flag,67|8|25|153|27,hello|!"
         );
         assertAll(expectedPaths.map(path -> () -> assertThat(output).contains(path)));
     }
 
     @Test
     void processProgramWithMultipleSpritesPerScript() {
-        commandLine.execute(C2S_CMD, "-p", "src/test/fixtures/multipleSprites.json", "--scripts");
+        commandLine.execute(C2S_CMD, INPUT_FLAG, "src/test/fixtures/multipleSprites.json", "--scripts");
         assertEmptyStdErr();
         assertStdOutContains("scriptId_-481429174");
     }
@@ -93,14 +111,16 @@ class Code2seqIntegrationTest extends CliTest {
     @Test
     void processProgramWithMultipleSpritesPerScriptToFile(@TempDir File tempDir) throws IOException {
         commandLine.execute(
-            C2S_CMD, "-p", "src/test/fixtures/multipleSprites.json", "--scripts", "-o", tempDir.toString()
+            C2S_CMD, INPUT_FLAG, "src/test/fixtures/multipleSprites.json", "--scripts", "-o", tempDir.toString()
         );
         assertEmptyStdErr();
         assertEmptyStdOut();
 
         final String output = Files.readString(tempDir.toPath().resolve("multipleSprites.script.txt"));
         assertThat(output)
-            .contains("scriptId_-481429174 39,29|57|41|8|25|153|27,39 39,29|57|41|8|25|156,39 hi|!,27|153|25|156,hi|!");
-        assertThat(output).contains("scriptId_1341144038 green|flag,67|8|25|153|27,green|flag");
+            .contains(
+                "scriptId_-481429174 39,29|57|41|8|25|153|27,hi|! 39,29|57|41|8|25|156,show hi|!,27|153|25|156,show"
+            );
+        assertThat(output).contains("scriptId_1341144038 green|flag,67|8|25|153|27,hello|!");
     }
 }

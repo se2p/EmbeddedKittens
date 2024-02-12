@@ -117,7 +117,7 @@ public abstract class PathGenerator {
 
         if (pathFormatOptions.normaliseTokens()) {
             sourceLiteral = StringUtil.normaliseString(sourceLiteral, pathFormatOptions.delimiter());
-            targetLiteral = StringUtil.normaliseString(sourceLiteral, pathFormatOptions.delimiter());
+            targetLiteral = StringUtil.normaliseString(targetLiteral, pathFormatOptions.delimiter());
         }
 
         if (!sourceLiteral.isEmpty() && !targetLiteral.isEmpty()) {
