@@ -58,10 +58,7 @@ class GeneratePathTaskTest implements JsonTest {
     @Test
     void testCreateContextEmptyProgram() throws ParsingException, IOException {
         Program program = getAST("src/test/fixtures/emptyProject.json");
-        PathGenerator pathGenerator = PathGeneratorFactory.createPathGenerator(
-            PathType.PROGRAM, 8, true, program,
-            false, programRelationFactory, ActorNameNormalizer.getDefault()
-        );
+        PathGenerator pathGenerator = getPathGenerator(program, true);
         GeneratePathTask generatePathTask = new GeneratePathTask(pathGenerator);
         List<ProgramFeatures> pathContextForCode2Vec = generatePathTask.createContext();
         assertThat(pathContextForCode2Vec).isEmpty();
@@ -71,10 +68,7 @@ class GeneratePathTaskTest implements JsonTest {
     @ValueSource(booleans = { true, false })
     void testCreateContextForCode2Vec(boolean includeStage) throws ParsingException, IOException {
         Program program = getAST("src/test/fixtures/multipleSprites.json");
-        PathGenerator pathGenerator = PathGeneratorFactory.createPathGenerator(
-            PathType.SPRITE, 8, includeStage,
-            program, false, programRelationFactory, ActorNameNormalizer.getDefault()
-        );
+        PathGenerator pathGenerator = getPathGenerator(program, includeStage);
         GeneratePathTask generatePathTask = new GeneratePathTask(pathGenerator);
         List<ProgramFeatures> pathContextsForCode2Vec = generatePathTask.createContext();
 
@@ -105,10 +99,7 @@ class GeneratePathTaskTest implements JsonTest {
     @ValueSource(booleans = { true, false })
     void testCreateContextCustomProcedures(boolean includeStage) throws ParsingException, IOException {
         Program program = getAST("src/test/fixtures/ml_preprocessing/shared/custom_blocks_simple.json");
-        PathGenerator pathGenerator = PathGeneratorFactory.createPathGenerator(
-            PathType.SPRITE, 8, includeStage,
-            program, false, programRelationFactory, ActorNameNormalizer.getDefault()
-        );
+        PathGenerator pathGenerator = getPathGenerator(program, includeStage);
         GeneratePathTask generatePathTask = new GeneratePathTask(pathGenerator);
 
         List<ProgramFeatures> pathContextsForCode2Vec = generatePathTask.createContext();
@@ -129,10 +120,7 @@ class GeneratePathTaskTest implements JsonTest {
     @ValueSource(booleans = { true, false })
     void testCreateContextForCode2VecPerScripts(boolean includeStage) throws ParsingException, IOException {
         Program program = getAST("src/test/fixtures/multipleSprites.json");
-        PathGenerator pathGenerator = PathGeneratorFactory.createPathGenerator(
-            PathType.SCRIPT, 8, includeStage,
-            program, false, programRelationFactory, ActorNameNormalizer.getDefault()
-        );
+        PathGenerator pathGenerator = getPathGenerator(program, includeStage);
         GeneratePathTask generatePathTask = new GeneratePathTask(pathGenerator);
         List<ProgramFeatures> pathContextsForCode2Vec = generatePathTask.createContext();
 
@@ -158,10 +146,7 @@ class GeneratePathTaskTest implements JsonTest {
     void testCreateContextForCode2VecPerScriptsCountForProgramWithOnlyValidScripts(boolean includeStage)
         throws IOException, ParsingException {
         Program program = getAST("src/test/fixtures/bugsPerScripts/random_project.json");
-        PathGenerator pathGenerator = PathGeneratorFactory.createPathGenerator(
-            PathType.SCRIPT, 8, includeStage,
-            program, false, programRelationFactory, ActorNameNormalizer.getDefault()
-        );
+        PathGenerator pathGenerator = getScriptPathGenerator(program, includeStage);
         GeneratePathTask generatePathTask = new GeneratePathTask(pathGenerator);
         List<ProgramFeatures> pathContextsForCode2Vec = generatePathTask.createContext();
         List<String> pathContexts = pathContextsForCode2Vec
@@ -176,5 +161,19 @@ class GeneratePathTaskTest implements JsonTest {
         int procedureCountPerProgram = (int) procedureCount.calculateMetric(program);
 
         assertThat(pathContexts).hasSize(scriptCountPerProgram + procedureCountPerProgram);
+    }
+
+    private PathGenerator getPathGenerator(final Program program, final boolean includeStage) {
+        return PathGeneratorFactory.createPathGenerator(
+            PathType.SPRITE, 8, includeStage,
+            program, false, programRelationFactory, ActorNameNormalizer.getDefault()
+        );
+    }
+
+    private PathGenerator getScriptPathGenerator(final Program program, final boolean includeStage) {
+        return PathGeneratorFactory.createPathGenerator(
+            PathType.SCRIPT, 8, includeStage,
+            program, false, programRelationFactory, ActorNameNormalizer.getDefault()
+        );
     }
 }
