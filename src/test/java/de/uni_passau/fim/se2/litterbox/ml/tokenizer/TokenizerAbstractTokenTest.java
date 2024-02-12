@@ -19,6 +19,7 @@
 package de.uni_passau.fim.se2.litterbox.ml.tokenizer;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -29,6 +30,9 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import de.uni_passau.fim.se2.litterbox.ast.ParsingException;
+import de.uni_passau.fim.se2.litterbox.ast.model.Program;
+import de.uni_passau.fim.se2.litterbox.ast.parser.Scratch3Parser;
 import de.uni_passau.fim.se2.litterbox.ml.MLOutputPath;
 import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
 import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
@@ -60,10 +64,11 @@ class TokenizerAbstractTokenTest extends AbstractTokenCheck {
             "src/test/fixtures/ml_preprocessing/shared/tts_blocks.json",
         }
     )
-    void testAllBlocksVisitableAbstract(final String filename) {
-        final TokenizingAnalyzer analyzer = getAnalyzer();
+    void testAllBlocksVisitableAbstract(final String filename) throws ParsingException, IOException {
+        final TokenizingProgramPreprocessor analyzer = getAnalyzer();
         final File inputFile = Path.of(filename).toFile();
-        final Stream<TokenSequence> output = analyzer.check(inputFile);
+        final Program program = new Scratch3Parser().parseFile(inputFile);
+        final Stream<TokenSequence> output = analyzer.process(program);
 
         output
             .map(TokenSequence::tokens)
@@ -72,20 +77,17 @@ class TokenizerAbstractTokenTest extends AbstractTokenCheck {
             .forEach(this::checkNodeLabel);
     }
 
-    private TokenizingAnalyzer getAnalyzer() {
+    private TokenizingProgramPreprocessor getAnalyzer() {
         final MLPreprocessorCommonOptions common = new MLPreprocessorCommonOptions(
-            Path.of(""),
             MLOutputPath.console(),
-            false,
             true,
             true,
             true,
             true,
             ActorNameNormalizer.getDefault()
         );
-        return new TokenizingAnalyzer(
-            common, false, false, false,
-            MaskingStrategy.none()
+        return new TokenizingProgramPreprocessor(
+            common, MaskingStrategy.none(), false, false, false
         );
     }
 }

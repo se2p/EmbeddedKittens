@@ -28,20 +28,27 @@ import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.PathGeneratorFact
 import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.ProgramFeatures;
 import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.ProgramRelationFactory;
 
-public class Code2VecAnalyzer extends Code2Analyzer {
+public class Code2VecProgramPreprocessor extends Code2ProgramPreprocessor {
 
-    public Code2VecAnalyzer(final MLPreprocessorCommonOptions commonOptions, int maxPathLength, boolean isPerScript) {
+    protected Code2VecProgramPreprocessor(
+        final MLPreprocessorCommonOptions commonOptions, final int maxPathLength, final boolean isPerScript
+    ) {
         super(commonOptions, maxPathLength, isPerScript);
     }
 
     @Override
-    public Stream<ProgramFeatures> check(final Program program) {
+    public Stream<ProgramFeatures> process(Program program) {
         final ProgramRelationFactory programRelationFactory = ProgramRelationFactory.withHashCodeFactory();
         final PathGenerator pathGenerator = PathGeneratorFactory.createPathGenerator(
-            pathType, maxPathLength, includeStage, program, includeDefaultSprites, programRelationFactory,
-            actorNameNormalizer
+            pathType, maxPathLength, commonOptions.includeStage(), program, commonOptions.includeDefaultSprites(),
+            programRelationFactory, commonOptions.actorNameNormalizer()
         );
         GeneratePathTask generatePathTask = new GeneratePathTask(pathGenerator);
         return generatePathTask.createContext().stream();
+    }
+
+    @Override
+    protected String resultToString(ProgramFeatures result) {
+        return result.toString();
     }
 }

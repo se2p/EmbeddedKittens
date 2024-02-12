@@ -18,61 +18,49 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.astnn;
 
-import java.io.File;
-import java.nio.file.Path;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-
-import org.apache.commons.io.FilenameUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
-import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessingAnalyzer;
 import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
+import de.uni_passau.fim.se2.litterbox.ml.MLProgramPreprocessor;
 import de.uni_passau.fim.se2.litterbox.ml.astnn.model.AstnnNode;
 import de.uni_passau.fim.se2.litterbox.ml.astnn.model.StatementTreeSequence;
 
-public class AstnnAnalyzer extends MLPreprocessingAnalyzer<StatementTreeSequence> {
+public class AstnnProgramPreprocessor extends MLProgramPreprocessor<StatementTreeSequence> {
 
-    private static final Logger log = Logger.getLogger(AstnnAnalyzer.class.getName());
+    private static final Logger log = Logger.getLogger(AstnnProgramPreprocessor.class.getName());
 
     private final ObjectMapper objectMapper;
     private final StatementTreeSequenceBuilder statementTreeSequenceBuilder;
 
-    /**
-     * Sets up an analyzer that extracts the necessary information for a machine learning model from a program.
-     *
-     * @param commonOptions Some common options used for all machine learning preprocessors.
-     */
-    public AstnnAnalyzer(final MLPreprocessorCommonOptions commonOptions) {
+    public AstnnProgramPreprocessor(final MLPreprocessorCommonOptions commonOptions) {
         super(commonOptions);
 
-        objectMapper = new ObjectMapper();
+        this.objectMapper = new ObjectMapper();
         statementTreeSequenceBuilder = new StatementTreeSequenceBuilder(
             commonOptions.actorNameNormalizer(), commonOptions.abstractTokens()
         );
     }
 
     @Override
-    public Stream<StatementTreeSequence> check(final Program program) {
+    public Stream<StatementTreeSequence> process(final Program program) {
         final Stream<StatementTreeSequence> nodes;
-        if (wholeProgram) {
+        if (commonOptions.wholeProgram()) {
             nodes = Stream.of(
-                statementTreeSequenceBuilder.build(program, includeStage, includeDefaultSprites)
+                statementTreeSequenceBuilder
+                    .build(program, commonOptions.includeStage(), commonOptions.includeDefaultSprites())
             );
         }
         else {
-            nodes = statementTreeSequenceBuilder.buildPerActor(program, includeStage, includeDefaultSprites);
+            nodes = statementTreeSequenceBuilder
+                .buildPerActor(program, commonOptions.includeStage(), commonOptions.includeDefaultSprites());
         }
 
         return nodes.filter(this::isValidStatementSequence);
-    }
-
-    @Override
-    protected String resultToString(final StatementTreeSequence result) {
-        return sequenceToString(result);
     }
 
     /**
@@ -90,6 +78,11 @@ public class AstnnAnalyzer extends MLPreprocessingAnalyzer<StatementTreeSequence
         return !hasEmptyName && !hasNoStatements;
     }
 
+    @Override
+    protected String resultToString(StatementTreeSequence result) {
+        return sequenceToString(result);
+    }
+
     private String sequenceToString(final StatementTreeSequence sequence) {
         try {
             return objectMapper.writeValueAsString(sequence);
@@ -100,10 +93,5 @@ public class AstnnAnalyzer extends MLPreprocessingAnalyzer<StatementTreeSequence
             ex.printStackTrace();
             return null;
         }
-    }
-
-    @Override
-    protected Path outputFileName(final File inputFile) {
-        return Path.of(FilenameUtils.removeExtension(inputFile.getName()) + ".jsonl");
     }
 }
