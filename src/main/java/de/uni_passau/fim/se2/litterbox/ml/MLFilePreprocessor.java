@@ -30,7 +30,6 @@ import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-import de.uni_passau.fim.se2.litterbox.ast.ParsingException;
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ast.parser.Scratch3Parser;
 
@@ -48,6 +47,15 @@ public abstract class MLFilePreprocessor<R> {
         this.outputPath = outputPath;
     }
 
+    /**
+     * Determines the output file name based on the input file name.
+     *
+     * <p>
+     * Should receive and return a file name rather than a path with multiple elements.
+     *
+     * @param inputFile The file name of the input file.
+     * @return The output file name.
+     */
     protected abstract Path outputFileName(Path inputFile);
 
     /**
@@ -63,17 +71,17 @@ public abstract class MLFilePreprocessor<R> {
         }
 
         if (input.toFile().isFile()) {
-            processFile(input);
+            processFile(input.getParent(), input);
         }
         else if (input.toFile().isDirectory()) {
             processDirectory(input);
         }
     }
 
-    private void processFile(final Path programPath) {
+    private void processFile(final Path inputBaseDir, final Path programPath) {
         try {
             final Stream<R> results = readProgram(programPath).stream().flatMap(programAnalyzer::process);
-            writeResultToOutput(programPath, results);
+            writeResultToOutput(inputBaseDir.relativize(programPath), results);
         }
         catch (IOException e) {
             log.warning("Could not process file '" + programPath + "'!");
@@ -84,7 +92,8 @@ public abstract class MLFilePreprocessor<R> {
         try (var files = Files.walk(path)) {
             files
                 .filter(f -> f.toFile().isFile())
-                .forEach(this::processFile);
+                .parallel()
+                .forEach(f -> processFile(path, f));
         }
         catch (IOException e) {
             log.warning("Failed to walk over all files in directory '" + path + "'!");
@@ -96,7 +105,7 @@ public abstract class MLFilePreprocessor<R> {
         try {
             return Optional.of(PARSER.parseFile(programPath.toFile()));
         }
-        catch (ParsingException e) {
+        catch (Exception e) {
             log.warning("Could not parse file '" + programPath + "' as Scratch project!");
             e.printStackTrace();
             return Optional.empty();
@@ -119,8 +128,7 @@ public abstract class MLFilePreprocessor<R> {
     }
 
     private void writeResultToFile(final Path inputFile, final Stream<R> result) throws IOException {
-        final Path outName = outputFileName(inputFile);
-        final Path outputFile = outputPath.getPath().resolve(outName);
+        final Path outputFile = getOutputFilePath(inputFile);
 
         Files.createDirectories(outputFile.getParent());
 
@@ -132,6 +140,17 @@ public abstract class MLFilePreprocessor<R> {
         }
 
         log.info("Wrote processing result of " + inputFile + " to file " + outputFile);
+    }
+
+    private Path getOutputFilePath(final Path inputFile) {
+        Path outputFile = outputPath.getPath();
+        if (inputFile.getParent() != null) {
+            outputFile = outputFile.resolve(inputFile.getParent());
+        }
+
+        final Path outName = outputFileName(inputFile.getFileName());
+        outputFile = outputFile.resolve(outName);
+        return outputFile;
     }
 
     private void writeResult(final Path inputFile, final PrintWriter printWriter, final Stream<R> result) {

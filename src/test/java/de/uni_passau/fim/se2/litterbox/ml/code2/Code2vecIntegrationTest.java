@@ -46,4 +46,19 @@ class Code2vecIntegrationTest extends CliTest {
             "stage GreenFlag,1809747443,10"
         );
     }
+
+    @Test
+    void ensureRecursiveFileProcessingNoOverwrites(@TempDir Path input, @TempDir Path output) throws IOException {
+        Files.createDirectories(input.resolve("a").resolve("b"));
+
+        final Path fixture = Path.of("src/test/fixtures/multipleSprites.json");
+        Files.copy(fixture, input.resolve(fixture.getFileName()));
+        Files.copy(fixture, input.resolve("a").resolve(fixture.getFileName()));
+        Files.copy(fixture, input.resolve("a").resolve("b").resolve(fixture.getFileName()));
+
+        commandLine.execute("code2vec", "-p", input.toString(), "--include-stage", "-o", output.toString());
+
+        assertThat(Files.walk(output).filter(p -> p.toFile().isFile())).hasSize(3);
+        assertThat(Files.walk(output).filter(p -> p.toFile().isDirectory())).hasSize(3);
+    }
 }
