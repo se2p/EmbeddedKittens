@@ -18,9 +18,8 @@
     <properties>
         <java.version>17</java.version>
         <maven.compiler.release>17</maven.compiler.release>
-        <!-- Pinned to specific snapshot version. Todo: refactoring in #4 -->
-        <litterbox.version>1.9-20240211.141123-16</litterbox.version>
 
+        <litterbox.version>1.9-SNAPSHOT</litterbox.version>
         <checkstyle.version>10.13.0</checkstyle.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

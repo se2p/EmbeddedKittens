@@ -19,17 +19,16 @@
 package de.uni_passau.fim.se2.litterbox.ml;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 
-import de.uni_passau.fim.se2.litterbox.analytics.Analyzer;
-import de.uni_passau.fim.se2.litterbox.ml.astnn.AstnnAnalyzer;
-import de.uni_passau.fim.se2.litterbox.ml.code2.Code2SeqAnalyzer;
-import de.uni_passau.fim.se2.litterbox.ml.code2.Code2VecAnalyzer;
-import de.uni_passau.fim.se2.litterbox.ml.ggnn.GgnnGraphAnalyzer;
+import de.uni_passau.fim.se2.litterbox.ml.astnn.AstnnPreprocessor;
+import de.uni_passau.fim.se2.litterbox.ml.code2.Code2SeqPreprocessor;
+import de.uni_passau.fim.se2.litterbox.ml.code2.Code2VecPreprocessor;
+import de.uni_passau.fim.se2.litterbox.ml.ggnn.GgnnGraphPreprocessor;
+import de.uni_passau.fim.se2.litterbox.ml.ggnn.GgnnOutputFormat;
 import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
-import de.uni_passau.fim.se2.litterbox.ml.tokenizer.TokenizingAnalyzer;
+import de.uni_passau.fim.se2.litterbox.ml.tokenizer.TokenizingPreprocessor;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
 import de.uni_passau.fim.se2.litterbox.ml.util.NodeNameUtil;
 import de.uni_passau.fim.se2.litterbox.utils.IssueTranslator;
@@ -91,31 +90,13 @@ public class Main implements Callable<Integer> {
         Path projectPath;
 
         @CommandLine.Option(
-            names = { "--project-id" },
-            description = "ID of the project that should be downloaded and analysed."
-        )
-        String projectId;
-
-        @CommandLine.Option(
-            names = { "--project-list" },
-            description = "Path to a file with a list of project ids which should be downloaded and analysed."
-        )
-        Path projectList;
-
-        @CommandLine.Option(
             names = { "-o", "--output" },
             description = "Path to the file or folder for the analyser results. "
                 + "Has to be a folder if multiple projects are analysed."
         )
         Path outputPath;
 
-        @CommandLine.Option(
-            names = { "--delete" },
-            description = "Delete the project files after analysing them."
-        )
-        boolean deleteProject;
-
-        protected abstract Analyzer<?> getAnalyzer() throws Exception;
+        protected abstract MLFilePreprocessor<?> getAnalyzer() throws Exception;
 
         /**
          * Override to implement custom parameter validation before the analyzer is run.
@@ -132,21 +113,12 @@ public class Main implements Callable<Integer> {
 
             validateParams();
 
-            final Analyzer<?> analyzer = getAnalyzer();
+            final MLFilePreprocessor<?> analyzer = getAnalyzer();
             return runAnalysis(analyzer);
         }
 
-        private int runAnalysis(final Analyzer<?> analyzer) throws IOException {
-            if (projectId != null) {
-                analyzer.analyzeSingle(projectId);
-            }
-            else if (projectList != null) {
-                analyzer.analyzeMultiple(projectList);
-            }
-            else {
-                analyzer.analyzeFile();
-            }
-
+        private int runAnalysis(final MLFilePreprocessor<?> analyzer) {
+            analyzer.process(projectPath);
             return 0;
         }
 
@@ -217,8 +189,8 @@ public class Main implements Callable<Integer> {
 
             final MLOutputPath outputPath = getOutputPath();
             return new MLPreprocessorCommonOptions(
-                projectPath, outputPath, deleteProject, includeStage, wholeProgram,
-                includeDefaultSprites, abstractTokens, buildActorNameNormalizer()
+                outputPath, includeStage, wholeProgram, includeDefaultSprites, abstractTokens,
+                buildActorNameNormalizer()
             );
         }
 
@@ -239,8 +211,8 @@ public class Main implements Callable<Integer> {
     static class AstnnSubcommand extends MLPreprocessorSubcommand {
 
         @Override
-        protected AstnnAnalyzer getAnalyzer() {
-            return new AstnnAnalyzer(getCommonOptions());
+        protected AstnnPreprocessor getAnalyzer() {
+            return new AstnnPreprocessor(getCommonOptions());
         }
     }
 
@@ -282,8 +254,8 @@ public class Main implements Callable<Integer> {
     static class Code2vecSubcommand extends Code2Subcommand {
 
         @Override
-        protected Code2VecAnalyzer getAnalyzer() {
-            return new Code2VecAnalyzer(getCommonOptions(), maxPathLength, isPerScript);
+        protected Code2VecPreprocessor getAnalyzer() {
+            return new Code2VecPreprocessor(getCommonOptions(), maxPathLength, isPerScript);
         }
     }
 
@@ -294,8 +266,8 @@ public class Main implements Callable<Integer> {
     static class Code2SeqSubcommand extends Code2Subcommand {
 
         @Override
-        protected Code2SeqAnalyzer getAnalyzer() {
-            return new Code2SeqAnalyzer(getCommonOptions(), maxPathLength, isPerScript);
+        protected Code2SeqPreprocessor getAnalyzer() {
+            return new Code2SeqPreprocessor(getCommonOptions(), maxPathLength, isPerScript);
         }
     }
 
@@ -318,8 +290,16 @@ public class Main implements Callable<Integer> {
         boolean dotGraph;
 
         @Override
-        protected GgnnGraphAnalyzer getAnalyzer() {
-            return new GgnnGraphAnalyzer(getCommonOptions(), dotGraph, label);
+        protected GgnnGraphPreprocessor getAnalyzer() {
+            final GgnnOutputFormat format;
+            if (dotGraph) {
+                format = GgnnOutputFormat.DOT_GRAPH;
+            }
+            else {
+                format = GgnnOutputFormat.JSON_GRAPH;
+            }
+
+            return new GgnnGraphPreprocessor(getCommonOptions(), format, label);
         }
     }
 
@@ -355,7 +335,7 @@ public class Main implements Callable<Integer> {
         String maskedStatementId = null;
 
         @Override
-        protected TokenizingAnalyzer getAnalyzer() {
+        protected TokenizingPreprocessor getAnalyzer() {
             if (wholeProgram && sequencePerScript) {
                 throw new CommandLine.ParameterException(
                     spec.commandLine(),
@@ -370,9 +350,9 @@ public class Main implements Callable<Integer> {
             else {
                 maskingStrategy = MaskingStrategy.statement(maskedStatementId);
             }
-            return new TokenizingAnalyzer(
-                getCommonOptions(), sequencePerScript, abstractFixedNodeOption,
-                statementLevel, maskingStrategy
+
+            return new TokenizingPreprocessor(
+                getCommonOptions(), sequencePerScript, abstractFixedNodeOption, statementLevel, maskingStrategy
             );
         }
     }

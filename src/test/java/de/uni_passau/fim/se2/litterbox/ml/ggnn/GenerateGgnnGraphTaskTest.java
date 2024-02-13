@@ -40,6 +40,8 @@ import de.uni_passau.fim.se2.litterbox.ast.model.SetStmtList;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.declaration.DeclarationStmt;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.declaration.DeclarationStmtList;
 import de.uni_passau.fim.se2.litterbox.ml.JsonTest;
+import de.uni_passau.fim.se2.litterbox.ml.MLOutputPath;
+import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
 import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 import de.uni_passau.fim.se2.litterbox.utils.Pair;
 
@@ -102,23 +104,37 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
     @ValueSource(booleans = { true, false })
     void testGraphWholeProgram(boolean includeStage) throws Exception {
         Program program = getAST(multipleSpritesFixture);
-        GenerateGgnnGraphTask graphTask = new GenerateGgnnGraphTask(
-            program, includeStage, true, true, null, ActorNameNormalizer.getDefault()
+        MLPreprocessorCommonOptions commonOptions = new MLPreprocessorCommonOptions(
+            MLOutputPath.console(), includeStage, true, true, false, ActorNameNormalizer.getDefault()
         );
 
-        List<GgnnProgramGraph> graphs = graphTask.getProgramGraphs();
-        assertThat(graphs).hasSize(1);
+        {
+            GgnnProgramPreprocessor graphTask = new GgnnProgramPreprocessor(
+                commonOptions, GgnnOutputFormat.JSON_GRAPH, null
+            );
+            List<GgnnProgramGraph> graphs = graphTask.process(program).map(g -> ((GgnnAnalyzerOutput.Graph) g).graph())
+                .toList();
+            assertThat(graphs).hasSize(1);
+        }
 
-        List<String> graphJsonl = graphTask.generateJsonGraphData().collect(Collectors.toList());
-        assertThat(graphJsonl).hasSize(1);
+        {
+            GgnnProgramPreprocessor graphTask = new GgnnProgramPreprocessor(
+                commonOptions, GgnnOutputFormat.DOT_GRAPH, null
+            );
+            List<String> graphJsonl = graphTask.process(program).map(graphTask::resultToString).toList();
+            assertThat(graphJsonl).hasSize(1);
+        }
     }
 
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void testGraphIncludeStage(boolean includeStage) throws Exception {
         Program program = getAST(multipleSpritesFixture);
-        GenerateGgnnGraphTask graphTask = new GenerateGgnnGraphTask(
-            program, includeStage, false, false, null, ActorNameNormalizer.getDefault()
+        MLPreprocessorCommonOptions commonOptions = new MLPreprocessorCommonOptions(
+            MLOutputPath.console(), includeStage, false, true, false, ActorNameNormalizer.getDefault()
+        );
+        GgnnProgramPreprocessor graphTask = new GgnnProgramPreprocessor(
+            commonOptions, GgnnOutputFormat.JSON_GRAPH, null
         );
 
         int expectedSprites;
@@ -129,10 +145,12 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
             expectedSprites = 2;
         }
 
-        List<GgnnProgramGraph> graphs = graphTask.getProgramGraphs();
+        List<GgnnProgramGraph> graphs = graphTask.process(program).map(g -> ((GgnnAnalyzerOutput.Graph) g).graph())
+            .toList();
         assertThat(graphs).hasSize(expectedSprites);
 
-        List<String> graphJsonl = graphTask.generateJsonGraphData().collect(Collectors.toList());
+        List<String> graphJsonl = graphTask.process(program).map(graphTask::resultToString)
+            .collect(Collectors.toList());
         assertThat(graphJsonl).hasSize(expectedSprites);
     }
 

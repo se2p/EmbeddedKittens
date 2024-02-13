@@ -50,15 +50,25 @@ import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 class AstnnAnalyzerTest {
 
     @Test
-    void testEmptyResultOnInvalidProgram() {
-        final Stream<StatementTreeSequence> result = processFixture(
-            "astnn_definitely_non_existing.json", true, true, false
+    void testEmptyResultOnInvalidProgram(@TempDir Path outputDir) throws IOException {
+        final MLPreprocessorCommonOptions commonOptions = new MLPreprocessorCommonOptions(
+            MLOutputPath.directory(outputDir),
+            true,
+            false,
+            true,
+            false,
+            ActorNameNormalizer.getDefault()
         );
-        assertThat(result.count()).isEqualTo(0);
+        final Path programPath = Path.of("src/test/fixtures/astnn_definitely_non_existing.json");
+        final AstnnPreprocessor analyzer = new AstnnPreprocessor(commonOptions);
+
+        analyzer.process(programPath);
+
+        assertThat(Files.walk(outputDir)).hasSize(1);
     }
 
     @Test
-    void testIgnoreEmptySprites() {
+    void testIgnoreEmptySprites() throws ParsingException, IOException {
         // one actor with an empty name, another one with no blocks
         final Stream<StatementTreeSequence> result = processFixture(
             "ml_preprocessing/astnn/empty_actors.json", false, true, false
@@ -68,7 +78,7 @@ class AstnnAnalyzerTest {
 
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
-    void testFilterSpritesDefaultName(boolean includeDefaultSprites) {
+    void testFilterSpritesDefaultName(boolean includeDefaultSprites) throws ParsingException, IOException {
         final List<StatementTreeSequence> result = processFixture(
             "allBlocks.json", true, includeDefaultSprites, false
         ).toList();
@@ -119,7 +129,7 @@ class AstnnAnalyzerTest {
 
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
-    void testStageIncludedPerSprite(boolean includeStage) {
+    void testStageIncludedPerSprite(boolean includeStage) throws ParsingException, IOException {
         final Stream<StatementTreeSequence> result = processFixture(
             "multipleSprites.json", includeStage, true, false
         );
@@ -130,7 +140,7 @@ class AstnnAnalyzerTest {
 
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
-    void testStageIncludedWholeProgram(boolean includeStage) {
+    void testStageIncludedWholeProgram(boolean includeStage) throws ParsingException, IOException {
         final List<StatementTreeSequence> result = processFixture(
             "multipleSprites.json", includeStage, true, true
         ).toList();
@@ -145,9 +155,7 @@ class AstnnAnalyzerTest {
     @Test
     void testWriteToFile(@TempDir Path outputDir) throws Exception {
         final MLPreprocessorCommonOptions options = new MLPreprocessorCommonOptions(
-            Path.of("src/test/fixtures/multipleSprites.json"),
             MLOutputPath.directory(outputDir),
-            false,
             false,
             false,
             true,
@@ -155,8 +163,8 @@ class AstnnAnalyzerTest {
             ActorNameNormalizer.getDefault()
         );
 
-        final AstnnAnalyzer analyzer = new AstnnAnalyzer(options);
-        analyzer.analyzeFile();
+        final AstnnPreprocessor analyzer = new AstnnPreprocessor(options);
+        analyzer.process(Path.of("src/test/fixtures/multipleSprites.json"));
 
         final Path expectedOutputFile = outputDir.resolve("multipleSprites.jsonl");
         assertThat(expectedOutputFile.toFile().exists()).isTrue();
@@ -167,21 +175,19 @@ class AstnnAnalyzerTest {
 
     private Stream<StatementTreeSequence> processFixture(
         final String program, boolean includeStage, boolean includeDefaultSprites, boolean wholeProgram
-    ) {
+    ) throws ParsingException, IOException {
         final Path programPath = Path.of("src/test/fixtures").resolve(program);
-        final AstnnAnalyzer analyzer = new AstnnAnalyzer(
-            options(programPath, includeStage, includeDefaultSprites, wholeProgram)
+        final AstnnProgramPreprocessor analyzer = new AstnnProgramPreprocessor(
+            options(includeStage, includeDefaultSprites, wholeProgram)
         );
-        return analyzer.check(programPath.toFile());
+        return analyzer.process(new Scratch3Parser().parseFile(programPath.toFile()));
     }
 
     private MLPreprocessorCommonOptions options(
-        final Path inputPath, boolean includeStage, boolean includeDefaultSprites, boolean wholeProgram
+        boolean includeStage, boolean includeDefaultSprites, boolean wholeProgram
     ) {
         return new MLPreprocessorCommonOptions(
-            inputPath,
             MLOutputPath.console(),
-            false,
             includeStage,
             wholeProgram,
             includeDefaultSprites,

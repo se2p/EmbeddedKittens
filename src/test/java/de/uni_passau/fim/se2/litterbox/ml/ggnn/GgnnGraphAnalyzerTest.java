@@ -24,13 +24,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import de.uni_passau.fim.se2.litterbox.ml.MLOutputPath;
 import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
@@ -39,22 +36,21 @@ import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 class GgnnGraphAnalyzerTest {
 
     @ParameterizedTest
-    @ValueSource(booleans = { true, false })
-    void testProduceOutput(boolean toDotGraph, @TempDir Path outputDir) throws IOException {
+    @EnumSource(GgnnOutputFormat.class)
+    void testProduceOutput(GgnnOutputFormat outputFormat, @TempDir Path outputDir) throws IOException {
         MLPreprocessorCommonOptions commonOptions = new MLPreprocessorCommonOptions(
-            Path.of("src/test/fixtures/multipleSprites.json"),
             MLOutputPath.directory(outputDir),
-            false, true, false, false, true,
+            true, false, false, true,
             ActorNameNormalizer.getDefault()
         );
-        GgnnGraphAnalyzer analyzer = new GgnnGraphAnalyzer(commonOptions, toDotGraph, null);
-        analyzer.analyzeFile();
+        GgnnGraphPreprocessor analyzer = new GgnnGraphPreprocessor(commonOptions, outputFormat, null);
+        analyzer.process(Path.of("src/test/fixtures/multipleSprites.json"));
 
-        Path expectedOutputFile = outputDir.resolve(expectedOutputFilename("multipleSprites", toDotGraph));
+        Path expectedOutputFile = outputDir.resolve(expectedOutputFilename("multipleSprites", outputFormat));
         assertThat(expectedOutputFile.toFile().exists()).isTrue();
 
         List<String> output = Files.readAllLines(expectedOutputFile);
-        if (!toDotGraph) {
+        if (!outputFormat.isDotGraph()) {
             assertThat(output).hasSize(3);
             assertThat(output.get(0)).contains("\"nodeLabelMap\"");
             assertThat(output.get(0)).contains("\"nodeTypeMap\"");
@@ -64,18 +60,7 @@ class GgnnGraphAnalyzerTest {
         }
     }
 
-    @Test
-    void testInvalidInput() {
-        MLPreprocessorCommonOptions commonOptions = new MLPreprocessorCommonOptions(
-            Path.of(""), MLOutputPath.console(), false, false, false, true, false, ActorNameNormalizer.getDefault()
-        );
-        GgnnGraphAnalyzer analyzer = new GgnnGraphAnalyzer(commonOptions, false, null);
-
-        Stream<String> result = analyzer.check(Path.of("non_existing").toFile());
-        assertThat(result.collect(Collectors.toList())).isEmpty();
-    }
-
-    private String expectedOutputFilename(String inputFile, boolean dotGraph) {
-        return String.format("GraphData_%s.%s", inputFile, dotGraph ? "dot" : "jsonl");
+    private String expectedOutputFilename(String inputFile, GgnnOutputFormat outputFormat) {
+        return String.format("GraphData_%s.%s", inputFile, outputFormat.isDotGraph() ? "dot" : "jsonl");
     }
 }

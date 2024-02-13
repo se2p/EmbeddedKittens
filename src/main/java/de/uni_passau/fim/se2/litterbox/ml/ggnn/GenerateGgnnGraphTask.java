@@ -19,13 +19,8 @@
 package de.uni_passau.fim.se2.litterbox.ml.ggnn;
 
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
 import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
@@ -33,11 +28,7 @@ import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 import de.uni_passau.fim.se2.litterbox.ml.util.NodeNameUtil;
 
-public class GenerateGgnnGraphTask {
-
-    private static final Logger log = Logger.getLogger(GenerateGgnnGraphTask.class.getName());
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+class GenerateGgnnGraphTask {
 
     private final Program program;
     private final boolean includeStage;
@@ -46,7 +37,7 @@ public class GenerateGgnnGraphTask {
     private final ActorNameNormalizer actorNameNormalizer;
     private final String labelName;
 
-    public GenerateGgnnGraphTask(
+    GenerateGgnnGraphTask(
         Program program, boolean includeStage, boolean includeDefaultSprites,
         boolean wholeProgramAsSingleGraph, String labelName,
         ActorNameNormalizer actorNameNormalizer
@@ -69,25 +60,9 @@ public class GenerateGgnnGraphTask {
         return GgnnProgramGraphDotGraphBuilder.asDotGraph(graphs, label);
     }
 
-    Stream<String> generateJsonGraphData() {
+    Stream<GgnnProgramGraph> generateGraphData() {
         final List<GgnnProgramGraph> graphs = getProgramGraphs();
-        return graphs.stream().flatMap(this::graphToJson);
-    }
-
-    private Stream<String> graphToJson(GgnnProgramGraph graph) {
-        try {
-            return Stream.of(objectMapper.writeValueAsString(graph));
-        }
-        catch (JsonProcessingException e) {
-            // can only happen in case LitterBox is used as a dependency and e.g., due to
-            // multiple competing Jackson versions in the classpath the conversion fails
-            log.log(
-                Level.SEVERE,
-                "Jackson could not convert the GGNN graph to JSON. Probable misconfiguration.",
-                e
-            );
-            return Stream.empty();
-        }
+        return graphs.stream();
     }
 
     List<GgnnProgramGraph> getProgramGraphs() {

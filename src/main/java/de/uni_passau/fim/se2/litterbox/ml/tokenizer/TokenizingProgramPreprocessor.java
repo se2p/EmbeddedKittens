@@ -18,14 +18,10 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.tokenizer;
 
-import java.io.File;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
-
-import org.apache.commons.io.FilenameUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,34 +30,21 @@ import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
 import de.uni_passau.fim.se2.litterbox.ast.model.ActorDefinition;
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ast.util.AstNodeUtil;
-import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessingAnalyzer;
 import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
+import de.uni_passau.fim.se2.litterbox.ml.MLProgramPreprocessor;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
 import de.uni_passau.fim.se2.litterbox.utils.Preconditions;
 
-public class TokenizingAnalyzer extends MLPreprocessingAnalyzer<TokenSequence> {
+public class TokenizingProgramPreprocessor extends MLProgramPreprocessor<TokenSequence> {
 
-    private final ObjectMapper objectMapper;
-
-    private final boolean sequencePerScript;
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final BiFunction<Program, ASTNode, List<String>> tokenizeFunction;
+    private final boolean sequencePerScript;
 
-    /**
-     * An analyzer that flattens the program into a token sequence.
-     *
-     * @param commonOptions           The common ML preprocessor options.
-     * @param sequencePerScript       Generate one token sequence per script instead of one per actor.
-     * @param abstractFixedNodeOption Whether to replace fixed node options with an abstract token.
-     * @param statementLevel          Generate a sequence consisting of only statement tokens.
-     * @param maskingStrategy         The masking strategy to use.
-     */
-    public TokenizingAnalyzer(
-        final MLPreprocessorCommonOptions commonOptions,
-        final boolean sequencePerScript,
-        final boolean abstractFixedNodeOption,
-        final boolean statementLevel,
-        final MaskingStrategy maskingStrategy
+    public TokenizingProgramPreprocessor(
+        final MLPreprocessorCommonOptions commonOptions, final MaskingStrategy maskingStrategy,
+        final boolean abstractFixedNodeOption, final boolean statementLevel, final boolean sequencePerScript
     ) {
         super(commonOptions);
 
@@ -70,30 +53,24 @@ public class TokenizingAnalyzer extends MLPreprocessingAnalyzer<TokenSequence> {
             "Cannot generate one sequence for the whole program and sequences per script at the same time."
         );
 
-        this.objectMapper = new ObjectMapper();
-
         this.sequencePerScript = sequencePerScript;
 
         if (statementLevel) {
-            tokenizeFunction = (program, astNode) -> StatementLevelTokenizer.tokenize(
-                program, astNode,
-                this.abstractTokens, maskingStrategy
-            );
+            tokenizeFunction = (program, astNode) -> StatementLevelTokenizer
+                .tokenize(program, astNode, commonOptions.abstractTokens(), maskingStrategy);
         }
         else {
-            tokenizeFunction = (program, astNode) -> Tokenizer.tokenize(
-                program, astNode, this.abstractTokens, abstractFixedNodeOption,
-                maskingStrategy
-            );
+            tokenizeFunction = (program, astNode) -> Tokenizer
+                .tokenize(program, astNode, commonOptions.abstractTokens(), abstractFixedNodeOption, maskingStrategy);
         }
     }
 
     @Override
-    public Stream<TokenSequence> check(final Program program) {
+    public Stream<TokenSequence> process(Program program) {
         final Stream<ActorDefinition> actors = getActors(program);
 
         final Stream<TokenSequence> result;
-        if (wholeProgram) {
+        if (commonOptions.wholeProgram()) {
             final List<String> tokens = actors
                 .flatMap(actor -> getTokenSequencesForActor(program, actor))
                 .flatMap(List::stream)
@@ -107,22 +84,28 @@ public class TokenizingAnalyzer extends MLPreprocessingAnalyzer<TokenSequence> {
         return result;
     }
 
-    private Stream<ActorDefinition> getActors(final Program program) {
-        if (includeDefaultSprites) {
-            return AstNodeUtil.getActors(program, includeStage);
+    @Override
+    protected String resultToString(TokenSequence result) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(result);
         }
-        else {
-            return AstNodeUtil.getActorsWithoutDefaultSprites(program, includeStage);
+        catch (JsonProcessingException e) {
+            // should never happen
+            throw new RuntimeException(e);
         }
     }
 
-    @Override
-    protected String resultToString(final TokenSequence result) {
-        return toJson(result);
+    private Stream<ActorDefinition> getActors(final Program program) {
+        if (commonOptions.includeDefaultSprites()) {
+            return AstNodeUtil.getActors(program, commonOptions.includeStage());
+        }
+        else {
+            return AstNodeUtil.getActorsWithoutDefaultSprites(program, commonOptions.includeStage());
+        }
     }
 
     private Optional<TokenSequence> generateSequenceForActor(final Program program, final ActorDefinition actor) {
-        return actorNameNormalizer.normalizeName(actor).map(label -> {
+        return commonOptions.actorNameNormalizer().normalizeName(actor).map(label -> {
             final List<List<String>> tokens = getTokenSequencesForActor(program, actor).toList();
             return TokenSequenceBuilder.build(label, tokens);
         });
@@ -141,21 +124,5 @@ public class TokenizingAnalyzer extends MLPreprocessingAnalyzer<TokenSequence> {
         else {
             return Stream.of(tokenizeFunction.apply(program, actor));
         }
-    }
-
-    // save as JSON list to avoid having to manually deal with escaping whitespace, quotes, … and parsing it again
-    private String toJson(final TokenSequence items) {
-        try {
-            return objectMapper.writeValueAsString(items);
-        }
-        catch (JsonProcessingException e) {
-            // should never happen
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    protected Path outputFileName(final File inputFile) {
-        return Path.of(FilenameUtils.removeExtension(inputFile.getName()) + ".jsonl");
     }
 }
