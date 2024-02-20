@@ -34,6 +34,7 @@ import de.uni_passau.fim.se2.litterbox.ast.model.metadata.Metadata;
 import de.uni_passau.fim.se2.litterbox.ast.model.procedure.ParameterDefinition;
 import de.uni_passau.fim.se2.litterbox.ast.model.procedure.ProcedureDefinition;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.CallStmt;
+import de.uni_passau.fim.se2.litterbox.ast.model.statement.Stmt;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.common.Broadcast;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.common.BroadcastAndWait;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.common.ChangeVariableBy;
@@ -82,6 +83,10 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
 
     static List<Pair<ASTNode>> getMessagePassingEdges(final ASTNode node) {
         return getEdges(new MessagePassingVisitor(), node);
+    }
+
+    static List<Pair<ASTNode>> getReturnToEdges(final ASTNode node) {
+        return getEdges(new ReturnToVisitor(), node);
     }
 
     private static List<Pair<ASTNode>> getEdges(final GgnnGraphEdgesVisitor v, final ASTNode node) {
@@ -364,6 +369,20 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
             }
             nonNullList.add(element);
             return nonNullList;
+        }
+    }
+
+    private static class ReturnToVisitor extends GgnnGraphEdgesVisitor {
+
+        @Override
+        public void visit(ProcedureDefinition node) {
+            final List<Stmt> statements = node.getStmtList().getStmts();
+            if (statements.isEmpty()) {
+                return;
+            }
+
+            final Stmt lastStmt = statements.get(statements.size() - 1);
+            edges.add(Pair.of(lastStmt, node));
         }
     }
 }

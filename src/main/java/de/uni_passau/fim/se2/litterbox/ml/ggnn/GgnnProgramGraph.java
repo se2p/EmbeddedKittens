@@ -83,5 +83,9 @@ public record GgnnProgramGraph(
          * Links sending and receiving blocks of messages.
          */
         MESSAGE_PASSING,
+        /**
+         * Links the last statement of a procedure back to its start.
+         */
+        RETURN_TO,
     }
 }
