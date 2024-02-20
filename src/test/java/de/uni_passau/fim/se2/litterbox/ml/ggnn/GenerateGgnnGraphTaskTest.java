@@ -426,6 +426,29 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
         assertHasEdges(spriteGraph, GgnnProgramGraph.EdgeType.PARAMETER_PASSING, List.of(expectedEdge));
     }
 
+    @Test
+    void testReturnToEdge() throws Exception {
+        Path inputPath = fixture("customBlocksWithParams.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, false, false);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph spriteGraph = graphs.get(0);
+
+        Pair<String> expectedEdge = Pair.of("PlaySoundUntilDone", "ProcedureDefinition");
+        assertHasEdges(spriteGraph, GgnnProgramGraph.EdgeType.RETURN_TO, List.of(expectedEdge));
+    }
+
+    @Test
+    void testNoReturnToEdgeEmptyProcedure() throws Exception {
+        Path inputPath = fixture("customBlockNoStatements.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, true, true);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph spriteGraph = graphs.get(0);
+
+        assertThat(spriteGraph.contextGraph().edges().get(GgnnProgramGraph.EdgeType.RETURN_TO)).isEmpty();
+    }
+
     private void assertHasSingleLabelNodeIndex(final GgnnProgramGraph graph) {
         Set<Integer> expectedNodeIndices = graph.contextGraph().nodeLabels().entrySet().stream()
             .filter(entry -> "ActorDefinition".equals(entry.getValue()))

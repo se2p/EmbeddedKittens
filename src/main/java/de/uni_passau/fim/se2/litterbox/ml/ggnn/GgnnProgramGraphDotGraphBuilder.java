@@ -114,6 +114,7 @@ public class GgnnProgramGraphDotGraphBuilder {
             case GUARDED_BY -> "[color=maroon]";
             case PARAMETER_PASSING -> "[color=purple]";
             case MESSAGE_PASSING -> "[color=darkcyan]";
+            case RETURN_TO -> "[color=cornflowerblue]";
         };
     }
 }
