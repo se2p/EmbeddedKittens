@@ -45,6 +45,7 @@ import de.uni_passau.fim.se2.litterbox.utils.Pair;
 class GenerateGgnnGraphTaskTest implements JsonTest {
 
     private static final String VAR_TYPE = "Variable";
+    private static final String LIST_TYPE = "ScratchList";
 
     private final Path multipleSpritesFixture = fixture("multipleSprites.json");
 
@@ -193,6 +194,79 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
     }
 
     @Test
+    void testLastLexicalUseList() throws Exception {
+        Path inputPath = ggnnFixture("guarded_by_list_dropdown_in_condition.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, true, true);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph graph = graphs.get(0);
+
+        List<Pair<String>> edges = List.of(
+            Pair.of(LIST_TYPE, LIST_TYPE),
+            Pair.of(LIST_TYPE, LIST_TYPE)
+        );
+        assertContainsEdges(graph, GgnnProgramGraph.EdgeType.LAST_LEXICAL_USE, edges);
+    }
+
+    @Test
+    void testLastLexicalUseDifferentVariables() throws Exception {
+        Path inputPath = ggnnFixture("last_lexical_use_different_variables.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, true, true);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph graph = graphs.get(0);
+
+        List<Pair<String>> edges = List.of(Pair.of("Variable", "Variable"));
+        assertContainsEdges(graph, GgnnProgramGraph.EdgeType.LAST_LEXICAL_USE, edges);
+    }
+
+    @Test
+    void testLastLexicalUseListAndVariableSameName() throws Exception {
+        Path inputPath = ggnnFixture("last_lexical_use_list_var_same_name.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, true, true);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph graph = graphs.get(0);
+
+        assertContainsEdges(graph, GgnnProgramGraph.EdgeType.LAST_LEXICAL_USE, Collections.emptyList());
+    }
+
+    @Test
+    void testLastLexicalUseVariableMultipleTimesSameBlock() throws Exception {
+        Path inputPath = ggnnFixture("last_lexical_use_variable_same_block_multiple_times.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, true, true);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph graph = graphs.get(0);
+
+        List<Pair<String>> edges = List.of(Pair.of("Variable", "Variable"));
+        assertContainsEdges(graph, GgnnProgramGraph.EdgeType.LAST_LEXICAL_USE, edges);
+    }
+
+    @Test
+    void testLastLexicalUseNoConnectionBetweenScripts() throws Exception {
+        Path inputPath = ggnnFixture("last_lexical_use_no_connection_between_scripts.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, true, true);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph graph = graphs.get(0);
+
+        assertContainsEdges(graph, GgnnProgramGraph.EdgeType.LAST_LEXICAL_USE, Collections.emptyList());
+    }
+
+    @Test
+    void testLastLexicalUseConnectVolumeAttribute() throws Exception {
+        Path inputPath = ggnnFixture("last_lexical_use_connect_attributes.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, true, true);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph graph = graphs.get(0);
+
+        Pair<String> edge = Pair.of("Volume", "Volume");
+        assertContainsEdges(graph, GgnnProgramGraph.EdgeType.LAST_LEXICAL_USE, List.of(edge));
+    }
+
+    @Test
     void testVariableGuardedBy() throws Exception {
         Path inputPath = ggnnFixture("guarded_by.json");
         List<GgnnProgramGraph> graphs = getGraphs(inputPath, false, false);
@@ -263,7 +337,7 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
         assertDifferentEdgeStartsCount(spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, 10);
         assertDifferentEdgeTargetsCount(spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, 1);
 
-        Pair<String> edge = Pair.of("ScratchList", "AsNumber");
+        Pair<String> edge = Pair.of(LIST_TYPE, "AsNumber");
         assertHasEdges(
             spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, Stream.generate(() -> edge).limit(10).toList()
         );
@@ -280,7 +354,7 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
         assertDifferentEdgeStartsCount(spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, 2);
         assertDifferentEdgeTargetsCount(spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, 1);
 
-        Pair<String> edge = Pair.of("ScratchList", "ListContains");
+        Pair<String> edge = Pair.of(LIST_TYPE, "ListContains");
         assertHasEdges(spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, List.of(edge, edge));
     }
 

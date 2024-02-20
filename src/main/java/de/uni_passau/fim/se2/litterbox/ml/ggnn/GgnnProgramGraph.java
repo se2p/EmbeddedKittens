@@ -87,5 +87,10 @@ public record GgnnProgramGraph(
          * Links the last statement of a procedure back to its start.
          */
         RETURN_TO,
+        /**
+         * Links variables and attributes to the last location they appeared in the script without considering control
+         * or data flow.
+         */
+        LAST_LEXICAL_USE,
     }
 }

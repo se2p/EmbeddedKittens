@@ -45,6 +45,7 @@ import de.uni_passau.fim.se2.litterbox.ast.model.statement.control.RepeatTimesSt
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.control.UntilStmt;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.declaration.DeclarationStmt;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.declaration.DeclarationStmtList;
+import de.uni_passau.fim.se2.litterbox.ast.model.variable.DataExpr;
 import de.uni_passau.fim.se2.litterbox.ast.util.AstNodeUtil;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.ScratchVisitor;
 import de.uni_passau.fim.se2.litterbox.ml.util.ProcedureMapping;
@@ -183,9 +184,11 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
             DefineableUsesVisitor elseStmtVisitor = DefineableUsesVisitor.visitNode(node.getElseStmts());
 
             connectVars(node.getBoolExpr(), guardsVisitor.getVariables(), thenStmtVisitor.getVariables());
+            connectVars(node.getBoolExpr(), guardsVisitor.getLists(), thenStmtVisitor.getLists());
             connectAttributes(node.getBoolExpr(), guardsVisitor.getAttributes(), thenStmtVisitor.getAttributes());
 
             connectVars(node.getBoolExpr(), guardsVisitor.getVariables(), elseStmtVisitor.getVariables());
+            connectVars(node.getBoolExpr(), guardsVisitor.getLists(), elseStmtVisitor.getLists());
             connectAttributes(node.getBoolExpr(), guardsVisitor.getAttributes(), elseStmtVisitor.getAttributes());
         }
 
@@ -209,19 +212,20 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
             DefineableUsesVisitor usesVisitor = DefineableUsesVisitor.visitNode(body);
 
             connectVars(guardExpression, guardsVisitor.getVariables(), usesVisitor.getVariables());
+            connectVars(guardExpression, guardsVisitor.getLists(), usesVisitor.getLists());
             connectAttributes(guardExpression, guardsVisitor.getAttributes(), usesVisitor.getAttributes());
         }
 
-        private void connectVars(
-            final Expression guardExpression, final Map<String, List<Expression>> guards,
-            final Map<String, List<Expression>> inBlock
+        private <T extends DataExpr> void connectVars(
+            final Expression guardExpression, final Map<String, List<T>> guards,
+            final Map<String, List<T>> inBlock
         ) {
-            for (Map.Entry<String, List<Expression>> usedVar : inBlock.entrySet()) {
+            for (Map.Entry<String, List<T>> usedVar : inBlock.entrySet()) {
                 if (!guards.containsKey(usedVar.getKey())) {
                     continue;
                 }
 
-                for (Expression v : usedVar.getValue()) {
+                for (final T v : usedVar.getValue()) {
                     edges.add(Pair.of(v, guardExpression));
                 }
             }
