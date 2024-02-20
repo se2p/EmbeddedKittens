@@ -45,7 +45,6 @@ import de.uni_passau.fim.se2.litterbox.ast.model.statement.control.RepeatTimesSt
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.control.UntilStmt;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.declaration.DeclarationStmt;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.declaration.DeclarationStmtList;
-import de.uni_passau.fim.se2.litterbox.ast.model.variable.Variable;
 import de.uni_passau.fim.se2.litterbox.ast.util.AstNodeUtil;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.ScratchVisitor;
 import de.uni_passau.fim.se2.litterbox.ml.util.ProcedureMapping;
@@ -214,15 +213,15 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
         }
 
         private void connectVars(
-            final Expression guardExpression, final Map<String, List<Variable>> guards,
-            final Map<String, List<Variable>> inBlock
+            final Expression guardExpression, final Map<String, List<Expression>> guards,
+            final Map<String, List<Expression>> inBlock
         ) {
-            for (Map.Entry<String, List<Variable>> usedVar : inBlock.entrySet()) {
+            for (Map.Entry<String, List<Expression>> usedVar : inBlock.entrySet()) {
                 if (!guards.containsKey(usedVar.getKey())) {
                     continue;
                 }
 
-                for (Variable v : usedVar.getValue()) {
+                for (Expression v : usedVar.getValue()) {
                     edges.add(Pair.of(v, guardExpression));
                 }
             }
@@ -260,7 +259,7 @@ abstract class GgnnGraphEdgesVisitor implements ScratchVisitor {
 
         private void addEdges(final Qualified assignTo, final ASTNode expr) {
             DefineableUsesVisitor v = DefineableUsesVisitor.visitNode(expr);
-            Stream<Variable> variables = v.getVariables().values().stream().flatMap(List::stream);
+            Stream<Expression> variables = v.getVariables().values().stream().flatMap(List::stream);
             Stream<ASTNode> attributes = v.getAttributes().stream();
 
             Stream.concat(variables, attributes)

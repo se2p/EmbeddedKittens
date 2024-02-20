@@ -238,6 +238,21 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
     }
 
     @Test
+    void testVariablesUsedInDropdownsGuardedBy() throws Exception {
+        Path inputPath = ggnnFixture("guarded_by_variable_use_dropdowns.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, true, true);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph spriteGraph = graphs.get(0);
+
+        assertDifferentEdgeStartsCount(spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, 5);
+        assertDifferentEdgeTargetsCount(spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, 1);
+
+        Pair<String> edge = Pair.of(VAR_TYPE, "Add");
+        assertHasEdges(spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, List.of(edge, edge, edge, edge, edge));
+    }
+
+    @Test
     void testAttributesOfGuardedBy() throws Exception {
         Path inputPath = ggnnFixture("guarded_by_attribute_of.json");
         List<GgnnProgramGraph> graphs = getGraphs(inputPath, false, false);

@@ -24,8 +24,14 @@ import java.util.List;
 import java.util.Map;
 
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
+import de.uni_passau.fim.se2.litterbox.ast.model.expression.Expression;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.num.*;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.string.*;
+import de.uni_passau.fim.se2.litterbox.ast.model.identifier.Identifier;
+import de.uni_passau.fim.se2.litterbox.ast.model.statement.actorlook.HideVariable;
+import de.uni_passau.fim.se2.litterbox.ast.model.statement.actorlook.ShowVariable;
+import de.uni_passau.fim.se2.litterbox.ast.model.statement.common.ChangeVariableBy;
+import de.uni_passau.fim.se2.litterbox.ast.model.statement.common.SetVariableTo;
 import de.uni_passau.fim.se2.litterbox.ast.model.variable.Variable;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.ScratchVisitor;
 
@@ -34,7 +40,7 @@ import de.uni_passau.fim.se2.litterbox.ast.visitor.ScratchVisitor;
  */
 class DefineableUsesVisitor implements ScratchVisitor {
 
-    private final Map<String, List<Variable>> variables = new HashMap<>();
+    private final Map<String, List<Expression>> variables = new HashMap<>();
     private final List<ASTNode> attributes = new ArrayList<>();
 
     public static DefineableUsesVisitor visitNode(final ASTNode node) {
@@ -43,7 +49,7 @@ class DefineableUsesVisitor implements ScratchVisitor {
         return v;
     }
 
-    public Map<String, List<Variable>> getVariables() {
+    public Map<String, List<Expression>> getVariables() {
         return variables;
     }
 
@@ -51,17 +57,57 @@ class DefineableUsesVisitor implements ScratchVisitor {
         return attributes;
     }
 
-    @Override
-    public void visit(Variable node) {
-        variables.compute(node.getName().getName(), (name, vars) -> {
+    private void addVariable(final Variable variable) {
+        variables.compute(variable.getName().getName(), (name, vars) -> {
             if (vars == null) {
                 vars = new ArrayList<>();
             }
-            vars.add(node);
+            vars.add(variable);
             return vars;
         });
+    }
+
+    private void addVariable(final Identifier identifier) {
+        variables.compute(identifier.toString(), (name, vars) -> {
+            if (vars == null) {
+                vars = new ArrayList<>();
+            }
+            vars.add(identifier);
+            return vars;
+        });
+    }
+
+    @Override
+    public void visit(Variable node) {
+        addVariable(node);
         ScratchVisitor.super.visit(node);
     }
+
+    @Override
+    public void visit(SetVariableTo node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    @Override
+    public void visit(ChangeVariableBy node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    @Override
+    public void visit(ShowVariable node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    @Override
+    public void visit(HideVariable node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    // Todo: same for lists as well
 
     @Override
     public void visit(Backdrop node) {
