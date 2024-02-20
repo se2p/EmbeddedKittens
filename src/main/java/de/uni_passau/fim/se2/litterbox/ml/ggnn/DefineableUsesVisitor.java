@@ -28,10 +28,17 @@ import de.uni_passau.fim.se2.litterbox.ast.model.expression.Expression;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.num.*;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.string.*;
 import de.uni_passau.fim.se2.litterbox.ast.model.identifier.Identifier;
+import de.uni_passau.fim.se2.litterbox.ast.model.identifier.LocalIdentifier;
+import de.uni_passau.fim.se2.litterbox.ast.model.identifier.Qualified;
+import de.uni_passau.fim.se2.litterbox.ast.model.statement.actorlook.HideList;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.actorlook.HideVariable;
+import de.uni_passau.fim.se2.litterbox.ast.model.statement.actorlook.ShowList;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.actorlook.ShowVariable;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.common.ChangeVariableBy;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.common.SetVariableTo;
+import de.uni_passau.fim.se2.litterbox.ast.model.statement.list.*;
+import de.uni_passau.fim.se2.litterbox.ast.model.variable.DataExpr;
+import de.uni_passau.fim.se2.litterbox.ast.model.variable.ScratchList;
 import de.uni_passau.fim.se2.litterbox.ast.model.variable.Variable;
 import de.uni_passau.fim.se2.litterbox.ast.visitor.ScratchVisitor;
 
@@ -57,7 +64,7 @@ class DefineableUsesVisitor implements ScratchVisitor {
         return attributes;
     }
 
-    private void addVariable(final Variable variable) {
+    private void addVariable(final DataExpr variable) {
         variables.compute(variable.getName().getName(), (name, vars) -> {
             if (vars == null) {
                 vars = new ArrayList<>();
@@ -68,13 +75,29 @@ class DefineableUsesVisitor implements ScratchVisitor {
     }
 
     private void addVariable(final Identifier identifier) {
-        variables.compute(identifier.toString(), (name, vars) -> {
+        variables.compute(getName(identifier), (name, vars) -> {
             if (vars == null) {
                 vars = new ArrayList<>();
             }
             vars.add(identifier);
             return vars;
         });
+    }
+
+    private String getName(final Identifier identifier) {
+        if (identifier instanceof Qualified q) {
+            return q.getFirst().getName();
+        }
+        else if (identifier instanceof LocalIdentifier l) {
+            return l.getName();
+        }
+        else {
+            throw new IllegalArgumentException(
+                "Unknown identifier type '"
+                    + identifier.getClass().getName()
+                    + "'. Cannot continue data dependency edge computation!"
+            );
+        }
     }
 
     @Override
@@ -107,7 +130,75 @@ class DefineableUsesVisitor implements ScratchVisitor {
         ScratchVisitor.super.visit(node);
     }
 
-    // Todo: same for lists as well
+    // region lists
+
+    @Override
+    public void visit(ScratchList node) {
+        addVariable(node);
+        ScratchVisitor.super.visit(node);
+    }
+
+    @Override
+    public void visit(AddTo node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    @Override
+    public void visit(DeleteOf node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    @Override
+    public void visit(DeleteAllOf node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    @Override
+    public void visit(InsertAt node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    @Override
+    public void visit(ReplaceItem node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    @Override
+    public void visit(ItemOfVariable node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    @Override
+    public void visit(IndexOf node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    @Override
+    public void visit(LengthOfVar node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    @Override
+    public void visit(ShowList node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    @Override
+    public void visit(HideList node) {
+        addVariable(node.getIdentifier());
+        ScratchVisitor.super.visit(node);
+    }
+
+    // endregion lists
 
     @Override
     public void visit(Backdrop node) {

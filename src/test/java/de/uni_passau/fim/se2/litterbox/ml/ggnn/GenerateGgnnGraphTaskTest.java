@@ -253,6 +253,38 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
     }
 
     @Test
+    void testListUsedInDropdownGuardedBy() throws Exception {
+        Path inputPath = ggnnFixture("guarded_by_list.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, true, true);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph spriteGraph = graphs.get(0);
+
+        assertDifferentEdgeStartsCount(spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, 10);
+        assertDifferentEdgeTargetsCount(spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, 1);
+
+        Pair<String> edge = Pair.of("ScratchList", "AsNumber");
+        assertHasEdges(
+            spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, Stream.generate(() -> edge).limit(10).toList()
+        );
+    }
+
+    @Test
+    void testListUsedInDropdownAsGuard() throws Exception {
+        Path inputPath = ggnnFixture("guarded_by_list_dropdown_in_condition.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, true, true);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph spriteGraph = graphs.get(0);
+
+        assertDifferentEdgeStartsCount(spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, 2);
+        assertDifferentEdgeTargetsCount(spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, 1);
+
+        Pair<String> edge = Pair.of("ScratchList", "ListContains");
+        assertHasEdges(spriteGraph, GgnnProgramGraph.EdgeType.GUARDED_BY, List.of(edge, edge));
+    }
+
+    @Test
     void testAttributesOfGuardedBy() throws Exception {
         Path inputPath = ggnnFixture("guarded_by_attribute_of.json");
         List<GgnnProgramGraph> graphs = getGraphs(inputPath, false, false);
@@ -389,6 +421,18 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
         GgnnProgramGraph stageGraph = graphs.get(0);
 
         Pair<String> expectedEdge = Pair.of("TurnRight", "TurnRight");
+        assertHasEdges(stageGraph, GgnnProgramGraph.EdgeType.DATA_DEPENDENCY, List.of(expectedEdge));
+    }
+
+    @Test
+    void testListDataDependency() throws Exception {
+        Path inputPath = ggnnFixture("data_dependency_list.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, true, true);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph stageGraph = graphs.get(0);
+
+        Pair<String> expectedEdge = Pair.of("AddTo", "InsertAt");
         assertHasEdges(stageGraph, GgnnProgramGraph.EdgeType.DATA_DEPENDENCY, List.of(expectedEdge));
     }
 
