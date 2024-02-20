@@ -84,10 +84,12 @@ public class GgnnGraphBuilder {
         final List<Pair<ASTNode>> messagePassingEdges = GgnnGraphEdgesVisitor.getMessagePassingEdges(astRoot);
         final List<Pair<ASTNode>> dataDependencies = getDataDependencies();
         final List<Pair<ASTNode>> returnToEdges = GgnnGraphEdgesVisitor.getReturnToEdges(astRoot);
+        final List<Pair<ASTNode>> lastLexicalUseEdges = LastLexicalUseVisitor.getEdges(astRoot);
 
         final Set<ASTNode> allNodes = getAllNodes(
             childEdges, nextTokenEdges, guardedByEdges, computedFromEdges,
-            parameterPassingEdges, messagePassingEdges, dataDependencies, returnToEdges
+            parameterPassingEdges, messagePassingEdges, dataDependencies,
+            returnToEdges, lastLexicalUseEdges
         );
         final Map<ASTNode, Integer> nodeIndices = getNodeIndices(allNodes);
 
@@ -100,6 +102,7 @@ public class GgnnGraphBuilder {
         edges.put(GgnnProgramGraph.EdgeType.PARAMETER_PASSING, getIndexedEdges(nodeIndices, parameterPassingEdges));
         edges.put(GgnnProgramGraph.EdgeType.MESSAGE_PASSING, getIndexedEdges(nodeIndices, messagePassingEdges));
         edges.put(GgnnProgramGraph.EdgeType.RETURN_TO, getIndexedEdges(nodeIndices, returnToEdges));
+        edges.put(GgnnProgramGraph.EdgeType.LAST_LEXICAL_USE, getIndexedEdges(nodeIndices, lastLexicalUseEdges));
 
         Set<Integer> usedNodes = getUsedNodes(edges);
         final Map<Integer, String> nodeLabels = getNodeLabels(nodeIndices, usedNodes);

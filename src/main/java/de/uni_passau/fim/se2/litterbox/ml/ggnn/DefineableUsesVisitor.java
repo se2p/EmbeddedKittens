@@ -24,31 +24,20 @@ import java.util.List;
 import java.util.Map;
 
 import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
-import de.uni_passau.fim.se2.litterbox.ast.model.expression.Expression;
-import de.uni_passau.fim.se2.litterbox.ast.model.expression.num.*;
-import de.uni_passau.fim.se2.litterbox.ast.model.expression.string.*;
-import de.uni_passau.fim.se2.litterbox.ast.model.identifier.Identifier;
-import de.uni_passau.fim.se2.litterbox.ast.model.identifier.LocalIdentifier;
-import de.uni_passau.fim.se2.litterbox.ast.model.identifier.Qualified;
-import de.uni_passau.fim.se2.litterbox.ast.model.statement.actorlook.HideList;
-import de.uni_passau.fim.se2.litterbox.ast.model.statement.actorlook.HideVariable;
-import de.uni_passau.fim.se2.litterbox.ast.model.statement.actorlook.ShowList;
-import de.uni_passau.fim.se2.litterbox.ast.model.statement.actorlook.ShowVariable;
-import de.uni_passau.fim.se2.litterbox.ast.model.statement.common.ChangeVariableBy;
-import de.uni_passau.fim.se2.litterbox.ast.model.statement.common.SetVariableTo;
-import de.uni_passau.fim.se2.litterbox.ast.model.statement.list.*;
-import de.uni_passau.fim.se2.litterbox.ast.model.variable.DataExpr;
 import de.uni_passau.fim.se2.litterbox.ast.model.variable.ScratchList;
 import de.uni_passau.fim.se2.litterbox.ast.model.variable.Variable;
-import de.uni_passau.fim.se2.litterbox.ast.visitor.ScratchVisitor;
 
 /**
  * Finds all {@link Variable Variables} and attributes that are used in the AST.
  */
-class DefineableUsesVisitor implements ScratchVisitor {
+class DefineableUsesVisitor extends GgnnDefineablesVisitor {
 
-    private final Map<String, List<Expression>> variables = new HashMap<>();
+    private final Map<String, List<Variable>> variables = new HashMap<>();
+    private final Map<String, List<ScratchList>> lists = new HashMap<>();
     private final List<ASTNode> attributes = new ArrayList<>();
+
+    private DefineableUsesVisitor() {
+    }
 
     public static DefineableUsesVisitor visitNode(final ASTNode node) {
         DefineableUsesVisitor v = new DefineableUsesVisitor();
@@ -56,15 +45,20 @@ class DefineableUsesVisitor implements ScratchVisitor {
         return v;
     }
 
-    public Map<String, List<Expression>> getVariables() {
+    public Map<String, List<Variable>> getVariables() {
         return variables;
+    }
+
+    public Map<String, List<ScratchList>> getLists() {
+        return lists;
     }
 
     public List<ASTNode> getAttributes() {
         return attributes;
     }
 
-    private void addVariable(final DataExpr variable) {
+    @Override
+    protected void addVariable(final Variable variable) {
         variables.compute(variable.getName().getName(), (name, vars) -> {
             if (vars == null) {
                 vars = new ArrayList<>();
@@ -74,218 +68,19 @@ class DefineableUsesVisitor implements ScratchVisitor {
         });
     }
 
-    private void addVariable(final Identifier identifier) {
-        variables.compute(getName(identifier), (name, vars) -> {
+    @Override
+    protected void addList(final ScratchList variable) {
+        lists.compute(variable.getName().getName(), (name, vars) -> {
             if (vars == null) {
                 vars = new ArrayList<>();
             }
-            vars.add(identifier);
+            vars.add(variable);
             return vars;
         });
     }
 
-    private String getName(final Identifier identifier) {
-        if (identifier instanceof Qualified q) {
-            return q.getFirst().getName();
-        }
-        else if (identifier instanceof LocalIdentifier l) {
-            return l.getName();
-        }
-        else {
-            throw new IllegalArgumentException(
-                "Unknown identifier type '"
-                    + identifier.getClass().getName()
-                    + "'. Cannot continue data dependency edge computation!"
-            );
-        }
-    }
-
     @Override
-    public void visit(Variable node) {
-        addVariable(node);
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(SetVariableTo node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(ChangeVariableBy node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(ShowVariable node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(HideVariable node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    // region lists
-
-    @Override
-    public void visit(ScratchList node) {
-        addVariable(node);
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(AddTo node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(DeleteOf node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(DeleteAllOf node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(InsertAt node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(ReplaceItem node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(ItemOfVariable node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(IndexOf node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(LengthOfVar node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(ShowList node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    @Override
-    public void visit(HideList node) {
-        addVariable(node.getIdentifier());
-        ScratchVisitor.super.visit(node);
-    }
-
-    // endregion lists
-
-    @Override
-    public void visit(Backdrop node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(Costume node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(Direction node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(Loudness node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(PositionX node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(PositionY node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(Size node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(Volume node) {
-        attributes.add(node);
-    }
-
-    // not directly attributes but external values:
-    // included as they can be used like variables and attributes within expressions and therefore are of interest
-    // especially for COMPUTED_FROM and GUARDED_BY edges
-
-    @Override
-    public void visit(Answer node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(AttributeOf node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(Current node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(DaysSince2000 node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(DistanceTo node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(MouseX node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(MouseY node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(Timer node) {
-        attributes.add(node);
-    }
-
-    @Override
-    public void visit(Username node) {
+    protected void addAttribute(ASTNode node) {
         attributes.add(node);
     }
 }
