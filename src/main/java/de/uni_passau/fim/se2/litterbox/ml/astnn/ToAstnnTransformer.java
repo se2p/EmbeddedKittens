@@ -56,7 +56,7 @@ class ToAstnnTransformer {
 
     public AstnnNode transform(final Program program, final ASTNode node) {
         final AstnnTransformationVisitor visitor = new AstnnTransformationVisitor(
-            program.getProcedureMapping(), actorNameNormalizer, abstractTokens
+            program, actorNameNormalizer, abstractTokens
         );
         node.accept(visitor);
         return visitor.getResult();

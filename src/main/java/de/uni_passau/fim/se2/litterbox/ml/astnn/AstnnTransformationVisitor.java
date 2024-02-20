@@ -95,6 +95,7 @@ import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 import de.uni_passau.fim.se2.litterbox.ml.shared.BaseTokenVisitor;
 import de.uni_passau.fim.se2.litterbox.ml.shared.TokenVisitorFactory;
 import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
+import de.uni_passau.fim.se2.litterbox.ml.util.ProcedureMapping;
 import de.uni_passau.fim.se2.litterbox.ml.util.StringUtil;
 
 class AstnnTransformationVisitor implements
@@ -110,6 +111,7 @@ class AstnnTransformationVisitor implements
 
     private final BaseTokenVisitor tokenVisitor = TokenVisitorFactory.getDefaultTokenVisitor(true);
 
+    private final ProcedureMapping procedureMapping;
     private final ProcedureDefinitionNameMapping procedureNameMapping;
     private final ActorNameNormalizer actorNameNormalizer;
     private final boolean abstractTokens;
@@ -121,10 +123,11 @@ class AstnnTransformationVisitor implements
     private Optional<AstnnNode> nodeTracker = Optional.empty();
 
     AstnnTransformationVisitor(
-        final ProcedureDefinitionNameMapping procedureNameMapping, final ActorNameNormalizer actorNameNormalizer,
+        final Program program, final ActorNameNormalizer actorNameNormalizer,
         final boolean abstractTokens
     ) {
-        this.procedureNameMapping = procedureNameMapping;
+        this.procedureNameMapping = program.getProcedureMapping();
+        this.procedureMapping = new ProcedureMapping(program);
         this.actorNameNormalizer = actorNameNormalizer;
         this.abstractTokens = abstractTokens;
     }
@@ -1077,7 +1080,10 @@ class AstnnTransformationVisitor implements
             return AbstractToken.CUSTOM_BLOCK.name();
         }
         else {
-            return node.getIdent().getName();
+            final ProcedureDefinition def = procedureMapping
+                .findCalledProcedure(node)
+                .orElseThrow(() -> new IllegalStateException("No procedure for calling custom block statement!"));
+            return getProcedureName(def);
         }
     }
 

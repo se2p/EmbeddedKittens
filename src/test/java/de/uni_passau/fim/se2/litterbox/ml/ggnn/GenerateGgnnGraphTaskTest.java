@@ -23,10 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -92,10 +89,10 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
 
         int expectedNodeCount;
         if (wholeProgram) {
-            expectedNodeCount = 16;
+            expectedNodeCount = 13;
         }
         else {
-            expectedNodeCount = 6;
+            expectedNodeCount = 5;
         }
         assertThat(graphs.get(0).contextGraph().nodeLabels()).hasSize(expectedNodeCount);
     }
@@ -401,6 +398,32 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
         List<GgnnProgramGraph> graphs = getGraphs(multipleSpritesFixture, false, false);
 
         assertAll(graphs.stream().map(graph -> () -> assertHasSingleLabelNodeIndex(graph)));
+    }
+
+    @Test
+    void testCustomBlockProcedureName() throws Exception {
+        Path inputPath = fixture("customBlocks.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, false, false);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph spriteGraph = graphs.get(0);
+
+        Collection<String> nodeLabels = spriteGraph.contextGraph().nodeLabels().values();
+        assertThat(nodeLabels).containsAtLeast("BlockNoInputs", "BlockWithInputs");
+        // block ID of a custom block
+        assertThat(nodeLabels).doesNotContain("v_ch_q_tp_zb_ga_pt_mu_5_ok");
+    }
+
+    @Test
+    void testConnectParametersCalledCustomBlocks() throws Exception {
+        Path inputPath = fixture("customBlocksWithParams.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, false, false);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph spriteGraph = graphs.get(0);
+
+        Pair<String> expectedEdge = Pair.of("custom_param", "ParameterDefinition");
+        assertHasEdges(spriteGraph, GgnnProgramGraph.EdgeType.PARAMETER_PASSING, List.of(expectedEdge));
     }
 
     private void assertHasSingleLabelNodeIndex(final GgnnProgramGraph graph) {
