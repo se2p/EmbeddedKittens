@@ -24,10 +24,16 @@ public class MaskingStrategy {
 
     private final MaskingType maskingType;
     private final String blockId;
+    private final String inputKey;
 
     private MaskingStrategy(final MaskingType maskingType, final String blockId) {
+        this(maskingType, blockId, null);
+    }
+
+    private MaskingStrategy(final MaskingType maskingType, final String blockId, final String inputKey) {
         this.maskingType = maskingType;
         this.blockId = blockId;
+        this.inputKey = inputKey;
     }
 
     public static MaskingStrategy none() {
@@ -44,11 +50,21 @@ public class MaskingStrategy {
         return new MaskingStrategy(MaskingType.FixedOption, blockId);
     }
 
+    public static MaskingStrategy input(final String blockId, final String inputkey) {
+        Preconditions.checkNotNull(blockId);
+        Preconditions.checkNotNull(inputkey);
+        return new MaskingStrategy(MaskingType.Input, blockId, inputkey);
+    }
+
     public MaskingType getMaskingType() {
         return maskingType;
     }
 
     public String getBlockId() {
         return blockId;
+    }
+
+    public String getInputKey() {
+        return inputKey;
     }
 }

@@ -22,4 +22,5 @@ public enum MaskingType {
     None,
     Block,
     FixedOption,
+    Input
 }
