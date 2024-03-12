@@ -20,7 +20,6 @@ package de.uni_passau.fim.se2.litterbox.ml.util;
 
 public enum MaskingType {
     None,
-    Statement,
+    Block,
     FixedOption,
-    Expression
 }
