@@ -174,8 +174,25 @@ public class Tokenizer extends AbstractTokenizer {
     }
 
     private boolean shouldBeMasked(final ASTNode node) {
-        final MaskingType maskingType = getMaskingStrategy().getMaskingType();
-        return MaskingType.Block.equals(maskingType) && getMaskingStrategy().getBlockId().equals(getBlockId(node));
+        final MaskingStrategy maskingStrategy = getMaskingStrategy();
+        final MaskingType maskingType = maskingStrategy.getMaskingType();
+
+        if (MaskingType.Block.equals(maskingType)) {
+            return maskingStrategy.getBlockId().equals(getBlockId(node));
+        }
+
+        if (MaskingType.Input.equals(maskingType)) {
+            final var parent = node.getParentNode();
+
+            if (parent == null) {
+                return false;
+            }
+
+            return maskingStrategy.getBlockId().equals(getBlockId(parent))
+                && AstNodeUtil.isInputOfKind(node, maskingStrategy.getInputKey());
+        }
+
+        return false;
     }
 
     private void visit(final ASTNode node, final String token) {
