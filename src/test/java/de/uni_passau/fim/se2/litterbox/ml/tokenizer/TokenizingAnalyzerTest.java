@@ -493,7 +493,7 @@ class TokenizingAnalyzerTest implements JsonTest {
         final var program = getAST("src/test/fixtures/ml_preprocessing/tokenizer/unconnected_script.json");
         final var analyzer = getAnalyzer(
             true, false, true, false,
-            MaskingStrategy.expression("NeSwTQKd7cASL.mXXiMu")
+            MaskingStrategy.block("NeSwTQKd7cASL.mXXiMu")
         );
         final var tokenSequence = analyzer.process(program);
         final var tokens = tokenSequence

@@ -41,7 +41,7 @@ public class StatementLevelTokenizer extends AbstractTokenizer {
         final MaskingStrategy maskingStrategy
     ) {
         super(procedureNameMapping, abstractTokens, maskingStrategy);
-        this.statementMasking = MaskingType.Statement.equals(getMaskingStrategy().getMaskingType());
+        this.statementMasking = MaskingType.Block.equals(getMaskingStrategy().getMaskingType());
         this.maskedBlockId = getMaskingStrategy().getBlockId();
     }
 

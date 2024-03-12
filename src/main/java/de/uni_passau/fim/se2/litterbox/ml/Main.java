@@ -329,10 +329,10 @@ public class Main implements Callable<Integer> {
         boolean statementLevel = false;
 
         @CommandLine.Option(
-            names = { "--masked-statement-id" },
-            description = "Block-Id of the statement to mask. Default: no masking."
+            names = { "--masked-block-id" },
+            description = "Id of the block to mask. Default: no masking."
         )
-        String maskedStatementId = null;
+        String maskedBlockId = null;
 
         @Override
         protected TokenizingPreprocessor getAnalyzer() {
@@ -344,11 +344,11 @@ public class Main implements Callable<Integer> {
             }
 
             final MaskingStrategy maskingStrategy;
-            if (maskedStatementId == null) {
+            if (maskedBlockId == null) {
                 maskingStrategy = MaskingStrategy.none();
             }
             else {
-                maskingStrategy = MaskingStrategy.statement(maskedStatementId);
+                maskingStrategy = MaskingStrategy.block(maskedBlockId);
             }
 
             return new TokenizingPreprocessor(

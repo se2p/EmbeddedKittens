@@ -175,10 +175,7 @@ public class Tokenizer extends AbstractTokenizer {
 
     private boolean shouldBeMasked(final ASTNode node) {
         final MaskingType maskingType = getMaskingStrategy().getMaskingType();
-        final boolean shouldMask = MaskingType.Expression.equals(maskingType)
-            || MaskingType.Statement.equals(maskingType);
-
-        return shouldMask && getMaskingStrategy().getBlockId().equals(getBlockId(node));
+        return MaskingType.Block.equals(maskingType) && getMaskingStrategy().getBlockId().equals(getBlockId(node));
     }
 
     private void visit(final ASTNode node, final String token) {

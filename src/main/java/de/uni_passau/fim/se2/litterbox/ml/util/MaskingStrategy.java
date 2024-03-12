@@ -34,14 +34,9 @@ public class MaskingStrategy {
         return new MaskingStrategy(MaskingType.None, null);
     }
 
-    public static MaskingStrategy statement(final String blockId) {
+    public static MaskingStrategy block(final String blockId) {
         Preconditions.checkNotNull(blockId);
-        return new MaskingStrategy(MaskingType.Statement, blockId);
-    }
-
-    public static MaskingStrategy expression(final String blockId) {
-        Preconditions.checkNotNull(blockId);
-        return new MaskingStrategy(MaskingType.Expression, blockId);
+        return new MaskingStrategy(MaskingType.Block, blockId);
     }
 
     public static MaskingStrategy fixedOption(final String blockId) {
