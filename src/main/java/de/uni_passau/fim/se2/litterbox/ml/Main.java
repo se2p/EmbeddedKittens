@@ -334,6 +334,12 @@ public class Main implements Callable<Integer> {
         )
         String maskedBlockId = null;
 
+        @CommandLine.Option(
+            names = { "--masked-input-key" },
+            description = "Input key to mask. Default: no masking."
+        )
+        String maskedInputKey = null;
+
         @Override
         protected TokenizingPreprocessor getAnalyzer() {
             if (wholeProgram && sequencePerScript) {
@@ -343,12 +349,22 @@ public class Main implements Callable<Integer> {
                 );
             }
 
+            if (maskedBlockId == null && maskedInputKey != null) {
+                throw new CommandLine.ParameterException(
+                    spec.commandLine(),
+                    "You must also use '--masked-block-id' to specify the ID of block whose input should be masked."
+                );
+            }
+
             final MaskingStrategy maskingStrategy;
             if (maskedBlockId == null) {
                 maskingStrategy = MaskingStrategy.none();
             }
-            else {
+            else if (maskedInputKey == null) {
                 maskingStrategy = MaskingStrategy.block(maskedBlockId);
+            }
+            else {
+                maskingStrategy = MaskingStrategy.input(maskedBlockId, maskedInputKey);
             }
 
             return new TokenizingPreprocessor(
