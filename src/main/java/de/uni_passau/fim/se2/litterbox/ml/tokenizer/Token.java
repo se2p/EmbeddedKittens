@@ -18,20 +18,29 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.tokenizer;
 
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public enum Token {
 
     UNKNOWN("UNKNOWN"),
     MASK("[MASK]"),
-    BEGIN("BEGIN"),
+    NOTHING("NOTHING"),
+    ELSE("ELSE"),
+
+    BEGIN_BOOL_EXPR("<"),
+    BEGIN_NUM_STR_EXPR("("),
     BEGIN_PROCEDURE("BEGIN_PROCEDURE"),
     BEGIN_SCRIPT("BEGIN_SCRIPT"),
     BEGIN_SPRITE("BEGIN_SPRITE"),
-    ELSE("ELSE"),
-    END("END"),
+    BEGIN_SUBSTACK("BEGIN_SUBSTACK"),
+    END_BOOL_EXPR(">"),
+    END_NUM_STR_EXPR(")"),
     END_PROCEDURE("END_PROCEDURE"),
     END_SCRIPT("END_SCRIPT"),
     END_SPRITE("END_SPRITE"),
-    NOTHING("NOTHING"),
+    END_SUBSTACK("END_SUBSTACK"),
 
     ATTRIBUTE("attribute"),
     KEY("key"),
@@ -200,6 +209,10 @@ public enum Token {
     TTS_SPEAK("tts_speak"),
     TTS_VOICE("tts_voice");
 
+    private static final Set<Token> SPECIAL_TOKENS = Arrays.stream(Token.values())
+        .filter(token -> !token.getStrRep().matches("^[a-z0-9_]+$"))
+        .collect(Collectors.toUnmodifiableSet());
+
     Token(final String strRep) {
         this.strRep = strRep;
     }
@@ -208,6 +221,18 @@ public enum Token {
 
     public String getStrRep() {
         return strRep;
+    }
+
+    /**
+     * Retrieves all special tokens that do not represent a concrete block.
+     *
+     * <p>
+     * Examples: {@link Token#ELSE}, {@link Token#BEGIN_SUBSTACK}, {@link Token#BEGIN_NUM_STR_EXPR}, …
+     *
+     * @return A set of special tokens.
+     */
+    public static Set<Token> getSpecialTokens() {
+        return SPECIAL_TOKENS;
     }
 
     @Override

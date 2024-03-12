@@ -73,9 +73,9 @@ public class StatementLevelTokenizer extends AbstractTokenizer {
         }
         else {
             addToken(opcode);
-            addToken(Token.BEGIN);
+            addToken(Token.BEGIN_SUBSTACK);
             visitChildren(node);
-            addToken(Token.END);
+            addToken(Token.END_SUBSTACK);
         }
     }
 

@@ -19,10 +19,18 @@
 package de.uni_passau.fim.se2.litterbox.ml.tokenizer;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import de.uni_passau.fim.se2.litterbox.ml.util.StringUtil;
 
 public final class TokenSequenceBuilder {
+
+    private static final Set<String> SPECIAL_TOKENS = Token.getSpecialTokens()
+        .stream()
+        .map(Token::getStrRep)
+        .collect(Collectors.toUnmodifiableSet());
 
     private TokenSequenceBuilder() {
         throw new IllegalCallerException("utility class");
@@ -37,7 +45,16 @@ public final class TokenSequenceBuilder {
     private static List<String> asSubTokenSequence(final List<String> tokenSequence) {
         return tokenSequence
             .stream()
-            .flatMap(tokens -> StringUtil.splitToNormalisedSubtokenStream(tokens, "_"))
+            .flatMap(TokenSequenceBuilder::splitToken)
             .toList();
+    }
+
+    private static Stream<String> splitToken(final String token) {
+        if (SPECIAL_TOKENS.contains(token)) {
+            return Stream.of(token);
+        }
+        else {
+            return StringUtil.splitToNormalisedSubtokenStream(token, "_");
+        }
     }
 }
