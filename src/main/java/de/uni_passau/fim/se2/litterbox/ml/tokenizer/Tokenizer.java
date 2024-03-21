@@ -76,7 +76,6 @@ import de.uni_passau.fim.se2.litterbox.ml.shared.BaseTokenVisitor;
 import de.uni_passau.fim.se2.litterbox.ml.shared.TokenVisitorFactory;
 import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
-import de.uni_passau.fim.se2.litterbox.ml.util.MaskingType;
 import de.uni_passau.fim.se2.litterbox.ml.util.StringUtil;
 
 public class Tokenizer extends AbstractTokenizer {
@@ -175,24 +174,15 @@ public class Tokenizer extends AbstractTokenizer {
 
     private boolean shouldBeMasked(final ASTNode node) {
         final MaskingStrategy maskingStrategy = getMaskingStrategy();
-        final MaskingType maskingType = maskingStrategy.getMaskingType();
+        final String blockId = maskingStrategy.getBlockId();
 
-        if (MaskingType.Block.equals(maskingType)) {
-            return maskingStrategy.getBlockId().equals(getBlockId(node));
-        }
-
-        if (MaskingType.Input.equals(maskingType)) {
-            final var parent = node.getParentNode();
-
-            if (parent == null) {
-                return false;
-            }
-
-            return maskingStrategy.getBlockId().equals(getBlockId(parent))
+        return switch (maskingStrategy.getMaskingType()) {
+            case None -> false;
+            case Block -> blockId.equals(getBlockId(node));
+            case FixedOption -> blockId.equals(getBlockId(node.getParentNode()));
+            case Input -> blockId.equals(getBlockId(node.getParentNode()))
                 && AstNodeUtil.isInputOfKind(node, maskingStrategy.getInputKey());
-        }
-
-        return false;
+        };
     }
 
     private void visit(final ASTNode node, final String token) {
@@ -864,10 +854,7 @@ public class Tokenizer extends AbstractTokenizer {
     }
 
     private void visitFixedNodeOption(final FixedNodeOption option, final Token opcode) {
-        if (
-            MaskingType.FixedOption.equals(getMaskingStrategy().getMaskingType())
-                && getMaskingStrategy().getBlockId().equals(getBlockId(option.getParentNode()))
-        ) {
+        if (shouldBeMasked(option)) {
             addToken(Token.MASK);
         }
         else {
