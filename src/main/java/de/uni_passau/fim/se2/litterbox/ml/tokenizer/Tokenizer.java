@@ -858,7 +858,7 @@ public class Tokenizer extends AbstractTokenizer {
             addToken(Token.MASK);
         }
         else {
-        node.accept(this);
+            node.accept(this);
         }
         addToken(right);
     }

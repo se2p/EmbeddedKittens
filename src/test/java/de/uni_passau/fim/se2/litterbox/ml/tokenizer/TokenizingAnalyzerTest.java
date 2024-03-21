@@ -31,7 +31,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -48,6 +47,7 @@ import de.uni_passau.fim.se2.litterbox.ml.MLOutputPath;
 import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
 import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 import de.uni_passau.fim.se2.litterbox.ml.shared.TokenVisitorFactory;
+import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
 
 class TokenizingAnalyzerTest implements JsonTest {
@@ -93,7 +93,8 @@ class TokenizingAnalyzerTest implements JsonTest {
             "cat",
             List.of(
                 List.of(
-                    BEGIN_SCRIPT, "event_whenkeypressed", "key", BEGIN_NUM_STR_EXPR, "39", END_NUM_STR_EXPR, LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR,
+                    BEGIN_SCRIPT, "event_whenkeypressed", "key", BEGIN_NUM_STR_EXPR, "39", END_NUM_STR_EXPR,
+                    LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR,
                     "hi_!", END_NUM_STR_EXPR, "looks_show", END_SCRIPT
                 )
             )
@@ -102,7 +103,8 @@ class TokenizingAnalyzerTest implements JsonTest {
             "abby",
             List.of(
                 List.of(
-                    BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "hello_!", END_NUM_STR_EXPR,
+                    BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "hello_!",
+                    END_NUM_STR_EXPR,
                     END_SCRIPT
                 )
             )
@@ -124,14 +126,16 @@ class TokenizingAnalyzerTest implements JsonTest {
             List.of("cat"),
             List.of(
                 List.of(
-                    BEGIN_SPRITE, BEGIN_SCRIPT, "event_whenkeypressed", "key", BEGIN_NUM_STR_EXPR, "39", END_NUM_STR_EXPR,
+                    BEGIN_SPRITE, BEGIN_SCRIPT, "event_whenkeypressed", "key", BEGIN_NUM_STR_EXPR, "39",
+                    END_NUM_STR_EXPR,
                     LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "hi_!", END_NUM_STR_EXPR, "looks_show", END_SCRIPT, END_SPRITE
                 )
             ),
             List.of(
                 List.of(
                     BEGIN_SPRITE, BEGIN_SCRIPT, "event", "whenkeypressed", "key", BEGIN_NUM_STR_EXPR, "39",
-                    END_NUM_STR_EXPR, "looks", "say", BEGIN_NUM_STR_EXPR, "hi", "!", END_NUM_STR_EXPR, "looks", "show", END_SCRIPT,
+                    END_NUM_STR_EXPR, "looks", "say", BEGIN_NUM_STR_EXPR, "hi", "!", END_NUM_STR_EXPR, "looks", "show",
+                    END_SCRIPT,
                     END_SPRITE
                 )
             )
@@ -153,13 +157,15 @@ class TokenizingAnalyzerTest implements JsonTest {
             List.of(STAGE_LABEL),
             List.of(
                 List.of(
-                    BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, "control_repeat", BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER", END_NUM_STR_EXPR,
+                    BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, "control_repeat", BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER",
+                    END_NUM_STR_EXPR,
                     BEGIN_SUBSTACK, END_SUBSTACK, END_SCRIPT
                 )
             ),
             List.of(
                 List.of(
-                    BEGIN_SCRIPT, "event", "whenflagclicked", "control", "repeat", BEGIN_NUM_STR_EXPR, "literal", "number",
+                    BEGIN_SCRIPT, "event", "whenflagclicked", "control", "repeat", BEGIN_NUM_STR_EXPR, "literal",
+                    "number",
                     END_NUM_STR_EXPR, BEGIN_SUBSTACK, END_SUBSTACK, END_SCRIPT
                 )
             )
@@ -168,7 +174,8 @@ class TokenizingAnalyzerTest implements JsonTest {
             "cat",
             List.of(
                 List.of(
-                    BEGIN_SCRIPT, "event_whenkeypressed", "key", BEGIN_NUM_STR_EXPR, "keyid", END_NUM_STR_EXPR, LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR,
+                    BEGIN_SCRIPT, "event_whenkeypressed", "key", BEGIN_NUM_STR_EXPR, "keyid", END_NUM_STR_EXPR,
+                    LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR,
                     "LITERAL_STRING", END_NUM_STR_EXPR, "looks_show", END_SCRIPT
                 )
             )
@@ -177,7 +184,8 @@ class TokenizingAnalyzerTest implements JsonTest {
             "abby",
             List.of(
                 List.of(
-                    BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "LITERAL_STRING", END_NUM_STR_EXPR,
+                    BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "LITERAL_STRING",
+                    END_NUM_STR_EXPR,
                     END_SCRIPT
                 )
             )
@@ -211,14 +219,16 @@ class TokenizingAnalyzerTest implements JsonTest {
         if (fewerParentheses) {
             expected = List.of(
                 BEGIN_SPRITE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
-                OPERATOR_ADD_TOKEN, "2", "5", END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "-10", END_NUM_STR_EXPR,
+                OPERATOR_ADD_TOKEN, "2", "5", END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "-10",
+                END_NUM_STR_EXPR,
                 END_SCRIPT, END_SPRITE
             );
         }
         else {
             expected = List.of(
                 BEGIN_SPRITE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
-                OPERATOR_ADD_TOKEN, BEGIN_NUM_STR_EXPR, "2", END_NUM_STR_EXPR, BEGIN_NUM_STR_EXPR, "5", END_NUM_STR_EXPR, END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN,
+                OPERATOR_ADD_TOKEN, BEGIN_NUM_STR_EXPR, "2", END_NUM_STR_EXPR, BEGIN_NUM_STR_EXPR, "5",
+                END_NUM_STR_EXPR, END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN,
                 BEGIN_NUM_STR_EXPR, "-10", END_NUM_STR_EXPR, END_SCRIPT, END_SPRITE
             );
         }
@@ -235,19 +245,25 @@ class TokenizingAnalyzerTest implements JsonTest {
         if (fewerParentheses) {
             expected = List.of(
                 BEGIN_SPRITE, BEGIN_PROCEDURE, "custom_block", "motion_turnright", BEGIN_NUM_STR_EXPR,
-                OPERATOR_ADD_TOKEN, "2", "block_param", END_NUM_STR_EXPR, "motion_turnleft", BEGIN_NUM_STR_EXPR, "block_param", END_NUM_STR_EXPR,
+                OPERATOR_ADD_TOKEN, "2", "block_param", END_NUM_STR_EXPR, "motion_turnleft", BEGIN_NUM_STR_EXPR,
+                "block_param", END_NUM_STR_EXPR,
                 END_PROCEDURE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
-                OPERATOR_ADD_TOKEN, "my_variable", "5", END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable",
-                END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "list_var", END_NUM_STR_EXPR, END_SCRIPT, END_SPRITE
+                OPERATOR_ADD_TOKEN, "my_variable", "5", END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN,
+                BEGIN_NUM_STR_EXPR, "my_variable",
+                END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "list_var", END_NUM_STR_EXPR,
+                END_SCRIPT, END_SPRITE
             );
         }
         else {
             expected = List.of(
                 BEGIN_SPRITE, BEGIN_PROCEDURE, "custom_block", "motion_turnright", BEGIN_NUM_STR_EXPR,
-                OPERATOR_ADD_TOKEN, BEGIN_NUM_STR_EXPR, "2", END_NUM_STR_EXPR, BEGIN_NUM_STR_EXPR, "block_param", END_NUM_STR_EXPR, END_NUM_STR_EXPR, "motion_turnleft",
+                OPERATOR_ADD_TOKEN, BEGIN_NUM_STR_EXPR, "2", END_NUM_STR_EXPR, BEGIN_NUM_STR_EXPR, "block_param",
+                END_NUM_STR_EXPR, END_NUM_STR_EXPR, "motion_turnleft",
                 BEGIN_NUM_STR_EXPR, "block_param", END_NUM_STR_EXPR, END_PROCEDURE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN,
-                MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, OPERATOR_ADD_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable", END_NUM_STR_EXPR, BEGIN_NUM_STR_EXPR, "5", END_NUM_STR_EXPR,
-                END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable", END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR,
+                MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, OPERATOR_ADD_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable",
+                END_NUM_STR_EXPR, BEGIN_NUM_STR_EXPR, "5", END_NUM_STR_EXPR,
+                END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable", END_NUM_STR_EXPR,
+                SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR,
                 "list_var", END_NUM_STR_EXPR, END_SCRIPT, END_SPRITE
             );
         }
@@ -347,13 +363,16 @@ class TokenizingAnalyzerTest implements JsonTest {
                     SPRITE_LABEL, List.of(
                         List.of(
                             BEGIN_PROCEDURE, "PROCEDURE_DEFINITION", "looks_say", BEGIN_NUM_STR_EXPR, "LITERAL_STRING",
-                            END_NUM_STR_EXPR, MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER", END_NUM_STR_EXPR, "control_stop",
+                            END_NUM_STR_EXPR, MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER",
+                            END_NUM_STR_EXPR, "control_stop",
                             "stop_target", END_PROCEDURE
                         ),
                         List.of(
-                            BEGIN_PROCEDURE, "PROCEDURE_DEFINITION", MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "PARAMETER",
+                            BEGIN_PROCEDURE, "PROCEDURE_DEFINITION", MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
+                            "PARAMETER",
                             END_NUM_STR_EXPR, "control_if", BEGIN_BOOL_EXPR, "PARAMETER", END_BOOL_EXPR, BEGIN_SUBSTACK,
-                            MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER", END_NUM_STR_EXPR, END_SUBSTACK,
+                            MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER", END_NUM_STR_EXPR,
+                            END_SUBSTACK,
                             "control_stop", "stop_target", END_PROCEDURE
                         )
                     )
@@ -366,14 +385,18 @@ class TokenizingAnalyzerTest implements JsonTest {
                 TokenSequenceBuilder.build(
                     SPRITE_LABEL, List.of(
                         List.of(
-                            BEGIN_PROCEDURE, "block_no_inputs", "looks_say", BEGIN_NUM_STR_EXPR, "hello_!", END_NUM_STR_EXPR,
-                            MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "10", END_NUM_STR_EXPR, "control_stop", "this_script",
+                            BEGIN_PROCEDURE, "block_no_inputs", "looks_say", BEGIN_NUM_STR_EXPR, "hello_!",
+                            END_NUM_STR_EXPR,
+                            MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "10", END_NUM_STR_EXPR, "control_stop",
+                            "this_script",
                             END_PROCEDURE
                         ),
                         List.of(
-                            BEGIN_PROCEDURE, "block_with_inputs", MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "num_input",
+                            BEGIN_PROCEDURE, "block_with_inputs", MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
+                            "num_input",
                             END_NUM_STR_EXPR, "control_if", BEGIN_BOOL_EXPR, "boolean", END_BOOL_EXPR, BEGIN_SUBSTACK,
-                            MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "10", END_NUM_STR_EXPR, END_SUBSTACK, "control_stop",
+                            MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "10", END_NUM_STR_EXPR, END_SUBSTACK,
+                            "control_stop",
                             "this_script", END_PROCEDURE
                         )
                     )
@@ -397,12 +420,15 @@ class TokenizingAnalyzerTest implements JsonTest {
             expectedOutput = TokenSequenceBuilder.build(
                 SPRITE_LABEL, List.of(
                     List.of(
-                        BEGIN_PROCEDURE, "PROCEDURE_DEFINITION", "control_wait", BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER", END_NUM_STR_EXPR,
+                        BEGIN_PROCEDURE, "PROCEDURE_DEFINITION", "control_wait", BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER",
+                        END_NUM_STR_EXPR,
                         END_PROCEDURE
                     ),
                     List.of(
-                        BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, "CUSTOM_BLOCK", BEGIN_NUM_STR_EXPR, "sound_volume", END_NUM_STR_EXPR,
-                        BEGIN_BOOL_EXPR, "sensing_mousedown", END_BOOL_EXPR, BEGIN_NUM_STR_EXPR, "sensing_mousey", END_NUM_STR_EXPR, "END_SCRIPT"
+                        BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, "CUSTOM_BLOCK", BEGIN_NUM_STR_EXPR, "sound_volume",
+                        END_NUM_STR_EXPR,
+                        BEGIN_BOOL_EXPR, "sensing_mousedown", END_BOOL_EXPR, BEGIN_NUM_STR_EXPR, "sensing_mousey",
+                        END_NUM_STR_EXPR, "END_SCRIPT"
                     )
                 )
             );
@@ -411,11 +437,14 @@ class TokenizingAnalyzerTest implements JsonTest {
             expectedOutput = TokenSequenceBuilder.build(
                 SPRITE_LABEL, List.of(
                     List.of(
-                        BEGIN_PROCEDURE, "my_proc_defn", "control_wait", BEGIN_NUM_STR_EXPR, "1", END_NUM_STR_EXPR, END_PROCEDURE
+                        BEGIN_PROCEDURE, "my_proc_defn", "control_wait", BEGIN_NUM_STR_EXPR, "1", END_NUM_STR_EXPR,
+                        END_PROCEDURE
                     ),
                     List.of(
-                        BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, "my_proc_defn", BEGIN_NUM_STR_EXPR, "sound_volume", END_NUM_STR_EXPR,
-                        BEGIN_BOOL_EXPR, "sensing_mousedown", END_BOOL_EXPR, BEGIN_NUM_STR_EXPR, "sensing_mousey", END_NUM_STR_EXPR, "END_SCRIPT"
+                        BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, "my_proc_defn", BEGIN_NUM_STR_EXPR, "sound_volume",
+                        END_NUM_STR_EXPR,
+                        BEGIN_BOOL_EXPR, "sensing_mousedown", END_BOOL_EXPR, BEGIN_NUM_STR_EXPR, "sensing_mousey",
+                        END_NUM_STR_EXPR, "END_SCRIPT"
                     )
                 )
             );
@@ -496,7 +525,8 @@ class TokenizingAnalyzerTest implements JsonTest {
         program.accept(noSpacesChecker);
     }
 
-    private Stream<TokenSequence> mask(final String path, final MaskingStrategy strategy) throws ParsingException, IOException {
+    private Stream<TokenSequence> mask(final String path, final MaskingStrategy strategy)
+        throws ParsingException, IOException {
         final var program = getAST(path);
         final var analyzer = getAnalyzer(true, false, true, false, strategy);
         return analyzer.process(program);
@@ -509,7 +539,8 @@ class TokenizingAnalyzerTest implements JsonTest {
             .findFirst();
     }
 
-    private void assertMaskingSuccessful(final String path, final MaskingStrategy strategy, final List<String> expected) throws ParsingException, IOException {
+    private void assertMaskingSuccessful(final String path, final MaskingStrategy strategy, final List<String> expected)
+        throws ParsingException, IOException {
         final var tokens = getMaskedSequence(mask(path, strategy));
         assertThat(tokens).isPresent();
         assertThat(tokens.get()).isEqualTo(expected);
@@ -576,7 +607,7 @@ class TokenizingAnalyzerTest implements JsonTest {
         assertMaskingSuccessful(path, strategy, expected);
     }
 
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     @ParameterizedTest
     void testMaskExprBlock(final boolean useDirectReference) throws ParsingException, IOException {
         final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
@@ -608,7 +639,7 @@ class TokenizingAnalyzerTest implements JsonTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = {true, false})
+    @ValueSource(booleans = { true, false })
     void testMaskSubstacks(final boolean maskEmptySubstack) throws ParsingException, IOException {
         final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
         // The MaskingType `Input` is only intended for expressions. Applying it to SUBSTACKs should do nothing;
