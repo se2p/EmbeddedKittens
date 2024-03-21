@@ -61,7 +61,7 @@ while read_dom; do
         line=$(extract_value "$ENTITY" "line")
         severityCheckstyle=$(extract_value "$ENTITY" "severity")
         severity=$(map_severity "$severityCheckstyle")
-        message=$(extract_value "$ENTITY" "message" | sed "s/&apos;/\\\\\"/g; s/&amp;/\&/g; s/&lt;/</g; s/&gt;/>/g")
+        message=$(extract_value "$ENTITY" "message" | sed "s/&quot;/\\\\\"/g; s/&apos;/\\\\\"/g; s/&amp;/\&/g; s/&lt;/</g; s/&gt;/>/g")
         checksum=$(printf "%s %s %d" "$current_file" "$message" "$line" | sha1sum | awk '{ print $1 }')
 
         if [[ $first -ne 1 ]]; then
