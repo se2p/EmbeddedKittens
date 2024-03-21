@@ -854,7 +854,12 @@ public class Tokenizer extends AbstractTokenizer {
 
     private void visitSurrounded(final Token left, final ASTNode node, final Token right) {
         addToken(left);
+        if (shouldBeMasked(node)) {
+            addToken(Token.MASK);
+        }
+        else {
         node.accept(this);
+        }
         addToken(right);
     }
 
