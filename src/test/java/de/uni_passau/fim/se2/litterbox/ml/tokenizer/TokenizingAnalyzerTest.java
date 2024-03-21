@@ -710,6 +710,52 @@ class TokenizingAnalyzerTest implements JsonTest {
         assertMaskingSuccessful(path, strategy, expected);
     }
 
+    @Test
+    void testMaskStopBlock() throws ParsingException, IOException {
+        final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
+        final var strategy = MaskingStrategy.block("control_stop");
+        final var expected = List.of(
+            BEGIN_SPRITE, BEGIN_SCRIPT,
+            EVENT_WHENFLAG_TOKEN,
+            "control_if", BEGIN_BOOL_EXPR, "sensing_mousedown", END_BOOL_EXPR,
+            BEGIN_SUBSTACK,
+            "control_wait", BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            "sound_stopallsounds",
+            END_SUBSTACK,
+            "control_if_else", BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            ELSE,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            MASK,
+            END_SCRIPT, END_SPRITE
+
+        );
+        assertMaskingSuccessful(path, strategy, expected);
+    }
+
+    @Test
+    void testMaskFixedOption() throws ParsingException, IOException {
+        final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
+        final var strategy = MaskingStrategy.fixedOption("control_stop");
+        final var expected = List.of(
+            BEGIN_SPRITE, BEGIN_SCRIPT,
+            EVENT_WHENFLAG_TOKEN,
+            "control_if", BEGIN_BOOL_EXPR, "sensing_mousedown", END_BOOL_EXPR,
+            BEGIN_SUBSTACK,
+            "control_wait", BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            "sound_stopallsounds",
+            END_SUBSTACK,
+            "control_if_else", BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            ELSE,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            "control_stop", MASK,
+            END_SCRIPT, END_SPRITE
+
+        );
+        assertMaskingSuccessful(path, strategy, expected);
+    }
+
     static class NoSpacesChecker implements ScratchVisitor {
 
         @Override

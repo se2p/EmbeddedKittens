@@ -76,6 +76,7 @@ import de.uni_passau.fim.se2.litterbox.ml.shared.BaseTokenVisitor;
 import de.uni_passau.fim.se2.litterbox.ml.shared.TokenVisitorFactory;
 import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
+import de.uni_passau.fim.se2.litterbox.ml.util.MaskingType;
 import de.uni_passau.fim.se2.litterbox.ml.util.StringUtil;
 
 public class Tokenizer extends AbstractTokenizer {
@@ -179,7 +180,11 @@ public class Tokenizer extends AbstractTokenizer {
         return switch (maskingStrategy.getMaskingType()) {
             case None -> false;
             case Block -> blockId.equals(getBlockId(node));
-            case FixedOption -> blockId.equals(getBlockId(node.getParentNode()));
+            case FixedOption ->
+                // Special handling required for stop blocks due to inconsistent representation in the LitterBox AST.
+                (node instanceof StopAll || node instanceof StopThisScript || node instanceof StopOtherScriptsInSprite)
+                    ? blockId.equals(getBlockId(node))
+                    : blockId.equals(getBlockId(node.getParentNode()));
             case Input -> blockId.equals(getBlockId(node.getParentNode()))
                 && AstNodeUtil.isInputOfKind(node, maskingStrategy.getInputKey());
         };
@@ -382,22 +387,48 @@ public class Tokenizer extends AbstractTokenizer {
 
     @Override
     public void visit(StopAll node) {
-        visitStop("all");
+        visitStopBlock(node, "all");
     }
 
     @Override
     public void visit(StopOtherScriptsInSprite node) {
-        visitStop("other_scripts");
+        visitStopBlock(node, "other_scripts");
     }
 
     @Override
     public void visit(StopThisScript node) {
-        visitStop("this_script");
+        visitStopBlock(node, "this_script");
     }
 
-    private void visitStop(final String target) {
+    /**
+     * Handles stop blocks and their fixed node options. In contrast to all other blocks with a rectangular dropdown
+     * menu, stop blocks are not represented in the LitterBox AST by a single {@code ASTNode} with a {@code
+     * FixedNodeOption} child. Instead, we have three different nodes ({@code StopAll},
+     * {@code StopOtherScriptsInSprite}, {@code StopThisScript}) for every possible entry in the dropdown menu, without
+     * a {@code FixedNodeOption} child.
+     *
+     * @param stopBlock The stop block to visit.
+     * @param target    The target selected in the dropdown menu.
+     */
+    private void visitStopBlock(final ASTNode stopBlock, final String target) {
+        final boolean shouldBeMasked = shouldBeMasked(stopBlock);
+        final MaskingType maskingType = getMaskingStrategy().getMaskingType();
+
+        // Visit the stop block.
+
+        if (shouldBeMasked && MaskingType.Block.equals(maskingType)) {
+            addToken(Token.MASK);
+            return;
+        }
+
         addToken(Token.CONTROL_STOP);
-        if (abstractFixedNodeOptions) {
+
+        // Visit its "FixedNodeOption". Basically the same code as in visitFixedNodeOption().
+
+        if (shouldBeMasked && MaskingType.FixedOption.equals(maskingType)) {
+            addToken(Token.MASK);
+        }
+        else if (abstractFixedNodeOptions) {
             addToken("stop_target");
         }
         else {
