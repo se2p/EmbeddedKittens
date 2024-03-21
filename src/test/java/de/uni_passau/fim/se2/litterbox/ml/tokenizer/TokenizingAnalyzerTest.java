@@ -73,6 +73,13 @@ class TokenizingAnalyzerTest implements JsonTest {
     private final String MOTION_MOVESTEPS_TOKEN = "motion_movesteps";
     private final String OPERATOR_ADD_TOKEN = "operator_add";
     private final String SOUND_CHANGEVOLUMEBY_TOKEN = "sound_changevolumeby";
+    private final String CONTROL_IF_ELSE = "control_if_else";
+    private final String CONTROL_IF = "control_if";
+    private final String SENSING_MOUSEDOWN = "sensing_mousedown";
+    private final String CONTROL_WAIT = "control_wait";
+    private final String SOUND_STOPALLSOUNDS = "sound_stopallsounds";
+    private final String CONTROL_STOP = "control_stop";
+    private final String STOP_TARGET = "stop_target";
 
     private final String MASK = Token.MASK.getStrRep();
     private final String LITERAL_NUMBER = AbstractToken.LITERAL_NUMBER.toString();
@@ -364,16 +371,16 @@ class TokenizingAnalyzerTest implements JsonTest {
                         List.of(
                             BEGIN_PROCEDURE, "PROCEDURE_DEFINITION", "looks_say", BEGIN_NUM_STR_EXPR, "LITERAL_STRING",
                             END_NUM_STR_EXPR, MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER",
-                            END_NUM_STR_EXPR, "control_stop",
-                            "stop_target", END_PROCEDURE
+                            END_NUM_STR_EXPR, CONTROL_STOP,
+                            STOP_TARGET, END_PROCEDURE
                         ),
                         List.of(
                             BEGIN_PROCEDURE, "PROCEDURE_DEFINITION", MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
                             "PARAMETER",
-                            END_NUM_STR_EXPR, "control_if", BEGIN_BOOL_EXPR, "PARAMETER", END_BOOL_EXPR, BEGIN_SUBSTACK,
+                            END_NUM_STR_EXPR, CONTROL_IF, BEGIN_BOOL_EXPR, "PARAMETER", END_BOOL_EXPR, BEGIN_SUBSTACK,
                             MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER", END_NUM_STR_EXPR,
                             END_SUBSTACK,
-                            "control_stop", "stop_target", END_PROCEDURE
+                            CONTROL_STOP, STOP_TARGET, END_PROCEDURE
                         )
                     )
                 )
@@ -387,16 +394,16 @@ class TokenizingAnalyzerTest implements JsonTest {
                         List.of(
                             BEGIN_PROCEDURE, "block_no_inputs", "looks_say", BEGIN_NUM_STR_EXPR, "hello_!",
                             END_NUM_STR_EXPR,
-                            MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "10", END_NUM_STR_EXPR, "control_stop",
+                            MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "10", END_NUM_STR_EXPR, CONTROL_STOP,
                             "this_script",
                             END_PROCEDURE
                         ),
                         List.of(
                             BEGIN_PROCEDURE, "block_with_inputs", MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
                             "num_input",
-                            END_NUM_STR_EXPR, "control_if", BEGIN_BOOL_EXPR, "boolean", END_BOOL_EXPR, BEGIN_SUBSTACK,
+                            END_NUM_STR_EXPR, CONTROL_IF, BEGIN_BOOL_EXPR, "boolean", END_BOOL_EXPR, BEGIN_SUBSTACK,
                             MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "10", END_NUM_STR_EXPR, END_SUBSTACK,
-                            "control_stop",
+                            CONTROL_STOP,
                             "this_script", END_PROCEDURE
                         )
                     )
@@ -420,14 +427,14 @@ class TokenizingAnalyzerTest implements JsonTest {
             expectedOutput = TokenSequenceBuilder.build(
                 SPRITE_LABEL, List.of(
                     List.of(
-                        BEGIN_PROCEDURE, "PROCEDURE_DEFINITION", "control_wait", BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER",
+                        BEGIN_PROCEDURE, "PROCEDURE_DEFINITION", CONTROL_WAIT, BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER",
                         END_NUM_STR_EXPR,
                         END_PROCEDURE
                     ),
                     List.of(
                         BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, "CUSTOM_BLOCK", BEGIN_NUM_STR_EXPR, "sound_volume",
                         END_NUM_STR_EXPR,
-                        BEGIN_BOOL_EXPR, "sensing_mousedown", END_BOOL_EXPR, BEGIN_NUM_STR_EXPR, "sensing_mousey",
+                        BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR, BEGIN_NUM_STR_EXPR, "sensing_mousey",
                         END_NUM_STR_EXPR, "END_SCRIPT"
                     )
                 )
@@ -437,13 +444,13 @@ class TokenizingAnalyzerTest implements JsonTest {
             expectedOutput = TokenSequenceBuilder.build(
                 SPRITE_LABEL, List.of(
                     List.of(
-                        BEGIN_PROCEDURE, "my_proc_defn", "control_wait", BEGIN_NUM_STR_EXPR, "1", END_NUM_STR_EXPR,
+                        BEGIN_PROCEDURE, "my_proc_defn", CONTROL_WAIT, BEGIN_NUM_STR_EXPR, "1", END_NUM_STR_EXPR,
                         END_PROCEDURE
                     ),
                     List.of(
                         BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, "my_proc_defn", BEGIN_NUM_STR_EXPR, "sound_volume",
                         END_NUM_STR_EXPR,
-                        BEGIN_BOOL_EXPR, "sensing_mousedown", END_BOOL_EXPR, BEGIN_NUM_STR_EXPR, "sensing_mousey",
+                        BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR, BEGIN_NUM_STR_EXPR, "sensing_mousey",
                         END_NUM_STR_EXPR, "END_SCRIPT"
                     )
                 )
@@ -539,6 +546,12 @@ class TokenizingAnalyzerTest implements JsonTest {
             .findFirst();
     }
 
+    private void assertMaskingSuccessful(final MaskingStrategy strategy, final List<String> expected)
+        throws ParsingException, IOException {
+        final String defaultPath = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
+        assertMaskingSuccessful(defaultPath, strategy, expected);
+    }
+
     private void assertMaskingSuccessful(final String path, final MaskingStrategy strategy, final List<String> expected)
         throws ParsingException, IOException {
         final var tokens = getMaskedSequence(mask(path, strategy));
@@ -546,7 +559,8 @@ class TokenizingAnalyzerTest implements JsonTest {
         assertThat(tokens.get()).isEqualTo(expected);
     }
 
-    private void assertNoMask(final String path, final MaskingStrategy strategy) throws ParsingException, IOException {
+    private void assertNoMask(final MaskingStrategy strategy) throws ParsingException, IOException {
+        final String path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
         assertThat(getMaskedSequence(mask(path, strategy))).isEmpty();
         assertThat(mask(path, strategy).toList()).isEqualTo(mask(path, MaskingStrategy.none()).toList());
     }
@@ -564,196 +578,184 @@ class TokenizingAnalyzerTest implements JsonTest {
 
     @Test
     void testMaskStmtBlock() throws ParsingException, IOException {
-        final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
-        final var strategy = MaskingStrategy.block("sound_stopallsounds");
+        final var strategy = MaskingStrategy.block(SOUND_STOPALLSOUNDS);
         final var expected = List.of(
             BEGIN_SPRITE, BEGIN_SCRIPT,
             EVENT_WHENFLAG_TOKEN,
-            "control_if", BEGIN_BOOL_EXPR, "sensing_mousedown", END_BOOL_EXPR,
+            CONTROL_IF, BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR,
             BEGIN_SUBSTACK,
-            "control_wait", BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
             MASK,
             END_SUBSTACK,
-            "control_if_else", BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
             BEGIN_SUBSTACK, END_SUBSTACK,
             ELSE,
             BEGIN_SUBSTACK, END_SUBSTACK,
-            "control_stop", "stop_target",
+            CONTROL_STOP, STOP_TARGET,
             END_SCRIPT, END_SPRITE
         );
-        assertMaskingSuccessful(path, strategy, expected);
+        assertMaskingSuccessful(strategy, expected);
     }
 
     @Test
     void testMaskCBlock() throws ParsingException, IOException {
-        final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
-        final var strategy = MaskingStrategy.block("control_if");
+        final var strategy = MaskingStrategy.block(CONTROL_IF);
         // Masking a C block should retain its SUBSTACK(s)
         final var expected = List.of(
             BEGIN_SPRITE, BEGIN_SCRIPT,
             EVENT_WHENFLAG_TOKEN,
             MASK,
             BEGIN_SUBSTACK,
-            "control_wait", BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
-            "sound_stopallsounds",
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            SOUND_STOPALLSOUNDS,
             END_SUBSTACK,
-            "control_if_else", BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
             BEGIN_SUBSTACK, END_SUBSTACK,
             ELSE,
             BEGIN_SUBSTACK, END_SUBSTACK,
-            "control_stop", "stop_target",
+            CONTROL_STOP, STOP_TARGET,
             END_SCRIPT, END_SPRITE
         );
-        assertMaskingSuccessful(path, strategy, expected);
+        assertMaskingSuccessful(strategy, expected);
     }
 
     @ValueSource(booleans = { true, false })
     @ParameterizedTest
     void testMaskExprBlock(final boolean useDirectReference) throws ParsingException, IOException {
-        final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
 
         // Expression blocks can be selected in two ways:
         // (1) Direct reference via block ID
         // (2) Indirect reference via parent's block ID and input key
         final var strategy = useDirectReference
-            ? MaskingStrategy.block("sensing_mousedown")
-            : MaskingStrategy.input("control_if", "CONDITION");
+            ? MaskingStrategy.block(SENSING_MOUSEDOWN)
+            : MaskingStrategy.input(CONTROL_IF, "CONDITION");
 
         // Both strategies must produce the same outcome.
         final var expected = List.of(
             BEGIN_SPRITE, BEGIN_SCRIPT,
             EVENT_WHENFLAG_TOKEN,
-            "control_if", BEGIN_BOOL_EXPR, MASK, END_BOOL_EXPR,
+            CONTROL_IF, BEGIN_BOOL_EXPR, MASK, END_BOOL_EXPR,
             BEGIN_SUBSTACK,
-            "control_wait", BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
-            "sound_stopallsounds",
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            SOUND_STOPALLSOUNDS,
             END_SUBSTACK,
-            "control_if_else", BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
             BEGIN_SUBSTACK, END_SUBSTACK,
             ELSE,
             BEGIN_SUBSTACK, END_SUBSTACK,
-            "control_stop", "stop_target",
+            CONTROL_STOP, STOP_TARGET,
             END_SCRIPT, END_SPRITE
         );
-        assertMaskingSuccessful(path, strategy, expected);
+        assertMaskingSuccessful(strategy, expected);
     }
 
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void testMaskSubstacks(final boolean maskEmptySubstack) throws ParsingException, IOException {
-        final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
         // The MaskingType `Input` is only intended for expressions. Applying it to SUBSTACKs should do nothing;
         // it must neither mask the first statement of the SUBSTACK nor the entire SUBSTACK. This holds for both
         // empty and non-empty SUBSTACKs.
-        final String blockId = maskEmptySubstack ? "control_if_else" : "control_if";
+        final String blockId = maskEmptySubstack ? CONTROL_IF_ELSE : CONTROL_IF;
         final var strategy = MaskingStrategy.input(blockId, "SUBSTACK");
-        assertNoMask(path, strategy);
+        assertNoMask(strategy);
     }
 
     @Test
     void testMaskEmptyExprInput() throws ParsingException, IOException {
-        final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
-        final var strategy = MaskingStrategy.input("control_if_else", "CONDITION");
+        final var strategy = MaskingStrategy.input(CONTROL_IF_ELSE, "CONDITION");
         // Unlike masking an empty SUBSTACK, masking an empty input must produce a MASK token.
         final var expected = List.of(
             BEGIN_SPRITE, BEGIN_SCRIPT,
             EVENT_WHENFLAG_TOKEN,
-            "control_if", BEGIN_BOOL_EXPR, "sensing_mousedown", END_BOOL_EXPR,
+            CONTROL_IF, BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR,
             BEGIN_SUBSTACK,
-            "control_wait", BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
-            "sound_stopallsounds",
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            SOUND_STOPALLSOUNDS,
             END_SUBSTACK,
-            "control_if_else", BEGIN_BOOL_EXPR, MASK, END_BOOL_EXPR,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, MASK, END_BOOL_EXPR,
             BEGIN_SUBSTACK, END_SUBSTACK,
             ELSE,
             BEGIN_SUBSTACK, END_SUBSTACK,
-            "control_stop", "stop_target",
+            CONTROL_STOP, STOP_TARGET,
             END_SCRIPT, END_SPRITE
         );
-        assertMaskingSuccessful(path, strategy, expected);
+        assertMaskingSuccessful(strategy, expected);
     }
 
     @Test
     void testMaskInvalidBlockId() throws ParsingException, IOException {
-        final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
         final var strategy = MaskingStrategy.block("invalid");
-        assertNoMask(path, strategy);
+        assertNoMask(strategy);
     }
 
     @Test
     void testMaskInvalidInputKey() throws ParsingException, IOException {
-        final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
-        final var strategy = MaskingStrategy.input("control_wait", "INVALID");
-        assertNoMask(path, strategy);
+        final var strategy = MaskingStrategy.input(CONTROL_WAIT, "INVALID");
+        assertNoMask(strategy);
     }
 
     @Test
     void testMaskPrimitive() throws ParsingException, IOException {
-        final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
-        final var strategy = MaskingStrategy.input("control_wait", "DURATION");
+        final var strategy = MaskingStrategy.input(CONTROL_WAIT, "DURATION");
         final var expected = List.of(
             BEGIN_SPRITE, BEGIN_SCRIPT,
             EVENT_WHENFLAG_TOKEN,
-            "control_if", BEGIN_BOOL_EXPR, "sensing_mousedown", END_BOOL_EXPR,
+            CONTROL_IF, BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR,
             BEGIN_SUBSTACK,
-            "control_wait", BEGIN_NUM_STR_EXPR, MASK, END_NUM_STR_EXPR,
-            "sound_stopallsounds",
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, MASK, END_NUM_STR_EXPR,
+            SOUND_STOPALLSOUNDS,
             END_SUBSTACK,
-            "control_if_else", BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
             BEGIN_SUBSTACK, END_SUBSTACK,
             ELSE,
             BEGIN_SUBSTACK, END_SUBSTACK,
-            "control_stop", "stop_target",
+            CONTROL_STOP, STOP_TARGET,
             END_SCRIPT, END_SPRITE
 
         );
-        assertMaskingSuccessful(path, strategy, expected);
+        assertMaskingSuccessful(strategy, expected);
     }
 
     @Test
     void testMaskStopBlock() throws ParsingException, IOException {
-        final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
-        final var strategy = MaskingStrategy.block("control_stop");
+        final var strategy = MaskingStrategy.block(CONTROL_STOP);
         final var expected = List.of(
             BEGIN_SPRITE, BEGIN_SCRIPT,
             EVENT_WHENFLAG_TOKEN,
-            "control_if", BEGIN_BOOL_EXPR, "sensing_mousedown", END_BOOL_EXPR,
+            CONTROL_IF, BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR,
             BEGIN_SUBSTACK,
-            "control_wait", BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
-            "sound_stopallsounds",
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            SOUND_STOPALLSOUNDS,
             END_SUBSTACK,
-            "control_if_else", BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
             BEGIN_SUBSTACK, END_SUBSTACK,
             ELSE,
             BEGIN_SUBSTACK, END_SUBSTACK,
             MASK,
             END_SCRIPT, END_SPRITE
-
         );
-        assertMaskingSuccessful(path, strategy, expected);
+        assertMaskingSuccessful(strategy, expected);
     }
 
     @Test
     void testMaskFixedOption() throws ParsingException, IOException {
-        final var path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
-        final var strategy = MaskingStrategy.fixedOption("control_stop");
+        final var strategy = MaskingStrategy.fixedOption(CONTROL_STOP);
         final var expected = List.of(
             BEGIN_SPRITE, BEGIN_SCRIPT,
             EVENT_WHENFLAG_TOKEN,
-            "control_if", BEGIN_BOOL_EXPR, "sensing_mousedown", END_BOOL_EXPR,
+            CONTROL_IF, BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR,
             BEGIN_SUBSTACK,
-            "control_wait", BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
-            "sound_stopallsounds",
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            SOUND_STOPALLSOUNDS,
             END_SUBSTACK,
-            "control_if_else", BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
             BEGIN_SUBSTACK, END_SUBSTACK,
             ELSE,
             BEGIN_SUBSTACK, END_SUBSTACK,
-            "control_stop", MASK,
+            CONTROL_STOP, MASK,
             END_SCRIPT, END_SPRITE
-
         );
-        assertMaskingSuccessful(path, strategy, expected);
+        assertMaskingSuccessful(strategy, expected);
     }
 
     static class NoSpacesChecker implements ScratchVisitor {
