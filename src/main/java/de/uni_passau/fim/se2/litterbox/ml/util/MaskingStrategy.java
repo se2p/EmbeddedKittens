@@ -32,7 +32,7 @@ import de.uni_passau.fim.se2.litterbox.utils.Preconditions;
  *
  * @see de.uni_passau.fim.se2.litterbox.ml.tokenizer.Token#MASK
  */
-public sealed abstract class MaskingStrategy {
+public abstract sealed class MaskingStrategy {
 
     /**
      * Tells whether to insert a mask token for the given AST node, according to the current masking strategy.
@@ -40,10 +40,12 @@ public sealed abstract class MaskingStrategy {
      * @param node The node to tokenize.
      * @return {@code true} if the node should be masked, {@code false} otherwise.
      */
-    public abstract boolean shouldBeMasked(final ASTNode node);
+    public abstract boolean shouldBeMasked(ASTNode node);
 
     /**
      * Do not mask.
+     *
+     * @return Strategy that does not mask.
      */
     public static MaskingStrategy.None none() {
         return None.getInstance();
