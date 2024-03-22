@@ -309,6 +309,8 @@ public class Main implements Callable<Integer> {
     )
     static class TokenizerSubcommand extends MLPreprocessorSubcommand {
 
+        private static final String MASKED_BLOCK_ID = "--masked-block-id";
+
         @CommandLine.Option(
             names = { "--sequence-per-script" },
             description = "Generate one token sequence per script instead of per sprite/program."
@@ -329,14 +331,15 @@ public class Main implements Callable<Integer> {
         boolean statementLevel = false;
 
         @CommandLine.Option(
-            names = { "--masked-block-id" },
-            description = "Id of the block to mask. Default: no masking."
+            names = { MASKED_BLOCK_ID },
+            description = "Mask the block with the given ID. Default: no masking."
         )
         String maskedBlockId = null;
 
         @CommandLine.Option(
             names = { "--masked-input-key" },
-            description = "Input key to mask. Default: no masking."
+            description = "Mask the input of a block. Valid input keys are the same as in the Scratch JSON. "
+                + "Use " + MASKED_BLOCK_ID + " to specify the block that takes the input. Default: no masking."
         )
         String maskedInputKey = null;
 
