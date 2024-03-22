@@ -18,53 +18,102 @@
  */
 package de.uni_passau.fim.se2.litterbox.ml.util;
 
+import de.uni_passau.fim.se2.litterbox.ast.model.ASTNode;
+import de.uni_passau.fim.se2.litterbox.ast.model.statement.common.StopOtherScriptsInSprite;
+import de.uni_passau.fim.se2.litterbox.ast.model.statement.termination.StopAll;
+import de.uni_passau.fim.se2.litterbox.ast.model.statement.termination.StopThisScript;
+import de.uni_passau.fim.se2.litterbox.ast.util.AstNodeUtil;
 import de.uni_passau.fim.se2.litterbox.utils.Preconditions;
 
-public class MaskingStrategy {
-
-    private final MaskingType maskingType;
-    private final String blockId;
-    private final String inputKey;
-
-    private MaskingStrategy(final MaskingType maskingType, final String blockId) {
-        this(maskingType, blockId, null);
-    }
-
-    private MaskingStrategy(final MaskingType maskingType, final String blockId, final String inputKey) {
-        this.maskingType = maskingType;
-        this.blockId = blockId;
-        this.inputKey = inputKey;
-    }
+public sealed abstract class MaskingStrategy {
+    public abstract boolean shouldBeMasked(final ASTNode node);
 
     public static MaskingStrategy none() {
-        return new MaskingStrategy(MaskingType.None, null);
+        return None.getInstance();
     }
 
     public static MaskingStrategy block(final String blockId) {
         Preconditions.checkNotNull(blockId);
-        return new MaskingStrategy(MaskingType.Block, blockId);
+        return new Block(blockId);
+    }
+
+    public static MaskingStrategy input(final String blockId, final String inputKey) {
+        Preconditions.checkNotNull(blockId);
+        Preconditions.checkNotNull(inputKey);
+        return new Input(blockId, inputKey);
     }
 
     public static MaskingStrategy fixedOption(final String blockId) {
         Preconditions.checkNotNull(blockId);
-        return new MaskingStrategy(MaskingType.FixedOption, blockId);
+        return new FixedOption(blockId);
     }
 
-    public static MaskingStrategy input(final String blockId, final String inputkey) {
-        Preconditions.checkNotNull(blockId);
-        Preconditions.checkNotNull(inputkey);
-        return new MaskingStrategy(MaskingType.Input, blockId, inputkey);
+    public static final class None extends MaskingStrategy {
+        private static None INSTANCE;
+
+        private None() {
+        }
+
+        @Override
+        public boolean shouldBeMasked(final ASTNode node) {
+            return false;
+        }
+
+        private static None getInstance() {
+            if (INSTANCE == null) {
+                INSTANCE = new None();
+            }
+
+            return INSTANCE;
+        }
     }
 
-    public MaskingType getMaskingType() {
-        return maskingType;
+    public static final class Block extends MaskingStrategy {
+        private final String blockId;
+
+        private Block(final String blockId) {
+            this.blockId = blockId;
+        }
+
+        @Override
+        public boolean shouldBeMasked(final ASTNode node) {
+            return blockId.equals(AstNodeUtil.getBlockId(node));
+        }
     }
 
-    public String getBlockId() {
-        return blockId;
+    public static final class Input extends MaskingStrategy {
+        private final String blockId;
+        private final String inputKey;
+
+        private Input(final String blockId, final String inputKey) {
+            this.blockId = blockId;
+            this.inputKey = inputKey;
+        }
+
+        @Override
+        public boolean shouldBeMasked(final ASTNode node) {
+            return blockId.equals(AstNodeUtil.getBlockId(node.getParentNode()))
+                && AstNodeUtil.isInputOfKind(node, inputKey);
+        }
     }
 
-    public String getInputKey() {
-        return inputKey;
+    public static final class FixedOption extends MaskingStrategy {
+        private final String blockId;
+
+        private FixedOption(final String blockId) {
+            this.blockId = blockId;
+        }
+
+        @Override
+        public boolean shouldBeMasked(final ASTNode node) {
+            final boolean isStopBlock = node instanceof StopAll
+                    || node instanceof StopThisScript
+                    || node instanceof StopOtherScriptsInSprite;
+
+            // Special handling required for stop blocks due to inconsistent representation in the LitterBox AST.
+            return isStopBlock
+                ? blockId.equals(AstNodeUtil.getBlockId(node))
+                : blockId.equals(AstNodeUtil.getBlockId(node.getParentNode()));
+        }
     }
 }

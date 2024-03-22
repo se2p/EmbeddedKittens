@@ -76,7 +76,6 @@ import de.uni_passau.fim.se2.litterbox.ml.shared.BaseTokenVisitor;
 import de.uni_passau.fim.se2.litterbox.ml.shared.TokenVisitorFactory;
 import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
-import de.uni_passau.fim.se2.litterbox.ml.util.MaskingType;
 import de.uni_passau.fim.se2.litterbox.ml.util.StringUtil;
 
 public class Tokenizer extends AbstractTokenizer {
@@ -174,20 +173,7 @@ public class Tokenizer extends AbstractTokenizer {
     }
 
     private boolean shouldBeMasked(final ASTNode node) {
-        final MaskingStrategy maskingStrategy = getMaskingStrategy();
-        final String blockId = maskingStrategy.getBlockId();
-
-        return switch (maskingStrategy.getMaskingType()) {
-            case None -> false;
-            case Block -> blockId.equals(getBlockId(node));
-            case FixedOption ->
-                // Special handling required for stop blocks due to inconsistent representation in the LitterBox AST.
-                (node instanceof StopAll || node instanceof StopThisScript || node instanceof StopOtherScriptsInSprite)
-                    ? blockId.equals(getBlockId(node))
-                    : blockId.equals(getBlockId(node.getParentNode()));
-            case Input -> blockId.equals(getBlockId(node.getParentNode()))
-                && AstNodeUtil.isInputOfKind(node, maskingStrategy.getInputKey());
-        };
+        return getMaskingStrategy().shouldBeMasked(node);
     }
 
     private void visit(final ASTNode node, final String token) {
@@ -412,11 +398,10 @@ public class Tokenizer extends AbstractTokenizer {
      */
     private void visitStopBlock(final ASTNode stopBlock, final String target) {
         final boolean shouldBeMasked = shouldBeMasked(stopBlock);
-        final MaskingType maskingType = getMaskingStrategy().getMaskingType();
 
         // Visit the stop block.
 
-        if (shouldBeMasked && MaskingType.Block.equals(maskingType)) {
+        if (shouldBeMasked && getMaskingStrategy() instanceof MaskingStrategy.Block) {
             addToken(Token.MASK);
             return;
         }
@@ -425,7 +410,7 @@ public class Tokenizer extends AbstractTokenizer {
 
         // Visit its "FixedNodeOption". Basically the same code as in visitFixedNodeOption().
 
-        if (shouldBeMasked && MaskingType.FixedOption.equals(maskingType)) {
+        if (shouldBeMasked && getMaskingStrategy() instanceof MaskingStrategy.FixedOption) {
             addToken(Token.MASK);
         }
         else if (abstractFixedNodeOptions) {
