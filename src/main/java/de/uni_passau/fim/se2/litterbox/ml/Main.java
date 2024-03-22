@@ -309,6 +309,10 @@ public class Main implements Callable<Integer> {
     )
     static class TokenizerSubcommand extends MLPreprocessorSubcommand {
 
+        private static final String MASKED_BLOCK_ID = "--masked-block-id";
+        private static final String MASKED_INPUT_KEY = "--masked-input-key";
+        private static final String MASKED_FIXED_NODE_OPTION = "--masked-fixed-node-option";
+
         @CommandLine.Option(
             names = { "--sequence-per-script" },
             description = "Generate one token sequence per script instead of per sprite/program."
@@ -329,10 +333,65 @@ public class Main implements Callable<Integer> {
         boolean statementLevel = false;
 
         @CommandLine.Option(
-            names = { "--masked-block-id" },
-            description = "Id of the block to mask. Default: no masking."
+            names = { MASKED_BLOCK_ID },
+            description = "Mask the block with the given ID. Default: no masking."
         )
         String maskedBlockId = null;
+
+        @CommandLine.Option(
+            names = { MASKED_INPUT_KEY },
+            description = "Mask the input of a block. Valid input keys are the same as in the Scratch JSON. "
+                + "Use together with " + MASKED_BLOCK_ID
+                + " to specify the block that takes the input. Default: no masking."
+        )
+        String maskedInputKey = null;
+
+        @CommandLine.Option(
+            names = { MASKED_FIXED_NODE_OPTION },
+            description = "Mask the fixed node option of the block with the given ID. Default: no masking."
+        )
+        String maskedFixedNodeOption = null;
+
+        private void throwParameterException(final String... message) {
+            throw new CommandLine.ParameterException(
+                spec.commandLine(),
+                String.join(" ", message)
+            );
+        }
+
+        private MaskingStrategy getMaskingStrategy() {
+            if (maskedBlockId != null) {
+                if (maskedFixedNodeOption != null) {
+                    throwParameterException(
+                        "You cannot use", MASKED_BLOCK_ID, "together with", MASKED_FIXED_NODE_OPTION
+                    );
+                }
+
+                if (maskedInputKey != null) {
+                    return MaskingStrategy.input(maskedBlockId, maskedInputKey);
+                }
+
+                return MaskingStrategy.block(maskedBlockId);
+            }
+
+            if (maskedFixedNodeOption != null) {
+                if (maskedInputKey != null) {
+                    throwParameterException(
+                        "You cannot use", MASKED_INPUT_KEY, "together with", MASKED_FIXED_NODE_OPTION
+                    );
+                }
+
+                return MaskingStrategy.fixedOption(maskedFixedNodeOption);
+            }
+
+            if (maskedInputKey != null) {
+                throwParameterException(
+                    "You must also use", MASKED_BLOCK_ID, "to specify the ID of block whose input should be masked"
+                );
+            }
+
+            return MaskingStrategy.none();
+        }
 
         @Override
         protected TokenizingPreprocessor getAnalyzer() {
@@ -343,16 +402,8 @@ public class Main implements Callable<Integer> {
                 );
             }
 
-            final MaskingStrategy maskingStrategy;
-            if (maskedBlockId == null) {
-                maskingStrategy = MaskingStrategy.none();
-            }
-            else {
-                maskingStrategy = MaskingStrategy.block(maskedBlockId);
-            }
-
             return new TokenizingPreprocessor(
-                getCommonOptions(), sequencePerScript, abstractFixedNodeOption, statementLevel, maskingStrategy
+                getCommonOptions(), sequencePerScript, abstractFixedNodeOption, statementLevel, getMaskingStrategy()
             );
         }
     }

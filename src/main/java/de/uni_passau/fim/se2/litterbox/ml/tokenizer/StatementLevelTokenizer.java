@@ -28,12 +28,8 @@ import de.uni_passau.fim.se2.litterbox.ast.model.statement.termination.StopAll;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.termination.StopThisScript;
 import de.uni_passau.fim.se2.litterbox.ast.parser.symboltable.ProcedureDefinitionNameMapping;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
-import de.uni_passau.fim.se2.litterbox.ml.util.MaskingType;
 
 public class StatementLevelTokenizer extends AbstractTokenizer {
-
-    private final boolean statementMasking;
-    private final String maskedBlockId;
 
     private StatementLevelTokenizer(
         final ProcedureDefinitionNameMapping procedureNameMapping,
@@ -41,8 +37,6 @@ public class StatementLevelTokenizer extends AbstractTokenizer {
         final MaskingStrategy maskingStrategy
     ) {
         super(procedureNameMapping, abstractTokens, maskingStrategy);
-        this.statementMasking = MaskingType.Block.equals(getMaskingStrategy().getMaskingType());
-        this.maskedBlockId = getMaskingStrategy().getBlockId();
     }
 
     public static List<String> tokenize(
@@ -90,7 +84,8 @@ public class StatementLevelTokenizer extends AbstractTokenizer {
     }
 
     private boolean shouldBeMasked(final ASTNode node) {
-        return statementMasking && maskedBlockId.equals(getStatementId(node));
+        final var maskingStrategy = getMaskingStrategy();
+        return maskingStrategy instanceof MaskingStrategy.Block && maskingStrategy.shouldBeMasked(node);
     }
 
     @Override

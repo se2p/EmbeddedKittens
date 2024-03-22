@@ -27,7 +27,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -45,6 +47,7 @@ import de.uni_passau.fim.se2.litterbox.ml.MLOutputPath;
 import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
 import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 import de.uni_passau.fim.se2.litterbox.ml.shared.TokenVisitorFactory;
+import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
 
 class TokenizingAnalyzerTest implements JsonTest {
@@ -52,32 +55,44 @@ class TokenizingAnalyzerTest implements JsonTest {
     private final String STAGE_LABEL = "stage";
     private final String SPRITE_LABEL = "sprite";
 
-    private final String BEGIN_SUBSTACK_TOKEN = "BEGIN_SUBSTACK";
-    private final String END_SUBSTACK_TOKEN = "END_SUBSTACK";
-    private final String BEGIN_SPRITE_TOKEN = "BEGIN_SPRITE";
-    private final String END_SPRITE_TOKEN = "END_SPRITE";
-    private final String BEGIN_SCRIPT_TOKEN = "BEGIN_SCRIPT";
-    private final String END_SCRIPT_TOKEN = "END_SCRIPT";
-    private final String BEGIN_PROCEDURE_TOKEN = "BEGIN_PROCEDURE";
-    private final String END_PROCEDURE_TOKEN = "END_PROCEDURE";
-    private final String LPAREN = "(";
-    private final String RPAREN = ")";
-    private final String LANGLE = "<";
-    private final String RANGLE = ">";
+    private final String BEGIN_SUBSTACK = Token.BEGIN_SUBSTACK.getStrRep();
+    private final String END_SUBSTACK = Token.END_SUBSTACK.getStrRep();
+    private final String BEGIN_SPRITE = Token.BEGIN_SPRITE.getStrRep();
+    private final String END_SPRITE = Token.END_SPRITE.getStrRep();
+    private final String BEGIN_SCRIPT = Token.BEGIN_SCRIPT.getStrRep();
+    private final String END_SCRIPT = Token.END_SCRIPT.getStrRep();
+    private final String BEGIN_PROCEDURE = Token.BEGIN_PROCEDURE.getStrRep();
+    private final String END_PROCEDURE = Token.END_PROCEDURE.getStrRep();
+    private final String BEGIN_NUM_STR_EXPR = Token.BEGIN_NUM_STR_EXPR.getStrRep();
+    private final String END_NUM_STR_EXPR = Token.END_NUM_STR_EXPR.getStrRep();
+    private final String BEGIN_BOOL_EXPR = Token.BEGIN_BOOL_EXPR.getStrRep();
+    private final String END_BOOL_EXPR = Token.END_BOOL_EXPR.getStrRep();
 
     private final String EVENT_WHENFLAG_TOKEN = "event_whenflagclicked";
     private final String LOOKS_SAY_TOKEN = "looks_say";
     private final String MOTION_MOVESTEPS_TOKEN = "motion_movesteps";
     private final String OPERATOR_ADD_TOKEN = "operator_add";
     private final String SOUND_CHANGEVOLUMEBY_TOKEN = "sound_changevolumeby";
+    private final String CONTROL_IF_ELSE = "control_if_else";
+    private final String CONTROL_IF = "control_if";
+    private final String SENSING_MOUSEDOWN = "sensing_mousedown";
+    private final String CONTROL_WAIT = "control_wait";
+    private final String SOUND_STOPALLSOUNDS = "sound_stopallsounds";
+    private final String CONTROL_STOP = "control_stop";
+    private final String STOP_TARGET = "stop_target";
+
+    private final String MASK = Token.MASK.getStrRep();
+    private final String LITERAL_NUMBER = AbstractToken.LITERAL_NUMBER.toString();
+    private final String NOTHING = Token.NOTHING.getStrRep();
+    private final String ELSE = Token.ELSE.getStrRep();
 
     private final List<TokenSequence> concreteScriptSequences = List.of(
         TokenSequenceBuilder.build(
             STAGE_LABEL,
             List.of(
                 List.of(
-                    BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "control_repeat", LPAREN, "10", RPAREN,
-                    BEGIN_SUBSTACK_TOKEN, END_SUBSTACK_TOKEN, END_SCRIPT_TOKEN
+                    BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, "control_repeat", BEGIN_NUM_STR_EXPR, "10", END_NUM_STR_EXPR,
+                    BEGIN_SUBSTACK, END_SUBSTACK, END_SCRIPT
                 )
             )
         ),
@@ -85,8 +100,9 @@ class TokenizingAnalyzerTest implements JsonTest {
             "cat",
             List.of(
                 List.of(
-                    BEGIN_SCRIPT_TOKEN, "event_whenkeypressed", "key", LPAREN, "39", RPAREN, LOOKS_SAY_TOKEN, LPAREN,
-                    "hi_!", RPAREN, "looks_show", END_SCRIPT_TOKEN
+                    BEGIN_SCRIPT, "event_whenkeypressed", "key", BEGIN_NUM_STR_EXPR, "39", END_NUM_STR_EXPR,
+                    LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR,
+                    "hi_!", END_NUM_STR_EXPR, "looks_show", END_SCRIPT
                 )
             )
         ),
@@ -94,8 +110,9 @@ class TokenizingAnalyzerTest implements JsonTest {
             "abby",
             List.of(
                 List.of(
-                    BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, LPAREN, "hello_!", RPAREN,
-                    END_SCRIPT_TOKEN
+                    BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "hello_!",
+                    END_NUM_STR_EXPR,
+                    END_SCRIPT
                 )
             )
         )
@@ -106,8 +123,8 @@ class TokenizingAnalyzerTest implements JsonTest {
             STAGE_LABEL,
             List.of(
                 List.of(
-                    BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "control_repeat", LPAREN, "10",
-                    RPAREN, BEGIN_SUBSTACK_TOKEN, END_SUBSTACK_TOKEN, END_SCRIPT_TOKEN, END_SPRITE_TOKEN
+                    BEGIN_SPRITE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, "control_repeat", BEGIN_NUM_STR_EXPR, "10",
+                    END_NUM_STR_EXPR, BEGIN_SUBSTACK, END_SUBSTACK, END_SCRIPT, END_SPRITE
                 )
             )
         ),
@@ -116,15 +133,17 @@ class TokenizingAnalyzerTest implements JsonTest {
             List.of("cat"),
             List.of(
                 List.of(
-                    BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, "event_whenkeypressed", "key", LPAREN, "39", RPAREN,
-                    LOOKS_SAY_TOKEN, LPAREN, "hi_!", RPAREN, "looks_show", END_SCRIPT_TOKEN, END_SPRITE_TOKEN
+                    BEGIN_SPRITE, BEGIN_SCRIPT, "event_whenkeypressed", "key", BEGIN_NUM_STR_EXPR, "39",
+                    END_NUM_STR_EXPR,
+                    LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "hi_!", END_NUM_STR_EXPR, "looks_show", END_SCRIPT, END_SPRITE
                 )
             ),
             List.of(
                 List.of(
-                    BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, "event", "whenkeypressed", "key", LPAREN, "39",
-                    RPAREN, "looks", "say", LPAREN, "hi", "!", RPAREN, "looks", "show", END_SCRIPT_TOKEN,
-                    END_SPRITE_TOKEN
+                    BEGIN_SPRITE, BEGIN_SCRIPT, "event", "whenkeypressed", "key", BEGIN_NUM_STR_EXPR, "39",
+                    END_NUM_STR_EXPR, "looks", "say", BEGIN_NUM_STR_EXPR, "hi", "!", END_NUM_STR_EXPR, "looks", "show",
+                    END_SCRIPT,
+                    END_SPRITE
                 )
             )
         ),
@@ -132,8 +151,8 @@ class TokenizingAnalyzerTest implements JsonTest {
             "abby",
             List.of(
                 List.of(
-                    BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, LPAREN, "hello_!",
-                    RPAREN, END_SCRIPT_TOKEN, END_SPRITE_TOKEN
+                    BEGIN_SPRITE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "hello_!",
+                    END_NUM_STR_EXPR, END_SCRIPT, END_SPRITE
                 )
             )
         )
@@ -145,14 +164,16 @@ class TokenizingAnalyzerTest implements JsonTest {
             List.of(STAGE_LABEL),
             List.of(
                 List.of(
-                    BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "control_repeat", LPAREN, "LITERAL_NUMBER", RPAREN,
-                    BEGIN_SUBSTACK_TOKEN, END_SUBSTACK_TOKEN, END_SCRIPT_TOKEN
+                    BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, "control_repeat", BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER",
+                    END_NUM_STR_EXPR,
+                    BEGIN_SUBSTACK, END_SUBSTACK, END_SCRIPT
                 )
             ),
             List.of(
                 List.of(
-                    BEGIN_SCRIPT_TOKEN, "event", "whenflagclicked", "control", "repeat", LPAREN, "literal", "number",
-                    RPAREN, BEGIN_SUBSTACK_TOKEN, END_SUBSTACK_TOKEN, END_SCRIPT_TOKEN
+                    BEGIN_SCRIPT, "event", "whenflagclicked", "control", "repeat", BEGIN_NUM_STR_EXPR, "literal",
+                    "number",
+                    END_NUM_STR_EXPR, BEGIN_SUBSTACK, END_SUBSTACK, END_SCRIPT
                 )
             )
         ),
@@ -160,8 +181,9 @@ class TokenizingAnalyzerTest implements JsonTest {
             "cat",
             List.of(
                 List.of(
-                    BEGIN_SCRIPT_TOKEN, "event_whenkeypressed", "key", LPAREN, "keyid", RPAREN, LOOKS_SAY_TOKEN, LPAREN,
-                    "LITERAL_STRING", RPAREN, "looks_show", END_SCRIPT_TOKEN
+                    BEGIN_SCRIPT, "event_whenkeypressed", "key", BEGIN_NUM_STR_EXPR, "keyid", END_NUM_STR_EXPR,
+                    LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR,
+                    "LITERAL_STRING", END_NUM_STR_EXPR, "looks_show", END_SCRIPT
                 )
             )
         ),
@@ -169,8 +191,9 @@ class TokenizingAnalyzerTest implements JsonTest {
             "abby",
             List.of(
                 List.of(
-                    BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, LPAREN, "LITERAL_STRING", RPAREN,
-                    END_SCRIPT_TOKEN
+                    BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "LITERAL_STRING",
+                    END_NUM_STR_EXPR,
+                    END_SCRIPT
                 )
             )
         )
@@ -202,16 +225,18 @@ class TokenizingAnalyzerTest implements JsonTest {
         final List<String> expected;
         if (fewerParentheses) {
             expected = List.of(
-                BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, LPAREN,
-                OPERATOR_ADD_TOKEN, "2", "5", RPAREN, SOUND_CHANGEVOLUMEBY_TOKEN, LPAREN, "-10", RPAREN,
-                END_SCRIPT_TOKEN, END_SPRITE_TOKEN
+                BEGIN_SPRITE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
+                OPERATOR_ADD_TOKEN, "2", "5", END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "-10",
+                END_NUM_STR_EXPR,
+                END_SCRIPT, END_SPRITE
             );
         }
         else {
             expected = List.of(
-                BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, LPAREN,
-                OPERATOR_ADD_TOKEN, LPAREN, "2", RPAREN, LPAREN, "5", RPAREN, RPAREN, SOUND_CHANGEVOLUMEBY_TOKEN,
-                LPAREN, "-10", RPAREN, END_SCRIPT_TOKEN, END_SPRITE_TOKEN
+                BEGIN_SPRITE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
+                OPERATOR_ADD_TOKEN, BEGIN_NUM_STR_EXPR, "2", END_NUM_STR_EXPR, BEGIN_NUM_STR_EXPR, "5",
+                END_NUM_STR_EXPR, END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN,
+                BEGIN_NUM_STR_EXPR, "-10", END_NUM_STR_EXPR, END_SCRIPT, END_SPRITE
             );
         }
 
@@ -226,21 +251,27 @@ class TokenizingAnalyzerTest implements JsonTest {
         final List<String> expected;
         if (fewerParentheses) {
             expected = List.of(
-                BEGIN_SPRITE_TOKEN, BEGIN_PROCEDURE_TOKEN, "custom_block", "motion_turnright", LPAREN,
-                OPERATOR_ADD_TOKEN, "2", "block_param", RPAREN, "motion_turnleft", LPAREN, "block_param", RPAREN,
-                END_PROCEDURE_TOKEN, BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, LPAREN,
-                OPERATOR_ADD_TOKEN, "my_variable", "5", RPAREN, SOUND_CHANGEVOLUMEBY_TOKEN, LPAREN, "my_variable",
-                RPAREN, SOUND_CHANGEVOLUMEBY_TOKEN, LPAREN, "list_var", RPAREN, END_SCRIPT_TOKEN, END_SPRITE_TOKEN
+                BEGIN_SPRITE, BEGIN_PROCEDURE, "custom_block", "motion_turnright", BEGIN_NUM_STR_EXPR,
+                OPERATOR_ADD_TOKEN, "2", "block_param", END_NUM_STR_EXPR, "motion_turnleft", BEGIN_NUM_STR_EXPR,
+                "block_param", END_NUM_STR_EXPR,
+                END_PROCEDURE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
+                OPERATOR_ADD_TOKEN, "my_variable", "5", END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN,
+                BEGIN_NUM_STR_EXPR, "my_variable",
+                END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "list_var", END_NUM_STR_EXPR,
+                END_SCRIPT, END_SPRITE
             );
         }
         else {
             expected = List.of(
-                BEGIN_SPRITE_TOKEN, BEGIN_PROCEDURE_TOKEN, "custom_block", "motion_turnright", LPAREN,
-                OPERATOR_ADD_TOKEN, LPAREN, "2", RPAREN, LPAREN, "block_param", RPAREN, RPAREN, "motion_turnleft",
-                LPAREN, "block_param", RPAREN, END_PROCEDURE_TOKEN, BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN,
-                MOTION_MOVESTEPS_TOKEN, LPAREN, OPERATOR_ADD_TOKEN, LPAREN, "my_variable", RPAREN, LPAREN, "5", RPAREN,
-                RPAREN, SOUND_CHANGEVOLUMEBY_TOKEN, LPAREN, "my_variable", RPAREN, SOUND_CHANGEVOLUMEBY_TOKEN, LPAREN,
-                "list_var", RPAREN, END_SCRIPT_TOKEN, END_SPRITE_TOKEN
+                BEGIN_SPRITE, BEGIN_PROCEDURE, "custom_block", "motion_turnright", BEGIN_NUM_STR_EXPR,
+                OPERATOR_ADD_TOKEN, BEGIN_NUM_STR_EXPR, "2", END_NUM_STR_EXPR, BEGIN_NUM_STR_EXPR, "block_param",
+                END_NUM_STR_EXPR, END_NUM_STR_EXPR, "motion_turnleft",
+                BEGIN_NUM_STR_EXPR, "block_param", END_NUM_STR_EXPR, END_PROCEDURE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN,
+                MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, OPERATOR_ADD_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable",
+                END_NUM_STR_EXPR, BEGIN_NUM_STR_EXPR, "5", END_NUM_STR_EXPR,
+                END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable", END_NUM_STR_EXPR,
+                SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR,
+                "list_var", END_NUM_STR_EXPR, END_SCRIPT, END_SPRITE
             );
         }
 
@@ -338,15 +369,18 @@ class TokenizingAnalyzerTest implements JsonTest {
                 TokenSequenceBuilder.build(
                     SPRITE_LABEL, List.of(
                         List.of(
-                            BEGIN_PROCEDURE_TOKEN, "PROCEDURE_DEFINITION", "looks_say", LPAREN, "LITERAL_STRING",
-                            RPAREN, MOTION_MOVESTEPS_TOKEN, LPAREN, "LITERAL_NUMBER", RPAREN, "control_stop",
-                            "stop_target", END_PROCEDURE_TOKEN
+                            BEGIN_PROCEDURE, "PROCEDURE_DEFINITION", "looks_say", BEGIN_NUM_STR_EXPR, "LITERAL_STRING",
+                            END_NUM_STR_EXPR, MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER",
+                            END_NUM_STR_EXPR, CONTROL_STOP,
+                            STOP_TARGET, END_PROCEDURE
                         ),
                         List.of(
-                            BEGIN_PROCEDURE_TOKEN, "PROCEDURE_DEFINITION", MOTION_MOVESTEPS_TOKEN, LPAREN, "PARAMETER",
-                            RPAREN, "control_if", LANGLE, "PARAMETER", RANGLE, BEGIN_SUBSTACK_TOKEN,
-                            MOTION_MOVESTEPS_TOKEN, LPAREN, "LITERAL_NUMBER", RPAREN, END_SUBSTACK_TOKEN,
-                            "control_stop", "stop_target", END_PROCEDURE_TOKEN
+                            BEGIN_PROCEDURE, "PROCEDURE_DEFINITION", MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
+                            "PARAMETER",
+                            END_NUM_STR_EXPR, CONTROL_IF, BEGIN_BOOL_EXPR, "PARAMETER", END_BOOL_EXPR, BEGIN_SUBSTACK,
+                            MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER", END_NUM_STR_EXPR,
+                            END_SUBSTACK,
+                            CONTROL_STOP, STOP_TARGET, END_PROCEDURE
                         )
                     )
                 )
@@ -358,15 +392,19 @@ class TokenizingAnalyzerTest implements JsonTest {
                 TokenSequenceBuilder.build(
                     SPRITE_LABEL, List.of(
                         List.of(
-                            BEGIN_PROCEDURE_TOKEN, "block_no_inputs", "looks_say", LPAREN, "hello_!", RPAREN,
-                            MOTION_MOVESTEPS_TOKEN, LPAREN, "10", RPAREN, "control_stop", "this_script",
-                            END_PROCEDURE_TOKEN
+                            BEGIN_PROCEDURE, "block_no_inputs", "looks_say", BEGIN_NUM_STR_EXPR, "hello_!",
+                            END_NUM_STR_EXPR,
+                            MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "10", END_NUM_STR_EXPR, CONTROL_STOP,
+                            "this_script",
+                            END_PROCEDURE
                         ),
                         List.of(
-                            BEGIN_PROCEDURE_TOKEN, "block_with_inputs", MOTION_MOVESTEPS_TOKEN, LPAREN, "num_input",
-                            RPAREN, "control_if", LANGLE, "boolean", RANGLE, BEGIN_SUBSTACK_TOKEN,
-                            MOTION_MOVESTEPS_TOKEN, LPAREN, "10", RPAREN, END_SUBSTACK_TOKEN, "control_stop",
-                            "this_script", END_PROCEDURE_TOKEN
+                            BEGIN_PROCEDURE, "block_with_inputs", MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
+                            "num_input",
+                            END_NUM_STR_EXPR, CONTROL_IF, BEGIN_BOOL_EXPR, "boolean", END_BOOL_EXPR, BEGIN_SUBSTACK,
+                            MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "10", END_NUM_STR_EXPR, END_SUBSTACK,
+                            CONTROL_STOP,
+                            "this_script", END_PROCEDURE
                         )
                     )
                 )
@@ -389,12 +427,15 @@ class TokenizingAnalyzerTest implements JsonTest {
             expectedOutput = TokenSequenceBuilder.build(
                 SPRITE_LABEL, List.of(
                     List.of(
-                        BEGIN_PROCEDURE_TOKEN, "PROCEDURE_DEFINITION", "control_wait", LPAREN, "LITERAL_NUMBER", RPAREN,
-                        END_PROCEDURE_TOKEN
+                        BEGIN_PROCEDURE, "PROCEDURE_DEFINITION", CONTROL_WAIT, BEGIN_NUM_STR_EXPR, "LITERAL_NUMBER",
+                        END_NUM_STR_EXPR,
+                        END_PROCEDURE
                     ),
                     List.of(
-                        BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "CUSTOM_BLOCK", LPAREN, "sound_volume", RPAREN,
-                        LANGLE, "sensing_mousedown", RANGLE, LPAREN, "sensing_mousey", RPAREN, "END_SCRIPT"
+                        BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, "CUSTOM_BLOCK", BEGIN_NUM_STR_EXPR, "sound_volume",
+                        END_NUM_STR_EXPR,
+                        BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR, BEGIN_NUM_STR_EXPR, "sensing_mousey",
+                        END_NUM_STR_EXPR, "END_SCRIPT"
                     )
                 )
             );
@@ -403,11 +444,14 @@ class TokenizingAnalyzerTest implements JsonTest {
             expectedOutput = TokenSequenceBuilder.build(
                 SPRITE_LABEL, List.of(
                     List.of(
-                        BEGIN_PROCEDURE_TOKEN, "my_proc_defn", "control_wait", LPAREN, "1", RPAREN, END_PROCEDURE_TOKEN
+                        BEGIN_PROCEDURE, "my_proc_defn", CONTROL_WAIT, BEGIN_NUM_STR_EXPR, "1", END_NUM_STR_EXPR,
+                        END_PROCEDURE
                     ),
                     List.of(
-                        BEGIN_SCRIPT_TOKEN, EVENT_WHENFLAG_TOKEN, "my_proc_defn", LPAREN, "sound_volume", RPAREN,
-                        LANGLE, "sensing_mousedown", RANGLE, LPAREN, "sensing_mousey", RPAREN, "END_SCRIPT"
+                        BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, "my_proc_defn", BEGIN_NUM_STR_EXPR, "sound_volume",
+                        END_NUM_STR_EXPR,
+                        BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR, BEGIN_NUM_STR_EXPR, "sensing_mousey",
+                        END_NUM_STR_EXPR, "END_SCRIPT"
                     )
                 )
             );
@@ -488,25 +532,230 @@ class TokenizingAnalyzerTest implements JsonTest {
         program.accept(noSpacesChecker);
     }
 
+    private Stream<TokenSequence> mask(final String path, final MaskingStrategy strategy)
+        throws ParsingException, IOException {
+        final var program = getAST(path);
+        final var analyzer = getAnalyzer(true, false, true, false, strategy);
+        return analyzer.process(program);
+    }
+
+    private Optional<List<String>> getMaskedSequence(final Stream<TokenSequence> tokenSequences) {
+        return tokenSequences
+            .flatMap(sequence -> sequence.tokens().stream().findFirst().stream())
+            .filter(sequence -> sequence.contains(MASK))
+            .findFirst();
+    }
+
+    private void assertMaskingSuccessful(final MaskingStrategy strategy, final List<String> expected)
+        throws ParsingException, IOException {
+        final String defaultPath = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
+        assertMaskingSuccessful(defaultPath, strategy, expected);
+    }
+
+    private void assertMaskingSuccessful(final String path, final MaskingStrategy strategy, final List<String> expected)
+        throws ParsingException, IOException {
+        final var tokens = getMaskedSequence(mask(path, strategy));
+        assertThat(tokens).isPresent();
+        assertThat(tokens.get()).isEqualTo(expected);
+    }
+
+    private void assertNoMask(final MaskingStrategy strategy) throws ParsingException, IOException {
+        final String path = "src/test/fixtures/ml_preprocessing/tokenizer/masking_scenarios.json";
+        assertThat(getMaskedSequence(mask(path, strategy))).isEmpty();
+        assertThat(mask(path, strategy).toList()).isEqualTo(mask(path, MaskingStrategy.none()).toList());
+    }
+
     @Test
     void testTokenizeUnconnectedScript() throws ParsingException, IOException {
-        final var program = getAST("src/test/fixtures/ml_preprocessing/tokenizer/unconnected_script.json");
-        final var analyzer = getAnalyzer(
-            true, false, true, false,
-            MaskingStrategy.block("NeSwTQKd7cASL.mXXiMu")
+        final var path = "src/test/fixtures/ml_preprocessing/tokenizer/unconnected_script.json";
+        final var strategy = MaskingStrategy.block("NeSwTQKd7cASL.mXXiMu");
+        final var expected = List.of(
+            BEGIN_SPRITE, BEGIN_SCRIPT, "event_never", BEGIN_BOOL_EXPR, "operator_and", BEGIN_BOOL_EXPR,
+            MASK, END_BOOL_EXPR, BEGIN_BOOL_EXPR, "NOTHING", END_BOOL_EXPR, END_BOOL_EXPR, END_SCRIPT, END_SPRITE
         );
-        final var tokenSequence = analyzer.process(program);
-        final var tokens = tokenSequence
-            .flatMap(sequence -> sequence.tokens().stream().findFirst().stream())
-            .filter(sequence -> sequence.contains(Token.MASK.getStrRep()))
-            .findFirst();
-        assertThat(tokens.isPresent()).isTrue();
-        assertThat(tokens.get()).isEqualTo(
-            List.of(
-                BEGIN_SPRITE_TOKEN, BEGIN_SCRIPT_TOKEN, "event_never", LANGLE, "operator_and", LANGLE,
-                Token.MASK.getStrRep(), RANGLE, LANGLE, "NOTHING", RANGLE, RANGLE, END_SCRIPT_TOKEN, END_SPRITE_TOKEN
-            )
+        assertMaskingSuccessful(path, strategy, expected);
+    }
+
+    @Test
+    void testMaskStmtBlock() throws ParsingException, IOException {
+        final var strategy = MaskingStrategy.block(SOUND_STOPALLSOUNDS);
+        final var expected = List.of(
+            BEGIN_SPRITE, BEGIN_SCRIPT,
+            EVENT_WHENFLAG_TOKEN,
+            CONTROL_IF, BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR,
+            BEGIN_SUBSTACK,
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            MASK,
+            END_SUBSTACK,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            ELSE,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            CONTROL_STOP, STOP_TARGET,
+            END_SCRIPT, END_SPRITE
         );
+        assertMaskingSuccessful(strategy, expected);
+    }
+
+    @Test
+    void testMaskCBlock() throws ParsingException, IOException {
+        final var strategy = MaskingStrategy.block(CONTROL_IF);
+        // Masking a C block should retain its SUBSTACK(s)
+        final var expected = List.of(
+            BEGIN_SPRITE, BEGIN_SCRIPT,
+            EVENT_WHENFLAG_TOKEN,
+            MASK,
+            BEGIN_SUBSTACK,
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            SOUND_STOPALLSOUNDS,
+            END_SUBSTACK,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            ELSE,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            CONTROL_STOP, STOP_TARGET,
+            END_SCRIPT, END_SPRITE
+        );
+        assertMaskingSuccessful(strategy, expected);
+    }
+
+    @ValueSource(booleans = { true, false })
+    @ParameterizedTest
+    void testMaskExprBlock(final boolean useDirectReference) throws ParsingException, IOException {
+
+        // Expression blocks can be selected in two ways:
+        // (1) Direct reference via block ID
+        // (2) Indirect reference via parent's block ID and input key
+        final var strategy = useDirectReference
+            ? MaskingStrategy.block(SENSING_MOUSEDOWN)
+            : MaskingStrategy.input(CONTROL_IF, "CONDITION");
+
+        // Both strategies must produce the same outcome.
+        final var expected = List.of(
+            BEGIN_SPRITE, BEGIN_SCRIPT,
+            EVENT_WHENFLAG_TOKEN,
+            CONTROL_IF, BEGIN_BOOL_EXPR, MASK, END_BOOL_EXPR,
+            BEGIN_SUBSTACK,
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            SOUND_STOPALLSOUNDS,
+            END_SUBSTACK,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            ELSE,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            CONTROL_STOP, STOP_TARGET,
+            END_SCRIPT, END_SPRITE
+        );
+        assertMaskingSuccessful(strategy, expected);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    void testMaskSubstacks(final boolean maskEmptySubstack) throws ParsingException, IOException {
+        // The MaskingType `Input` is only intended for expressions. Applying it to SUBSTACKs should do nothing;
+        // it must neither mask the first statement of the SUBSTACK nor the entire SUBSTACK. This holds for both
+        // empty and non-empty SUBSTACKs.
+        final String blockId = maskEmptySubstack ? CONTROL_IF_ELSE : CONTROL_IF;
+        final var strategy = MaskingStrategy.input(blockId, "SUBSTACK");
+        assertNoMask(strategy);
+    }
+
+    @Test
+    void testMaskEmptyExprInput() throws ParsingException, IOException {
+        final var strategy = MaskingStrategy.input(CONTROL_IF_ELSE, "CONDITION");
+        // Unlike masking an empty SUBSTACK, masking an empty input must produce a MASK token.
+        final var expected = List.of(
+            BEGIN_SPRITE, BEGIN_SCRIPT,
+            EVENT_WHENFLAG_TOKEN,
+            CONTROL_IF, BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR,
+            BEGIN_SUBSTACK,
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            SOUND_STOPALLSOUNDS,
+            END_SUBSTACK,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, MASK, END_BOOL_EXPR,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            ELSE,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            CONTROL_STOP, STOP_TARGET,
+            END_SCRIPT, END_SPRITE
+        );
+        assertMaskingSuccessful(strategy, expected);
+    }
+
+    @Test
+    void testMaskInvalidBlockId() throws ParsingException, IOException {
+        final var strategy = MaskingStrategy.block("invalid");
+        assertNoMask(strategy);
+    }
+
+    @Test
+    void testMaskInvalidInputKey() throws ParsingException, IOException {
+        final var strategy = MaskingStrategy.input(CONTROL_WAIT, "INVALID");
+        assertNoMask(strategy);
+    }
+
+    @Test
+    void testMaskPrimitive() throws ParsingException, IOException {
+        final var strategy = MaskingStrategy.input(CONTROL_WAIT, "DURATION");
+        final var expected = List.of(
+            BEGIN_SPRITE, BEGIN_SCRIPT,
+            EVENT_WHENFLAG_TOKEN,
+            CONTROL_IF, BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR,
+            BEGIN_SUBSTACK,
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, MASK, END_NUM_STR_EXPR,
+            SOUND_STOPALLSOUNDS,
+            END_SUBSTACK,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            ELSE,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            CONTROL_STOP, STOP_TARGET,
+            END_SCRIPT, END_SPRITE
+
+        );
+        assertMaskingSuccessful(strategy, expected);
+    }
+
+    @Test
+    void testMaskStopBlock() throws ParsingException, IOException {
+        final var strategy = MaskingStrategy.block(CONTROL_STOP);
+        final var expected = List.of(
+            BEGIN_SPRITE, BEGIN_SCRIPT,
+            EVENT_WHENFLAG_TOKEN,
+            CONTROL_IF, BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR,
+            BEGIN_SUBSTACK,
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            SOUND_STOPALLSOUNDS,
+            END_SUBSTACK,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            ELSE,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            MASK,
+            END_SCRIPT, END_SPRITE
+        );
+        assertMaskingSuccessful(strategy, expected);
+    }
+
+    @Test
+    void testMaskFixedOption() throws ParsingException, IOException {
+        final var strategy = MaskingStrategy.fixedOption(CONTROL_STOP);
+        final var expected = List.of(
+            BEGIN_SPRITE, BEGIN_SCRIPT,
+            EVENT_WHENFLAG_TOKEN,
+            CONTROL_IF, BEGIN_BOOL_EXPR, SENSING_MOUSEDOWN, END_BOOL_EXPR,
+            BEGIN_SUBSTACK,
+            CONTROL_WAIT, BEGIN_NUM_STR_EXPR, LITERAL_NUMBER, END_NUM_STR_EXPR,
+            SOUND_STOPALLSOUNDS,
+            END_SUBSTACK,
+            CONTROL_IF_ELSE, BEGIN_BOOL_EXPR, NOTHING, END_BOOL_EXPR,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            ELSE,
+            BEGIN_SUBSTACK, END_SUBSTACK,
+            CONTROL_STOP, MASK,
+            END_SCRIPT, END_SPRITE
+        );
+        assertMaskingSuccessful(strategy, expected);
     }
 
     static class NoSpacesChecker implements ScratchVisitor {

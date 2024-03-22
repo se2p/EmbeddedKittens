@@ -76,7 +76,6 @@ import de.uni_passau.fim.se2.litterbox.ml.shared.BaseTokenVisitor;
 import de.uni_passau.fim.se2.litterbox.ml.shared.TokenVisitorFactory;
 import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
-import de.uni_passau.fim.se2.litterbox.ml.util.MaskingType;
 import de.uni_passau.fim.se2.litterbox.ml.util.StringUtil;
 
 public class Tokenizer extends AbstractTokenizer {
@@ -174,8 +173,7 @@ public class Tokenizer extends AbstractTokenizer {
     }
 
     private boolean shouldBeMasked(final ASTNode node) {
-        final MaskingType maskingType = getMaskingStrategy().getMaskingType();
-        return MaskingType.Block.equals(maskingType) && getMaskingStrategy().getBlockId().equals(getBlockId(node));
+        return getMaskingStrategy().shouldBeMasked(node);
     }
 
     private void visit(final ASTNode node, final String token) {
@@ -375,22 +373,47 @@ public class Tokenizer extends AbstractTokenizer {
 
     @Override
     public void visit(StopAll node) {
-        visitStop("all");
+        visitStopBlock(node, "all");
     }
 
     @Override
     public void visit(StopOtherScriptsInSprite node) {
-        visitStop("other_scripts");
+        visitStopBlock(node, "other_scripts");
     }
 
     @Override
     public void visit(StopThisScript node) {
-        visitStop("this_script");
+        visitStopBlock(node, "this_script");
     }
 
-    private void visitStop(final String target) {
+    /**
+     * Handles stop blocks and their fixed node options. In contrast to all other blocks with a rectangular dropdown
+     * menu, stop blocks are not represented in the LitterBox AST by a single {@code ASTNode} with a {@code
+     * FixedNodeOption} child. Instead, we have three different nodes ({@code StopAll},
+     * {@code StopOtherScriptsInSprite}, {@code StopThisScript}) for every possible entry in the dropdown menu, without
+     * a {@code FixedNodeOption} child.
+     *
+     * @param stopBlock The stop block to visit.
+     * @param target    The target selected in the dropdown menu.
+     */
+    private void visitStopBlock(final ASTNode stopBlock, final String target) {
+        final boolean shouldBeMasked = shouldBeMasked(stopBlock);
+
+        // Visit the stop block.
+
+        if (shouldBeMasked && getMaskingStrategy() instanceof MaskingStrategy.Block) {
+            addToken(Token.MASK);
+            return;
+        }
+
         addToken(Token.CONTROL_STOP);
-        if (abstractFixedNodeOptions) {
+
+        // Visit its "FixedNodeOption". Basically the same code as in visitFixedNodeOption().
+
+        if (shouldBeMasked && getMaskingStrategy() instanceof MaskingStrategy.FixedOption) {
+            addToken(Token.MASK);
+        }
+        else if (abstractFixedNodeOptions) {
             addToken("stop_target");
         }
         else {
@@ -837,15 +860,17 @@ public class Tokenizer extends AbstractTokenizer {
 
     private void visitSurrounded(final Token left, final ASTNode node, final Token right) {
         addToken(left);
-        node.accept(this);
+        if (shouldBeMasked(node)) {
+            addToken(Token.MASK);
+        }
+        else {
+            node.accept(this);
+        }
         addToken(right);
     }
 
     private void visitFixedNodeOption(final FixedNodeOption option, final Token opcode) {
-        if (
-            MaskingType.FixedOption.equals(getMaskingStrategy().getMaskingType())
-                && getMaskingStrategy().getBlockId().equals(getBlockId(option.getParentNode()))
-        ) {
+        if (shouldBeMasked(option)) {
             addToken(Token.MASK);
         }
         else {
