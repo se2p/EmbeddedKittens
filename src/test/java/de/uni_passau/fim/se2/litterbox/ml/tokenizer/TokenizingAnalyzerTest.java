@@ -199,6 +199,10 @@ class TokenizingAnalyzerTest implements JsonTest {
         )
     );
 
+    private void assertSameTokenSequence(final List<String> actual, final List<String> expected) {
+        assertThat(actual).containsExactlyElementsIn(expected).inOrder();
+    }
+
     @Test
     void testNoCrashOnUnparseableProgam(@TempDir Path outputDir) throws IOException {
         final MLPreprocessorCommonOptions common = new MLPreprocessorCommonOptions(
@@ -225,22 +229,27 @@ class TokenizingAnalyzerTest implements JsonTest {
         final List<String> expected;
         if (fewerParentheses) {
             expected = List.of(
-                BEGIN_SPRITE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
-                OPERATOR_ADD_TOKEN, "2", "5", END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "-10",
-                END_NUM_STR_EXPR,
+                BEGIN_SPRITE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN,
+                MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "2", OPERATOR_ADD_TOKEN, "5", END_NUM_STR_EXPR,
+                SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "-10", END_NUM_STR_EXPR,
                 END_SCRIPT, END_SPRITE
             );
         }
         else {
             expected = List.of(
-                BEGIN_SPRITE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
-                OPERATOR_ADD_TOKEN, BEGIN_NUM_STR_EXPR, "2", END_NUM_STR_EXPR, BEGIN_NUM_STR_EXPR, "5",
-                END_NUM_STR_EXPR, END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN,
-                BEGIN_NUM_STR_EXPR, "-10", END_NUM_STR_EXPR, END_SCRIPT, END_SPRITE
+                BEGIN_SPRITE, BEGIN_SCRIPT,
+                EVENT_WHENFLAG_TOKEN,
+                MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
+                BEGIN_NUM_STR_EXPR, "2", END_NUM_STR_EXPR,
+                OPERATOR_ADD_TOKEN,
+                BEGIN_NUM_STR_EXPR, "5", END_NUM_STR_EXPR,
+                END_NUM_STR_EXPR,
+                SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "-10", END_NUM_STR_EXPR,
+                END_SCRIPT, END_SPRITE
             );
         }
 
-        assertThat(output).containsExactlyElementsIn(expected);
+        assertSameTokenSequence(output, expected);
     }
 
     @ParameterizedTest
@@ -251,31 +260,41 @@ class TokenizingAnalyzerTest implements JsonTest {
         final List<String> expected;
         if (fewerParentheses) {
             expected = List.of(
-                BEGIN_SPRITE, BEGIN_PROCEDURE, "custom_block", "motion_turnright", BEGIN_NUM_STR_EXPR,
-                OPERATOR_ADD_TOKEN, "2", "block_param", END_NUM_STR_EXPR, "motion_turnleft", BEGIN_NUM_STR_EXPR,
-                "block_param", END_NUM_STR_EXPR,
-                END_PROCEDURE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
-                OPERATOR_ADD_TOKEN, "my_variable", "5", END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN,
-                BEGIN_NUM_STR_EXPR, "my_variable",
-                END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "list_var", END_NUM_STR_EXPR,
+                BEGIN_SPRITE, BEGIN_PROCEDURE, "custom_block",
+                "motion_turnright", BEGIN_NUM_STR_EXPR, "2", OPERATOR_ADD_TOKEN, "block_param", END_NUM_STR_EXPR,
+                "motion_turnleft", BEGIN_NUM_STR_EXPR, "block_param", END_NUM_STR_EXPR,
+                END_PROCEDURE,
+                BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN,
+                MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable", OPERATOR_ADD_TOKEN, "5", END_NUM_STR_EXPR,
+                SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable", END_NUM_STR_EXPR,
+                SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "list_var", END_NUM_STR_EXPR,
                 END_SCRIPT, END_SPRITE
             );
         }
         else {
             expected = List.of(
-                BEGIN_SPRITE, BEGIN_PROCEDURE, "custom_block", "motion_turnright", BEGIN_NUM_STR_EXPR,
-                OPERATOR_ADD_TOKEN, BEGIN_NUM_STR_EXPR, "2", END_NUM_STR_EXPR, BEGIN_NUM_STR_EXPR, "block_param",
-                END_NUM_STR_EXPR, END_NUM_STR_EXPR, "motion_turnleft",
-                BEGIN_NUM_STR_EXPR, "block_param", END_NUM_STR_EXPR, END_PROCEDURE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN,
-                MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, OPERATOR_ADD_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable",
-                END_NUM_STR_EXPR, BEGIN_NUM_STR_EXPR, "5", END_NUM_STR_EXPR,
-                END_NUM_STR_EXPR, SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable", END_NUM_STR_EXPR,
-                SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR,
-                "list_var", END_NUM_STR_EXPR, END_SCRIPT, END_SPRITE
+                BEGIN_SPRITE, BEGIN_PROCEDURE, "custom_block",
+                "motion_turnright", BEGIN_NUM_STR_EXPR,
+                BEGIN_NUM_STR_EXPR, "2", END_NUM_STR_EXPR,
+                OPERATOR_ADD_TOKEN,
+                BEGIN_NUM_STR_EXPR, "block_param", END_NUM_STR_EXPR,
+                END_NUM_STR_EXPR,
+                "motion_turnleft", BEGIN_NUM_STR_EXPR, "block_param", END_NUM_STR_EXPR,
+                END_PROCEDURE,
+                BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN,
+                MOTION_MOVESTEPS_TOKEN,
+                BEGIN_NUM_STR_EXPR,
+                BEGIN_NUM_STR_EXPR, "my_variable", END_NUM_STR_EXPR,
+                OPERATOR_ADD_TOKEN,
+                BEGIN_NUM_STR_EXPR, "5", END_NUM_STR_EXPR,
+                END_NUM_STR_EXPR,
+                SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable", END_NUM_STR_EXPR,
+                SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "list_var", END_NUM_STR_EXPR,
+                END_SCRIPT, END_SPRITE
             );
         }
 
-        assertThat(output).containsExactlyElementsIn(expected);
+        assertSameTokenSequence(output, expected);
     }
 
     private List<String> tokenizeFirstSprite(
@@ -570,8 +589,13 @@ class TokenizingAnalyzerTest implements JsonTest {
         final var path = "src/test/fixtures/ml_preprocessing/tokenizer/unconnected_script.json";
         final var strategy = MaskingStrategy.block("NeSwTQKd7cASL.mXXiMu");
         final var expected = List.of(
-            BEGIN_SPRITE, BEGIN_SCRIPT, "event_never", BEGIN_BOOL_EXPR, "operator_and", BEGIN_BOOL_EXPR,
-            MASK, END_BOOL_EXPR, BEGIN_BOOL_EXPR, "NOTHING", END_BOOL_EXPR, END_BOOL_EXPR, END_SCRIPT, END_SPRITE
+            BEGIN_SPRITE, BEGIN_SCRIPT, "event_never",
+            BEGIN_BOOL_EXPR,
+            BEGIN_BOOL_EXPR, MASK, END_BOOL_EXPR,
+            "operator_and",
+            BEGIN_BOOL_EXPR, "NOTHING", END_BOOL_EXPR,
+            END_BOOL_EXPR,
+            END_SCRIPT, END_SPRITE
         );
         assertMaskingSuccessful(path, strategy, expected);
     }

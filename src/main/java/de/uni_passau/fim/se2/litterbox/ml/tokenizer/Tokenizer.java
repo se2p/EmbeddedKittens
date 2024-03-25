@@ -26,6 +26,7 @@ import de.uni_passau.fim.se2.litterbox.ast.model.elementchoice.Prev;
 import de.uni_passau.fim.se2.litterbox.ast.model.elementchoice.Random;
 import de.uni_passau.fim.se2.litterbox.ast.model.event.EventAttribute;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.AsExprType;
+import de.uni_passau.fim.se2.litterbox.ast.model.expression.BinaryExpression;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.Expression;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.UnspecifiedExpression;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.bool.*;
@@ -188,12 +189,16 @@ public class Tokenizer extends AbstractTokenizer {
                 continue;
             }
 
-            if (child instanceof Expression childExpr) {
-                visitExpression(childExpr);
-            }
-            else {
-                child.accept(this);
-            }
+            visitChild(child);
+        }
+    }
+
+    private void visitChild(final ASTNode child) {
+        if (child instanceof Expression childExpr) {
+            visitExpression(childExpr);
+        }
+        else {
+            child.accept(this);
         }
     }
 
@@ -527,24 +532,35 @@ public class Tokenizer extends AbstractTokenizer {
 
     // region operators
 
+    private void visitBinaryOperator(final BinaryExpression<?, ?> node, final Token opcode) {
+        if (shouldBeMasked(node)) {
+            addToken(Token.MASK);
+        }
+        else {
+            visitChild(node.getOperand1());
+            addToken(opcode);
+            visitChild(node.getOperand2());
+        }
+    }
+
     @Override
     public void visit(Add node) {
-        visit(node, Token.OPERATOR_ADD);
+        visitBinaryOperator(node, Token.OPERATOR_ADD);
     }
 
     @Override
     public void visit(Minus node) {
-        visit(node, Token.OPERATOR_SUBTRACT);
+        visitBinaryOperator(node, Token.OPERATOR_SUBTRACT);
     }
 
     @Override
     public void visit(Mult node) {
-        visit(node, Token.OPERATOR_MULTIPLY);
+        visitBinaryOperator(node, Token.OPERATOR_MULTIPLY);
     }
 
     @Override
     public void visit(Div node) {
-        visit(node, Token.OPERATOR_DIVIDE);
+        visitBinaryOperator(node, Token.OPERATOR_DIVIDE);
     }
 
     @Override
@@ -554,27 +570,27 @@ public class Tokenizer extends AbstractTokenizer {
 
     @Override
     public void visit(BiggerThan node) {
-        visit(node, Token.OPERATOR_GT);
+        visitBinaryOperator(node, Token.OPERATOR_GT);
     }
 
     @Override
     public void visit(LessThan node) {
-        visit(node, Token.OPERATOR_LT);
+        visitBinaryOperator(node, Token.OPERATOR_LT);
     }
 
     @Override
     public void visit(Equals node) {
-        visit(node, Token.OPERATOR_EQUALS);
+        visitBinaryOperator(node, Token.OPERATOR_EQUALS);
     }
 
     @Override
     public void visit(And node) {
-        visit(node, Token.OPERATOR_AND);
+        visitBinaryOperator(node, Token.OPERATOR_AND);
     }
 
     @Override
     public void visit(Or node) {
-        visit(node, Token.OPERATOR_OR);
+        visitBinaryOperator(node, Token.OPERATOR_OR);
     }
 
     @Override
@@ -604,7 +620,7 @@ public class Tokenizer extends AbstractTokenizer {
 
     @Override
     public void visit(Mod node) {
-        visit(node, Token.OPERATOR_MOD);
+        visitBinaryOperator(node, Token.OPERATOR_MOD);
     }
 
     @Override
