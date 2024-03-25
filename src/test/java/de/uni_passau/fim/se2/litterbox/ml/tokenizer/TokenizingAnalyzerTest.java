@@ -102,7 +102,7 @@ class TokenizingAnalyzerTest implements JsonTest {
                 List.of(
                     BEGIN_SCRIPT, "event_whenkeypressed", "key", BEGIN_NUM_STR_EXPR, "39", END_NUM_STR_EXPR,
                     LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR,
-                    "hi_!", END_NUM_STR_EXPR, "looks_show", END_SCRIPT
+                    "Hi!", END_NUM_STR_EXPR, "looks_show", END_SCRIPT
                 )
             )
         ),
@@ -110,7 +110,7 @@ class TokenizingAnalyzerTest implements JsonTest {
             "abby",
             List.of(
                 List.of(
-                    BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "hello_!",
+                    BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "Hello!",
                     END_NUM_STR_EXPR,
                     END_SCRIPT
                 )
@@ -135,7 +135,7 @@ class TokenizingAnalyzerTest implements JsonTest {
                 List.of(
                     BEGIN_SPRITE, BEGIN_SCRIPT, "event_whenkeypressed", "key", BEGIN_NUM_STR_EXPR, "39",
                     END_NUM_STR_EXPR,
-                    LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "hi_!", END_NUM_STR_EXPR, "looks_show", END_SCRIPT, END_SPRITE
+                    LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "Hi!", END_NUM_STR_EXPR, "looks_show", END_SCRIPT, END_SPRITE
                 )
             ),
             List.of(
@@ -151,7 +151,7 @@ class TokenizingAnalyzerTest implements JsonTest {
             "abby",
             List.of(
                 List.of(
-                    BEGIN_SPRITE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "hello_!",
+                    BEGIN_SPRITE, BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN, LOOKS_SAY_TOKEN, BEGIN_NUM_STR_EXPR, "Hello!",
                     END_NUM_STR_EXPR, END_SCRIPT, END_SPRITE
                 )
             )
@@ -411,7 +411,7 @@ class TokenizingAnalyzerTest implements JsonTest {
                 TokenSequenceBuilder.build(
                     SPRITE_LABEL, List.of(
                         List.of(
-                            BEGIN_PROCEDURE, "block_no_inputs", "looks_say", BEGIN_NUM_STR_EXPR, "hello_!",
+                            BEGIN_PROCEDURE, "block_no_inputs", "looks_say", BEGIN_NUM_STR_EXPR, "Hello!",
                             END_NUM_STR_EXPR,
                             MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "10", END_NUM_STR_EXPR, CONTROL_STOP,
                             "this_script",
@@ -419,8 +419,8 @@ class TokenizingAnalyzerTest implements JsonTest {
                         ),
                         List.of(
                             BEGIN_PROCEDURE, "block_with_inputs", MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR,
-                            "num_input",
-                            END_NUM_STR_EXPR, CONTROL_IF, BEGIN_BOOL_EXPR, "boolean", END_BOOL_EXPR, BEGIN_SUBSTACK,
+                            "NumInput",
+                            END_NUM_STR_EXPR, CONTROL_IF, BEGIN_BOOL_EXPR, "Boolean", END_BOOL_EXPR, BEGIN_SUBSTACK,
                             MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "10", END_NUM_STR_EXPR, END_SUBSTACK,
                             CONTROL_STOP,
                             "this_script", END_PROCEDURE

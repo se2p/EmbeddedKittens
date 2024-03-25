@@ -99,7 +99,7 @@ public class Tokenizer extends AbstractTokenizer {
      */
     private final boolean parenthesiseAtoms;
 
-    private final BaseTokenVisitor tokenVisitor = TokenVisitorFactory.getDefaultTokenVisitor(true);
+    private final BaseTokenVisitor tokenVisitor = TokenVisitorFactory.getDefaultTokenVisitor(false);
     private final boolean abstractFixedNodeOptions;
 
     private Tokenizer(
