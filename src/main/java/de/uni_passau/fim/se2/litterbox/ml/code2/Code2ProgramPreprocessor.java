@@ -38,9 +38,6 @@ public abstract class Code2ProgramPreprocessor extends MLProgramPreprocessor<Pro
         if (isPerScript) {
             this.pathType = PathType.SCRIPT;
         }
-        else if (commonOptions.wholeProgram()) {
-            this.pathType = PathType.PROGRAM;
-        }
         else {
             this.pathType = PathType.SPRITE;
         }

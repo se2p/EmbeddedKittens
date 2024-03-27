@@ -27,14 +27,23 @@ import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.
 
 public class Code2SeqProgramPreprocessor extends Code2ProgramPreprocessor {
 
-    protected Code2SeqProgramPreprocessor(
+    public Code2SeqProgramPreprocessor(
         final MLPreprocessorCommonOptions commonOptions, final int maxPathLength, final boolean isPerScript
     ) {
         super(commonOptions, maxPathLength, isPerScript);
     }
 
     @Override
-    public Stream<ProgramFeatures> process(Program program) {
+    public Stream<ProgramFeatures> processSprites(Program program) {
+        return process(program, super.pathType);
+    }
+
+    @Override
+    public Stream<ProgramFeatures> processWholeProgram(Program program) {
+        return process(program, PathType.PROGRAM);
+    }
+
+    private Stream<ProgramFeatures> process(final Program program, final PathType pathType) {
         final ProgramRelationFactory programRelationFactory = new ProgramRelationFactory();
         final PathFormatOptions pathFormatOptions = new PathFormatOptions("|", "|", "|", "", "", true, true);
         PathGenerator pathGenerator = PathGeneratorFactory.createPathGenerator(

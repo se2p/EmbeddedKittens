@@ -48,9 +48,18 @@ public class GgnnProgramPreprocessor extends MLProgramPreprocessor<GgnnAnalyzerO
     }
 
     @Override
-    public Stream<GgnnAnalyzerOutput> process(final Program program) {
+    public Stream<GgnnAnalyzerOutput> processSprites(Program program) {
+        return process(program, false);
+    }
+
+    @Override
+    public Stream<GgnnAnalyzerOutput> processWholeProgram(Program program) {
+        return process(program, true);
+    }
+
+    private Stream<GgnnAnalyzerOutput> process(final Program program, final boolean wholeProgram) {
         GenerateGgnnGraphTask generateGgnnGraphTask = new GenerateGgnnGraphTask(
-            program, commonOptions.includeStage(), commonOptions.includeDefaultSprites(), commonOptions.wholeProgram(),
+            program, commonOptions.includeStage(), commonOptions.includeDefaultSprites(), wholeProgram,
             labelName, commonOptions.actorNameNormalizer()
         );
         if (outputFormat.isDotGraph()) {

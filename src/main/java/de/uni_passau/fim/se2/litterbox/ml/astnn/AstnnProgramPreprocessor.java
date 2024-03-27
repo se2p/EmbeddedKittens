@@ -47,19 +47,18 @@ public class AstnnProgramPreprocessor extends MLProgramPreprocessor<StatementTre
     }
 
     @Override
-    public Stream<StatementTreeSequence> process(final Program program) {
-        final Stream<StatementTreeSequence> nodes;
-        if (commonOptions.wholeProgram()) {
-            nodes = Stream.of(
-                statementTreeSequenceBuilder
-                    .build(program, commonOptions.includeStage(), commonOptions.includeDefaultSprites())
-            );
-        }
-        else {
-            nodes = statementTreeSequenceBuilder
-                .buildPerActor(program, commonOptions.includeStage(), commonOptions.includeDefaultSprites());
-        }
+    public Stream<StatementTreeSequence> processWholeProgram(final Program program) {
+        final Stream<StatementTreeSequence> nodes = Stream.of(
+            statementTreeSequenceBuilder
+                .build(program, commonOptions.includeStage(), commonOptions.includeDefaultSprites())
+        );
+        return nodes.filter(this::isValidStatementSequence);
+    }
 
+    @Override
+    public Stream<StatementTreeSequence> processSprites(final Program program) {
+        final Stream<StatementTreeSequence> nodes = statementTreeSequenceBuilder
+            .buildPerActor(program, commonOptions.includeStage(), commonOptions.includeDefaultSprites());
         return nodes.filter(this::isValidStatementSequence);
     }
 

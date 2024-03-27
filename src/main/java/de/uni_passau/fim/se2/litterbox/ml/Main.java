@@ -28,6 +28,8 @@ import de.uni_passau.fim.se2.litterbox.ml.code2.Code2VecPreprocessor;
 import de.uni_passau.fim.se2.litterbox.ml.ggnn.GgnnGraphPreprocessor;
 import de.uni_passau.fim.se2.litterbox.ml.ggnn.GgnnOutputFormat;
 import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
+import de.uni_passau.fim.se2.litterbox.ml.shared.WholeProgramFileProcessor;
+import de.uni_passau.fim.se2.litterbox.ml.shared.WholeProgramJsonProcessor;
 import de.uni_passau.fim.se2.litterbox.ml.tokenizer.TokenizingPreprocessor;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
 import de.uni_passau.fim.se2.litterbox.ml.util.NodeNameUtil;
@@ -71,7 +73,7 @@ public class Main implements Callable<Integer> {
     }
 
     @CommandLine.Command(mixinStandardHelpOptions = true)
-    abstract static class LitterBoxSubcommand implements Callable<Integer> {
+    abstract static class MLPreprocessorSubcommand implements Callable<Integer> {
 
         @CommandLine.Spec
         CommandLine.Model.CommandSpec spec;
@@ -96,58 +98,29 @@ public class Main implements Callable<Integer> {
         )
         Path outputPath;
 
-        protected abstract MLFilePreprocessor<?> getAnalyzer() throws Exception;
-
-        /**
-         * Override to implement custom parameter validation before the analyzer is run.
-         *
-         * @throws Exception Thrown when an invalid parameter configuration was passed.
-         */
-        protected void validateParams() throws Exception {
-            // intentionally empty here, to be implemented by subclasses when needed
-        }
-
-        @Override
-        public final Integer call() throws Exception {
-            IssueTranslator.getInstance().setLanguage(language);
-
-            validateParams();
-
-            final MLFilePreprocessor<?> analyzer = getAnalyzer();
-            return runAnalysis(analyzer);
-        }
-
-        private int runAnalysis(final MLFilePreprocessor<?> analyzer) {
-            analyzer.process(projectPath);
-            return 0;
-        }
-
-        protected void requireProjectPath() throws CommandLine.ParameterException {
-            if (projectPath == null) {
-                throw new CommandLine.ParameterException(spec.commandLine(), "Input path option '--path' required.");
-            }
-        }
-
-        protected void requireOutputPath() throws CommandLine.ParameterException {
-            if (outputPath == null) {
-                throw new CommandLine.ParameterException(spec.commandLine(), "Output path option '--output' required.");
-            }
-        }
-    }
-
-    abstract static class MLPreprocessorSubcommand extends LitterBoxSubcommand {
-
         @CommandLine.Option(
             names = { "-s", "--include-stage" },
             description = "Include the stage like a regular sprite into the analysis."
         )
         boolean includeStage;
 
-        @CommandLine.Option(
-            names = { "-w", "--whole-program" },
-            description = "Treat the program as a single big sprite."
-        )
-        boolean wholeProgram;
+        @CommandLine.ArgGroup(exclusive = true)
+        WholeProgramGroup wholeProgram = new WholeProgramGroup();
+
+        static class WholeProgramGroup {
+
+            @CommandLine.Option(
+                names = { "-w", "--whole-program" },
+                description = "Treat the program as a single big sprite."
+            )
+            boolean wholeProgram = false;
+
+            @CommandLine.Option(
+                names = { "--whole-program-json" },
+                description = "Creates a JSON per program with the sub-outputs per sprite inside."
+            )
+            boolean wholeProgramJson = false;
+        }
 
         @CommandLine.Option(
             names = { "--include-default-sprites" },
@@ -168,6 +141,61 @@ public class Main implements Callable<Integer> {
         )
         boolean latinOnlyActorNames;
 
+        protected abstract MLFilePreprocessor<?> getAnalyzer() throws Exception;
+
+        /**
+         * Override to implement custom parameter validation before the analyzer is run.
+         *
+         * @throws Exception Thrown when an invalid parameter configuration was passed.
+         */
+        protected void validateParams() throws Exception {
+            // intentionally empty here, to be implemented by subclasses when needed
+        }
+
+        @Override
+        public final Integer call() throws Exception {
+            IssueTranslator.getInstance().setLanguage(language);
+
+            validateParams();
+
+            final MLFilePreprocessor<?> analyzer = getAnalyzer();
+            if (wholeProgram.wholeProgramJson) {
+                return runWholeProgramJsonAnalysis(analyzer.getProgramPreprocessor());
+            }
+            else {
+                return runAnalysis(analyzer);
+            }
+        }
+
+        private int runWholeProgramJsonAnalysis(final MLProgramPreprocessor<?> baseProcessor) {
+            final WholeProgramJsonProcessor<?> wholeProgramJsonProcessor = new WholeProgramJsonProcessor<>(
+                getCommonOptions(), baseProcessor
+            );
+            final WholeProgramFileProcessor<?> wholeProgramFileProcessor = new WholeProgramFileProcessor<>(
+                wholeProgramJsonProcessor, getOutputPath()
+            );
+
+            wholeProgramFileProcessor.processProgram(projectPath);
+
+            return 0;
+        }
+
+        private int runAnalysis(final MLFilePreprocessor<?> analyzer) {
+            if (wholeProgram.wholeProgram) {
+                analyzer.processProgram(projectPath);
+            }
+            else {
+                analyzer.processPerSprite(projectPath);
+            }
+            return 0;
+        }
+
+        protected void requireProjectPath() throws CommandLine.ParameterException {
+            if (projectPath == null) {
+                throw new CommandLine.ParameterException(spec.commandLine(), "Input path option '--path' required.");
+            }
+        }
+
         protected final MLOutputPath getOutputPath() throws CommandLine.ParameterException {
             if (outputPath != null) {
                 final File outputDirectory = outputPath.toFile();
@@ -187,10 +215,8 @@ public class Main implements Callable<Integer> {
         protected final MLPreprocessorCommonOptions getCommonOptions() {
             requireProjectPath();
 
-            final MLOutputPath outputPath = getOutputPath();
             return new MLPreprocessorCommonOptions(
-                outputPath, includeStage, wholeProgram, includeDefaultSprites, abstractTokens,
-                buildActorNameNormalizer()
+                getOutputPath(), includeStage, includeDefaultSprites, abstractTokens, buildActorNameNormalizer()
             );
         }
 
@@ -238,7 +264,7 @@ public class Main implements Callable<Integer> {
                 throw new CommandLine.ParameterException(spec.commandLine(), "The path length can’t be negative.");
             }
 
-            if (wholeProgram && isPerScript) {
+            if (wholeProgram.wholeProgram && isPerScript) {
                 throw new CommandLine.ParameterException(
                     spec.commandLine(),
                     "The analysis must be done either per script or for whole program"
@@ -395,7 +421,7 @@ public class Main implements Callable<Integer> {
 
         @Override
         protected TokenizingPreprocessor getAnalyzer() {
-            if (wholeProgram && sequencePerScript) {
+            if (wholeProgram.wholeProgram && sequencePerScript) {
                 throw new CommandLine.ParameterException(
                     spec.commandLine(),
                     "Cannot generate one sequence for the whole program and sequences per script at the same time."

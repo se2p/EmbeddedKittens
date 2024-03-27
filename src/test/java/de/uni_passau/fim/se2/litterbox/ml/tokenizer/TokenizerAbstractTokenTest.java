@@ -68,7 +68,7 @@ class TokenizerAbstractTokenTest extends AbstractTokenCheck {
         final TokenizingProgramPreprocessor analyzer = getAnalyzer();
         final File inputFile = Path.of(filename).toFile();
         final Program program = new Scratch3Parser().parseFile(inputFile);
-        final Stream<TokenSequence> output = analyzer.process(program);
+        final Stream<TokenSequence> output = analyzer.processWholeProgram(program);
 
         output
             .map(TokenSequence::tokens)
@@ -80,7 +80,6 @@ class TokenizerAbstractTokenTest extends AbstractTokenCheck {
     private TokenizingProgramPreprocessor getAnalyzer() {
         final MLPreprocessorCommonOptions common = new MLPreprocessorCommonOptions(
             MLOutputPath.console(),
-            true,
             true,
             true,
             true,
