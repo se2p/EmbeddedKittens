@@ -54,7 +54,6 @@ class AstnnAnalyzerTest {
         final MLPreprocessorCommonOptions commonOptions = new MLPreprocessorCommonOptions(
             MLOutputPath.directory(outputDir),
             true,
-            false,
             true,
             false,
             ActorNameNormalizer.getDefault()
@@ -62,7 +61,7 @@ class AstnnAnalyzerTest {
         final Path programPath = Path.of("src/test/fixtures/astnn_definitely_non_existing.json");
         final AstnnPreprocessor analyzer = new AstnnPreprocessor(commonOptions);
 
-        analyzer.process(programPath);
+        analyzer.processPerSprite(programPath);
 
         assertThat(Files.walk(outputDir)).hasSize(1);
     }
@@ -157,14 +156,13 @@ class AstnnAnalyzerTest {
         final MLPreprocessorCommonOptions options = new MLPreprocessorCommonOptions(
             MLOutputPath.directory(outputDir),
             false,
-            false,
             true,
             false,
             ActorNameNormalizer.getDefault()
         );
 
         final AstnnPreprocessor analyzer = new AstnnPreprocessor(options);
-        analyzer.process(Path.of("src/test/fixtures/multipleSprites.json"));
+        analyzer.processPerSprite(Path.of("src/test/fixtures/multipleSprites.json"));
 
         final Path expectedOutputFile = outputDir.resolve("multipleSprites.jsonl");
         assertThat(expectedOutputFile.toFile().exists()).isTrue();
@@ -178,18 +176,22 @@ class AstnnAnalyzerTest {
     ) throws ParsingException, IOException {
         final Path programPath = Path.of("src/test/fixtures").resolve(program);
         final AstnnProgramPreprocessor analyzer = new AstnnProgramPreprocessor(
-            options(includeStage, includeDefaultSprites, wholeProgram)
+            options(includeStage, includeDefaultSprites)
         );
-        return analyzer.process(new Scratch3Parser().parseFile(programPath.toFile()));
+        final Program parsedProgram = new Scratch3Parser().parseFile(programPath.toFile());
+
+        if (wholeProgram) {
+            return analyzer.processWholeProgram(parsedProgram);
+        }
+        else {
+            return analyzer.processSprites(parsedProgram);
+        }
     }
 
-    private MLPreprocessorCommonOptions options(
-        boolean includeStage, boolean includeDefaultSprites, boolean wholeProgram
-    ) {
+    private MLPreprocessorCommonOptions options(boolean includeStage, boolean includeDefaultSprites) {
         return new MLPreprocessorCommonOptions(
             MLOutputPath.console(),
             includeStage,
-            wholeProgram,
             includeDefaultSprites,
             false,
             ActorNameNormalizer.getDefault()

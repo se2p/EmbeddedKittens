@@ -39,12 +39,16 @@ public abstract class MLFilePreprocessor<R> {
 
     private static final Scratch3Parser PARSER = new Scratch3Parser();
 
-    protected final MLProgramPreprocessor<R> programAnalyzer;
+    protected final MLProgramPreprocessor<R> programPreprocessor;
     private final MLOutputPath outputPath;
 
-    protected MLFilePreprocessor(final MLProgramPreprocessor<R> programAnalyzer, final MLOutputPath outputPath) {
-        this.programAnalyzer = programAnalyzer;
+    protected MLFilePreprocessor(final MLProgramPreprocessor<R> programPreprocessor, final MLOutputPath outputPath) {
+        this.programPreprocessor = programPreprocessor;
         this.outputPath = outputPath;
+    }
+
+    public MLProgramPreprocessor<R> getProgramPreprocessor() {
+        return programPreprocessor;
     }
 
     /**
@@ -63,7 +67,20 @@ public abstract class MLFilePreprocessor<R> {
      *
      * @param input A file or directory.
      */
-    public void process(final Path input) {
+    public void processProgram(final Path input) {
+        process(input, true);
+    }
+
+    /**
+     * Processes either a single file, or the input as directory recursively.
+     *
+     * @param input A file or directory.
+     */
+    public void processPerSprite(final Path input) {
+        process(input, false);
+    }
+
+    private void process(final Path input, final boolean wholeProgram) {
         final File inputFile = input.toFile();
         if (!inputFile.exists()) {
             log.warning("Input file '" + input + "' does not exist!");
@@ -71,16 +88,23 @@ public abstract class MLFilePreprocessor<R> {
         }
 
         if (input.toFile().isFile()) {
-            processFile(input.getParent(), input);
+            processFile(input.getParent(), input, wholeProgram);
         }
         else if (input.toFile().isDirectory()) {
-            processDirectory(input);
+            processDirectory(input, wholeProgram);
         }
     }
 
-    private void processFile(final Path inputBaseDir, final Path programPath) {
+    private void processFile(final Path inputBaseDir, final Path programPath, final boolean wholeProgram) {
         try {
-            final Stream<R> results = readProgram(programPath).stream().flatMap(programAnalyzer::process);
+            final Stream<R> results = readProgram(programPath).stream().flatMap(program -> {
+                if (wholeProgram) {
+                    return programPreprocessor.processWholeProgram(program);
+                }
+                else {
+                    return programPreprocessor.processSprites(program);
+                }
+            });
             writeResultToOutput(inputBaseDir.relativize(programPath), results);
         }
         catch (IOException e) {
@@ -88,12 +112,12 @@ public abstract class MLFilePreprocessor<R> {
         }
     }
 
-    private void processDirectory(final Path path) {
+    private void processDirectory(final Path path, final boolean wholeProgram) {
         try (var files = Files.walk(path)) {
             files
                 .filter(f -> f.toFile().isFile())
                 .parallel()
-                .forEach(f -> processFile(path, f));
+                .forEach(f -> processFile(path, f, wholeProgram));
         }
         catch (IOException e) {
             log.warning("Failed to walk over all files in directory '" + path + "'!");
@@ -161,7 +185,7 @@ public abstract class MLFilePreprocessor<R> {
         }
 
         while (lines.hasNext()) {
-            final String output = programAnalyzer.resultToString(lines.next());
+            final String output = programPreprocessor.resultToString(lines.next());
             printWriter.println(output);
         }
     }

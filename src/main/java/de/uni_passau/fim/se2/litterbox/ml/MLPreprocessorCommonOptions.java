@@ -25,8 +25,6 @@ import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
  *
  * @param outputPath            The path which the results should be written to.
  * @param includeStage          If the stage should be included like a regular sprite in the processing steps.
- * @param wholeProgram          If the whole program should be treated as a single entity instead of performing the
- *                              analysis per sprite.
  * @param includeDefaultSprites If output should be generated for sprites that have the default name, e.g. ‘Sprite1’.
  * @param abstractTokens        If literals and variable names should be replaced by generic placeholders, e.g.
  *                              {@code var}.
@@ -34,7 +32,6 @@ import de.uni_passau.fim.se2.litterbox.ml.shared.ActorNameNormalizer;
 public record MLPreprocessorCommonOptions(
     MLOutputPath outputPath,
     boolean includeStage,
-    boolean wholeProgram,
     boolean includeDefaultSprites,
     boolean abstractTokens,
     ActorNameNormalizer actorNameNormalizer

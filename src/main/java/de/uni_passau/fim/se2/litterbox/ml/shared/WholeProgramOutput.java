@@ -16,23 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LitterBox-ML. If not, see <http://www.gnu.org/licenses/>.
  */
-package de.uni_passau.fim.se2.litterbox.ml;
+package de.uni_passau.fim.se2.litterbox.ml.shared;
 
-import java.util.stream.Stream;
+import java.util.List;
 
-import de.uni_passau.fim.se2.litterbox.ast.model.Program;
-
-public abstract class MLProgramPreprocessor<R> {
-
-    protected final MLPreprocessorCommonOptions commonOptions;
-
-    protected MLProgramPreprocessor(final MLPreprocessorCommonOptions commonOptions) {
-        this.commonOptions = commonOptions;
-    }
-
-    protected abstract String resultToString(R result);
-
-    public abstract Stream<R> processSprites(Program program);
-
-    public abstract Stream<R> processWholeProgram(Program program);
+public record WholeProgramOutput<T>(String programIdentifier, List<T> sprites) {
 }

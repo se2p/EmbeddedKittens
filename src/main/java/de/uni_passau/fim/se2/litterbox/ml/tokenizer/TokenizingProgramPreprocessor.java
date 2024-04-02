@@ -33,7 +33,6 @@ import de.uni_passau.fim.se2.litterbox.ast.util.AstNodeUtil;
 import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
 import de.uni_passau.fim.se2.litterbox.ml.MLProgramPreprocessor;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
-import de.uni_passau.fim.se2.litterbox.utils.Preconditions;
 
 public class TokenizingProgramPreprocessor extends MLProgramPreprocessor<TokenSequence> {
 
@@ -48,11 +47,6 @@ public class TokenizingProgramPreprocessor extends MLProgramPreprocessor<TokenSe
     ) {
         super(commonOptions);
 
-        Preconditions.checkArgument(
-            !(commonOptions.wholeProgram() && sequencePerScript),
-            "Cannot generate one sequence for the whole program and sequences per script at the same time."
-        );
-
         this.sequencePerScript = sequencePerScript;
 
         if (statementLevel) {
@@ -66,22 +60,20 @@ public class TokenizingProgramPreprocessor extends MLProgramPreprocessor<TokenSe
     }
 
     @Override
-    public Stream<TokenSequence> process(Program program) {
+    public Stream<TokenSequence> processSprites(Program program) {
+        final Stream<ActorDefinition> actors = getActors(program);
+        return actors.flatMap(actor -> generateSequenceForActor(program, actor).stream());
+    }
+
+    @Override
+    public Stream<TokenSequence> processWholeProgram(Program program) {
         final Stream<ActorDefinition> actors = getActors(program);
 
-        final Stream<TokenSequence> result;
-        if (commonOptions.wholeProgram()) {
-            final List<String> tokens = actors
-                .flatMap(actor -> getTokenSequencesForActor(program, actor))
-                .flatMap(List::stream)
-                .toList();
-            result = Stream.of(TokenSequenceBuilder.build(program.getIdent().getName(), List.of(tokens)));
-        }
-        else {
-            result = actors.flatMap(actor -> generateSequenceForActor(program, actor).stream());
-        }
-
-        return result;
+        final List<String> tokens = actors
+            .flatMap(actor -> getTokenSequencesForActor(program, actor))
+            .flatMap(List::stream)
+            .toList();
+        return Stream.of(TokenSequenceBuilder.build(program.getIdent().getName(), List.of(tokens)));
     }
 
     @Override

@@ -22,22 +22,28 @@ import java.util.stream.Stream;
 
 import de.uni_passau.fim.se2.litterbox.ast.model.Program;
 import de.uni_passau.fim.se2.litterbox.ml.MLPreprocessorCommonOptions;
-import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.GeneratePathTask;
-import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.PathGenerator;
-import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.PathGeneratorFactory;
-import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.ProgramFeatures;
+import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.*;
 import de.uni_passau.fim.se2.litterbox.ml.code2.pathgeneration.program_relation.ProgramRelationFactory;
 
 public class Code2VecProgramPreprocessor extends Code2ProgramPreprocessor {
 
-    protected Code2VecProgramPreprocessor(
+    public Code2VecProgramPreprocessor(
         final MLPreprocessorCommonOptions commonOptions, final int maxPathLength, final boolean isPerScript
     ) {
         super(commonOptions, maxPathLength, isPerScript);
     }
 
     @Override
-    public Stream<ProgramFeatures> process(Program program) {
+    public Stream<ProgramFeatures> processSprites(Program program) {
+        return process(program, super.pathType);
+    }
+
+    @Override
+    public Stream<ProgramFeatures> processWholeProgram(Program program) {
+        return process(program, PathType.PROGRAM);
+    }
+
+    private Stream<ProgramFeatures> process(final Program program, final PathType pathType) {
         final ProgramRelationFactory programRelationFactory = ProgramRelationFactory.withHashCodeFactory();
         final PathGenerator pathGenerator = PathGeneratorFactory.createPathGenerator(
             pathType, maxPathLength, commonOptions.includeStage(), program, commonOptions.includeDefaultSprites(),

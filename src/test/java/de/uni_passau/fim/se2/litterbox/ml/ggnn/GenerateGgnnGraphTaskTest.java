@@ -103,14 +103,15 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
     void testGraphWholeProgram(boolean includeStage) throws Exception {
         Program program = getAST(multipleSpritesFixture);
         MLPreprocessorCommonOptions commonOptions = new MLPreprocessorCommonOptions(
-            MLOutputPath.console(), includeStage, true, true, false, ActorNameNormalizer.getDefault()
+            MLOutputPath.console(), includeStage, true, false, ActorNameNormalizer.getDefault()
         );
 
         {
             GgnnProgramPreprocessor graphTask = new GgnnProgramPreprocessor(
                 commonOptions, GgnnOutputFormat.JSON_GRAPH, null
             );
-            List<GgnnProgramGraph> graphs = graphTask.process(program).map(g -> ((GgnnAnalyzerOutput.Graph) g).graph())
+            List<GgnnProgramGraph> graphs = graphTask.processWholeProgram(program)
+                .map(g -> ((GgnnAnalyzerOutput.Graph) g).graph())
                 .toList();
             assertThat(graphs).hasSize(1);
         }
@@ -119,7 +120,7 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
             GgnnProgramPreprocessor graphTask = new GgnnProgramPreprocessor(
                 commonOptions, GgnnOutputFormat.DOT_GRAPH, null
             );
-            List<String> graphJsonl = graphTask.process(program).map(graphTask::resultToString).toList();
+            List<String> graphJsonl = graphTask.processWholeProgram(program).map(graphTask::resultToString).toList();
             assertThat(graphJsonl).hasSize(1);
         }
     }
@@ -129,7 +130,7 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
     void testGraphIncludeStage(boolean includeStage) throws Exception {
         Program program = getAST(multipleSpritesFixture);
         MLPreprocessorCommonOptions commonOptions = new MLPreprocessorCommonOptions(
-            MLOutputPath.console(), includeStage, false, true, false, ActorNameNormalizer.getDefault()
+            MLOutputPath.console(), includeStage, true, false, ActorNameNormalizer.getDefault()
         );
         GgnnProgramPreprocessor graphTask = new GgnnProgramPreprocessor(
             commonOptions, GgnnOutputFormat.JSON_GRAPH, null
@@ -143,12 +144,12 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
             expectedSprites = 2;
         }
 
-        List<GgnnProgramGraph> graphs = graphTask.process(program).map(g -> ((GgnnAnalyzerOutput.Graph) g).graph())
+        List<GgnnProgramGraph> graphs = graphTask.processSprites(program)
+            .map(g -> ((GgnnAnalyzerOutput.Graph) g).graph())
             .toList();
         assertThat(graphs).hasSize(expectedSprites);
 
-        List<String> graphJsonl = graphTask.process(program).map(graphTask::resultToString)
-            .collect(Collectors.toList());
+        List<String> graphJsonl = graphTask.processSprites(program).map(graphTask::resultToString).toList();
         assertThat(graphJsonl).hasSize(expectedSprites);
     }
 

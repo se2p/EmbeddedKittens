@@ -40,11 +40,11 @@ class GgnnGraphAnalyzerTest {
     void testProduceOutput(GgnnOutputFormat outputFormat, @TempDir Path outputDir) throws IOException {
         MLPreprocessorCommonOptions commonOptions = new MLPreprocessorCommonOptions(
             MLOutputPath.directory(outputDir),
-            true, false, false, true,
+            true, false, true,
             ActorNameNormalizer.getDefault()
         );
         GgnnGraphPreprocessor analyzer = new GgnnGraphPreprocessor(commonOptions, outputFormat, null);
-        analyzer.process(Path.of("src/test/fixtures/multipleSprites.json"));
+        analyzer.processPerSprite(Path.of("src/test/fixtures/multipleSprites.json"));
 
         Path expectedOutputFile = outputDir.resolve(expectedOutputFilename("multipleSprites", outputFormat));
         assertThat(expectedOutputFile.toFile().exists()).isTrue();

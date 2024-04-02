@@ -208,7 +208,6 @@ class TokenizingAnalyzerTest implements JsonTest {
         final MLPreprocessorCommonOptions common = new MLPreprocessorCommonOptions(
             MLOutputPath.directory(outputDir),
             true,
-            false,
             true,
             false,
             ActorNameNormalizer.getDefault()
@@ -216,7 +215,7 @@ class TokenizingAnalyzerTest implements JsonTest {
         final TokenizingPreprocessor analyzer = new TokenizingPreprocessor(
             common, true, false, false, MaskingStrategy.none()
         );
-        analyzer.process(getFixture("unparseable.json"));
+        analyzer.processPerSprite(getFixture("unparseable.json"));
 
         assertThat(Files.walk(outputDir)).hasSize(1);
     }
@@ -317,9 +316,9 @@ class TokenizingAnalyzerTest implements JsonTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void testWholeProgramSingleSequence(boolean includeStage) throws ParsingException, IOException {
-        final var analyzer = getAnalyzer(includeStage, true, false, false);
+        final var analyzer = getAnalyzer(includeStage, false, false);
 
-        final var output = analyzer.process(inputFile("multipleSprites.json")).collect(Collectors.toList());
+        final var output = analyzer.processWholeProgram(inputFile("multipleSprites.json")).collect(Collectors.toList());
         assertThat(output).hasSize(1);
         assertThat(output.get(0).label()).isEqualTo("multipleSprites");
 
@@ -342,9 +341,9 @@ class TokenizingAnalyzerTest implements JsonTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void testSequencePerSprite(boolean includeStage) throws ParsingException, IOException {
-        final var analyzer = getAnalyzer(includeStage, false, false, false);
+        final var analyzer = getAnalyzer(includeStage, false, false);
 
-        final var output = analyzer.process(inputFile("multipleSprites.json")).collect(Collectors.toList());
+        final var output = analyzer.processSprites(inputFile("multipleSprites.json")).collect(Collectors.toList());
 
         int expectedSpriteCount = includeStage ? 3 : 2;
         assertThat(output).hasSize(expectedSpriteCount);
@@ -360,9 +359,9 @@ class TokenizingAnalyzerTest implements JsonTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void testSequencePerScript(boolean abstractTokens) throws ParsingException, IOException {
-        final var analyzer = getAnalyzer(true, false, abstractTokens, true);
+        final var analyzer = getAnalyzer(true, abstractTokens, true);
 
-        final var output = analyzer.process(inputFile("multipleSprites.json")).collect(Collectors.toList());
+        final var output = analyzer.processSprites(inputFile("multipleSprites.json")).collect(Collectors.toList());
 
         if (abstractTokens) {
             assertEquals(abstractScriptSequences, output);
@@ -375,9 +374,9 @@ class TokenizingAnalyzerTest implements JsonTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void testSequencePerProcedureDefinition(boolean abstractTokens) throws ParsingException, IOException {
-        final var analyzer = getAnalyzer(true, false, abstractTokens, true);
+        final var analyzer = getAnalyzer(true, abstractTokens, true);
 
-        final var output = analyzer.process(inputFile("customBlocks.json")).collect(Collectors.toList());
+        final var output = analyzer.processSprites(inputFile("customBlocks.json")).collect(Collectors.toList());
         assertThat(output).hasSize(2);
 
         final List<TokenSequence> expectedOutput;
@@ -436,10 +435,10 @@ class TokenizingAnalyzerTest implements JsonTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void testCustomProcedureCall(boolean abstractTokens) throws ParsingException, IOException {
-        final var analyzer = getAnalyzer(false, false, abstractTokens, true);
+        final var analyzer = getAnalyzer(false, abstractTokens, true);
 
         final Program input = inputFile("ml_preprocessing/tokenizer/custom_procedure_call.json");
-        final List<TokenSequence> output = analyzer.process(input).collect(Collectors.toList());
+        final List<TokenSequence> output = analyzer.processSprites(input).collect(Collectors.toList());
 
         final TokenSequence expectedOutput;
         if (abstractTokens) {
@@ -481,10 +480,10 @@ class TokenizingAnalyzerTest implements JsonTest {
 
     @Test
     void testTransformPenBlocks() throws ParsingException, IOException {
-        final var analyzer = getAnalyzer(false, true, true, false);
+        final var analyzer = getAnalyzer(false, true, false);
 
         final Program input = inputFile("ml_preprocessing/shared/pen_blocks.json");
-        final var output = analyzer.process(input).collect(Collectors.toList());
+        final var output = analyzer.processWholeProgram(input).collect(Collectors.toList());
 
         assertThat(output).hasSize(1);
         assertThat(output.get(0).tokens().get(0)).hasSize(47);
@@ -496,10 +495,10 @@ class TokenizingAnalyzerTest implements JsonTest {
 
     @Test
     void testTransformTtsBlocks() throws ParsingException, IOException {
-        final var analyzer = getAnalyzer(false, true, true, false);
+        final var analyzer = getAnalyzer(false, true, false);
 
         final Program input = inputFile("ml_preprocessing/shared/tts_blocks.json");
-        final var output = analyzer.process(input).collect(Collectors.toList());
+        final var output = analyzer.processWholeProgram(input).collect(Collectors.toList());
 
         assertThat(output).hasSize(1);
         assertThat(output.get(0).tokens()).hasSize(1);
@@ -511,10 +510,10 @@ class TokenizingAnalyzerTest implements JsonTest {
     @ParameterizedTest
     @ValueSource(booleans = { true, false })
     void testTransformMusicBlocks(boolean abstractTokens) throws ParsingException, IOException {
-        final var analyzer = getAnalyzer(false, true, abstractTokens, false);
+        final var analyzer = getAnalyzer(false, abstractTokens, false);
 
         final Program input = inputFile("ml_preprocessing/shared/music_blocks.json");
-        final var output = analyzer.process(input).collect(Collectors.toList());
+        final var output = analyzer.processWholeProgram(input).collect(Collectors.toList());
 
         assertThat(output).hasSize(1);
         assertThat(output.get(0).tokens()).hasSize(1);
@@ -554,8 +553,8 @@ class TokenizingAnalyzerTest implements JsonTest {
     private Stream<TokenSequence> mask(final String path, final MaskingStrategy strategy)
         throws ParsingException, IOException {
         final var program = getAST(path);
-        final var analyzer = getAnalyzer(true, false, true, false, strategy);
-        return analyzer.process(program);
+        final var analyzer = getAnalyzer(true, true, false, strategy);
+        return analyzer.processSprites(program);
     }
 
     private Optional<List<String>> getMaskedSequence(final Stream<TokenSequence> tokenSequences) {
@@ -804,16 +803,14 @@ class TokenizingAnalyzerTest implements JsonTest {
 
     private TokenizingProgramPreprocessor getAnalyzer(
         boolean includeStage,
-        boolean wholeProgram,
         boolean abstractTokens,
         boolean sequencePerScript
     ) {
-        return getAnalyzer(includeStage, wholeProgram, abstractTokens, sequencePerScript, MaskingStrategy.none());
+        return getAnalyzer(includeStage, abstractTokens, sequencePerScript, MaskingStrategy.none());
     }
 
     private TokenizingProgramPreprocessor getAnalyzer(
         boolean includeStage,
-        boolean wholeProgram,
         boolean abstractTokens,
         boolean sequencePerScript,
         MaskingStrategy maskingStrategy
@@ -821,7 +818,6 @@ class TokenizingAnalyzerTest implements JsonTest {
         final MLPreprocessorCommonOptions common = new MLPreprocessorCommonOptions(
             MLOutputPath.console(),
             includeStage,
-            wholeProgram,
             true,
             abstractTokens,
             ActorNameNormalizer.getDefault()

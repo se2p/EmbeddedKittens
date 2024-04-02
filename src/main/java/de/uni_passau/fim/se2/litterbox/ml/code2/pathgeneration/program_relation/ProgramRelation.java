@@ -37,6 +37,18 @@ public class ProgramRelation {
         this.path = path;
     }
 
+    public String getSource() {
+        return source;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
     @Override
     public String toString() {
         return String.format("%s,%s,%s", source, path, target);
