@@ -77,7 +77,7 @@ public class TokenizingProgramPreprocessor extends MLProgramPreprocessor<TokenSe
     }
 
     @Override
-    protected String resultToString(TokenSequence result) {
+    public String resultToString(TokenSequence result) {
         try {
             return OBJECT_MAPPER.writeValueAsString(result);
         }

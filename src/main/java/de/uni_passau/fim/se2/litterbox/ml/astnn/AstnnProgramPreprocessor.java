@@ -78,7 +78,7 @@ public class AstnnProgramPreprocessor extends MLProgramPreprocessor<StatementTre
     }
 
     @Override
-    protected String resultToString(StatementTreeSequence result) {
+    public String resultToString(StatementTreeSequence result) {
         return sequenceToString(result);
     }
 

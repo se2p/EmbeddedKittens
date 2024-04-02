@@ -42,7 +42,7 @@ public class WholeProgramJsonProcessor<T> extends MLProgramPreprocessor<WholePro
     }
 
     @Override
-    protected String resultToString(final WholeProgramOutput<T> result) {
+    public String resultToString(final WholeProgramOutput<T> result) {
         try {
             return objectMapper.writeValueAsString(result);
         }

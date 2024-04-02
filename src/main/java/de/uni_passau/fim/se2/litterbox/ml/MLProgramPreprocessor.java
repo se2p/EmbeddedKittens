@@ -30,7 +30,13 @@ public abstract class MLProgramPreprocessor<R> {
         this.commonOptions = commonOptions;
     }
 
-    protected abstract String resultToString(R result);
+    /**
+     * Converts the result from the preprocessing into a format that can be written to a file.
+     *
+     * @param result The preprocessing result.
+     * @return A representation of the result that can be written to a file.
+     */
+    public abstract String resultToString(R result);
 
     public abstract Stream<R> processSprites(Program program);
 

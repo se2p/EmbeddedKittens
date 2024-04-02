@@ -72,7 +72,7 @@ public class GgnnProgramPreprocessor extends MLProgramPreprocessor<GgnnAnalyzerO
     }
 
     @Override
-    protected String resultToString(final GgnnAnalyzerOutput result) {
+    public String resultToString(final GgnnAnalyzerOutput result) {
         if (result instanceof GgnnAnalyzerOutput.DotGraph graph) {
             return graph.dotGraph();
         }

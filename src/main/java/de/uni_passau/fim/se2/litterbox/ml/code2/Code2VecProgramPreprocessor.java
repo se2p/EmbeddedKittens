@@ -54,7 +54,7 @@ public class Code2VecProgramPreprocessor extends Code2ProgramPreprocessor {
     }
 
     @Override
-    protected String resultToString(ProgramFeatures result) {
+    public String resultToString(ProgramFeatures result) {
         return result.toString();
     }
 }

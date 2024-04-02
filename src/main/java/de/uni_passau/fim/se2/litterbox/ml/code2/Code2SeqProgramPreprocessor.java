@@ -56,7 +56,7 @@ public class Code2SeqProgramPreprocessor extends Code2ProgramPreprocessor {
     }
 
     @Override
-    protected String resultToString(ProgramFeatures result) {
+    public String resultToString(ProgramFeatures result) {
         return result.toString();
     }
 }
