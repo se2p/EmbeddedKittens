@@ -32,7 +32,6 @@ import de.uni_passau.fim.se2.litterbox.ast.model.expression.UnspecifiedExpressio
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.bool.*;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.num.*;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.string.*;
-import de.uni_passau.fim.se2.litterbox.ast.model.expression.string.attributes.AttributeFromFixed;
 import de.uni_passau.fim.se2.litterbox.ast.model.expression.string.attributes.FixedAttribute;
 import de.uni_passau.fim.se2.litterbox.ast.model.extensions.music.Tempo;
 import de.uni_passau.fim.se2.litterbox.ast.model.extensions.music.drums.FixedDrum;
@@ -50,8 +49,6 @@ import de.uni_passau.fim.se2.litterbox.ast.model.literals.BoolLiteral;
 import de.uni_passau.fim.se2.litterbox.ast.model.literals.ColorLiteral;
 import de.uni_passau.fim.se2.litterbox.ast.model.literals.NumberLiteral;
 import de.uni_passau.fim.se2.litterbox.ast.model.literals.StringLiteral;
-import de.uni_passau.fim.se2.litterbox.ast.model.metadata.block.DataBlockMetadata;
-import de.uni_passau.fim.se2.litterbox.ast.model.metadata.block.NonDataBlockMetadata;
 import de.uni_passau.fim.se2.litterbox.ast.model.position.MousePos;
 import de.uni_passau.fim.se2.litterbox.ast.model.position.RandomPos;
 import de.uni_passau.fim.se2.litterbox.ast.model.statement.Stmt;
@@ -859,20 +856,6 @@ public class Tokenizer extends AbstractTokenizer {
     // endregion music
 
     // region helper methods
-
-    private String getBlockId(final ASTNode node) {
-        if (node.getMetadata() instanceof DataBlockMetadata block) {
-            return block.getBlockId();
-        }
-        else if (node.getMetadata() instanceof NonDataBlockMetadata block) {
-            return block.getBlockId();
-        }
-        else if (node instanceof AttributeFromFixed attribute) {
-            return getBlockId(attribute.getParentNode());
-        }
-
-        return null;
-    }
 
     private void visitSurrounded(final Token left, final ASTNode node, final Token right) {
         addToken(left);
