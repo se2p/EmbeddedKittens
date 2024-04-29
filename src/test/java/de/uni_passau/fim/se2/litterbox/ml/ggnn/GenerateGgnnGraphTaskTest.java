@@ -549,6 +549,35 @@ class GenerateGgnnGraphTaskTest implements JsonTest {
     }
 
     @Test
+    void testCustomBlockFoundNumTextParameterTypes() throws Exception {
+        Path inputPath = fixture("customBlockNumTextParameters.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, true, false);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph spriteGraph = graphs.get(0);
+        Set<Pair<Integer>> edges = spriteGraph.contextGraph().getEdges(GgnnProgramGraph.EdgeType.PARAMETER_PASSING);
+
+        assertThat(edges).hasSize(8);
+    }
+
+    @Test
+    void testCustomBlockPercentNParameter() throws Exception {
+        Path inputPath = fixture("customBlockPercentNParameter.json");
+        List<GgnnProgramGraph> graphs = getGraphs(inputPath, false, false);
+        assertThat(graphs).hasSize(1);
+
+        GgnnProgramGraph spriteGraph = graphs.get(0);
+
+        int callStmtCount = (int) spriteGraph.contextGraph().nodeLabels().values().stream()
+            .filter(label -> label.startsWith("add note"))
+            .count();
+        Set<Pair<Integer>> edges = spriteGraph.contextGraph().getEdges(GgnnProgramGraph.EdgeType.PARAMETER_PASSING);
+
+        assertThat(callStmtCount).isEqualTo(26);
+        assertThat(edges).hasSize(callStmtCount * 2); // two parameters per call
+    }
+
+    @Test
     void testConnectParametersCalledCustomBlocks() throws Exception {
         Path inputPath = fixture("customBlocksWithParams.json");
         List<GgnnProgramGraph> graphs = getGraphs(inputPath, false, false);
