@@ -264,8 +264,8 @@ class TokenizingAnalyzerTest implements JsonTest {
                 "motion_turnleft", BEGIN_NUM_STR_EXPR, "block_param", END_NUM_STR_EXPR,
                 END_PROCEDURE,
                 BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN,
-                MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable", OPERATOR_ADD_TOKEN, "5", END_NUM_STR_EXPR,
-                SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable", END_NUM_STR_EXPR,
+                MOTION_MOVESTEPS_TOKEN, BEGIN_NUM_STR_EXPR, "my variable", OPERATOR_ADD_TOKEN, "5", END_NUM_STR_EXPR,
+                SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "my variable", END_NUM_STR_EXPR,
                 SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "list_var", END_NUM_STR_EXPR,
                 END_SCRIPT, END_SPRITE
             );
@@ -283,11 +283,11 @@ class TokenizingAnalyzerTest implements JsonTest {
                 BEGIN_SCRIPT, EVENT_WHENFLAG_TOKEN,
                 MOTION_MOVESTEPS_TOKEN,
                 BEGIN_NUM_STR_EXPR,
-                BEGIN_NUM_STR_EXPR, "my_variable", END_NUM_STR_EXPR,
+                BEGIN_NUM_STR_EXPR, "my variable", END_NUM_STR_EXPR,
                 OPERATOR_ADD_TOKEN,
                 BEGIN_NUM_STR_EXPR, "5", END_NUM_STR_EXPR,
                 END_NUM_STR_EXPR,
-                SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "my_variable", END_NUM_STR_EXPR,
+                SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "my variable", END_NUM_STR_EXPR,
                 SOUND_CHANGEVOLUMEBY_TOKEN, BEGIN_NUM_STR_EXPR, "list_var", END_NUM_STR_EXPR,
                 END_SCRIPT, END_SPRITE
             );
@@ -531,7 +531,7 @@ class TokenizingAnalyzerTest implements JsonTest {
         }
         else {
             assertThat(output.get(0).tokens().get(0))
-                .containsAtLeast("BASS_DRUM", "0.25", "60", "my_variable", "ORGAN");
+                .containsAtLeast("BASS_DRUM", "0.25", "60", "my variable", "ORGAN");
         }
     }
 

@@ -74,7 +74,6 @@ import de.uni_passau.fim.se2.litterbox.ml.shared.BaseTokenVisitor;
 import de.uni_passau.fim.se2.litterbox.ml.shared.TokenVisitorFactory;
 import de.uni_passau.fim.se2.litterbox.ml.util.AbstractToken;
 import de.uni_passau.fim.se2.litterbox.ml.util.MaskingStrategy;
-import de.uni_passau.fim.se2.litterbox.ml.util.StringUtil;
 
 public class Tokenizer extends AbstractTokenizer {
 
@@ -779,7 +778,7 @@ public class Tokenizer extends AbstractTokenizer {
 
     @Override
     public void visit(Variable node) {
-        final String name = StringUtil.normaliseString(node.getName().getName());
+        final String name = node.getName().getName();
         ifAbstractElse(AbstractToken.VAR, name);
     }
 
@@ -791,7 +790,7 @@ public class Tokenizer extends AbstractTokenizer {
 
     @Override
     public void visit(ScratchList node) {
-        final String name = StringUtil.normaliseString(node.getName().getName());
+        final String name = node.getName().getName();
         ifAbstractElse(AbstractToken.LIST, name);
     }
 
