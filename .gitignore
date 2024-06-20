@@ -1,4 +1,9 @@
-.idea/
-target/
 *.iml
+.devenv/
+.direnv/
+.idea/
+.pre-commit-config.yaml
+.vscode/
 dependency-reduced-pom.xml
+result
+target/
