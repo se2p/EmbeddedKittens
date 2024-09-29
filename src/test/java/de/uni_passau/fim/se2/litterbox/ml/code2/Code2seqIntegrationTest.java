@@ -46,6 +46,14 @@ class Code2seqIntegrationTest extends CliTest {
     }
 
     @Test
+    void disallowInvalidPathLength() {
+        int returnCode = commandLine.execute(C2S_CMD, "--whole-program", "--max-path-length", "-2");
+        assertThat(returnCode).isNotEqualTo(0);
+        assertThat(getOutput()).isEmpty();
+        assertThat(getErrorOutput()).contains("path length");
+    }
+
+    @Test
     void processEmptyProgram() {
         commandLine.execute(C2S_CMD, INPUT_FLAG, "src/test/fixtures/emptyProject.json");
         assertEmptyStdOut();
