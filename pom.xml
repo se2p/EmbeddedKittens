@@ -19,7 +19,7 @@
         <java.version>17</java.version>
         <maven.compiler.release>17</maven.compiler.release>
 
-        <litterbox.version>1.9-20240903.061809-12</litterbox.version>
+        <litterbox.version>1.9-20240927.173807-15</litterbox.version>
         <checkstyle.version>10.18.1</checkstyle.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -217,7 +217,7 @@
             <plugin>
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>4.5</version>
+                <version>4.6</version>
                 <configuration>
                     <properties>
                         <year>2021-2024</year>
@@ -236,6 +236,9 @@
                                 <exclude>src/main/resources/**</exclude>
                                 <exclude>**/*.properties</exclude>
                                 <exclude>**/.m2/repository/**</exclude>
+                                <exclude>.devenv/**</exclude>
+                                <exclude>.direnv/**</exclude>
+                                <exclude>.pre-commit-config.yaml</exclude>
                             </excludes>
                         </licenseSet>
                     </licenseSets>
@@ -289,7 +292,7 @@
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
-                <version>4.8.6.2</version>
+                <version>4.8.6.4</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -304,7 +307,7 @@
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>5.11.0</version>
+                <version>5.11.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -325,7 +328,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.18.0-rc1</version>
+            <version>2.18.0</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -340,12 +343,12 @@
         <dependency>
             <artifactId>guava</artifactId>
             <groupId>com.google.guava</groupId>
-            <version>33.3.0-jre</version>
+            <version>33.3.1-jre</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.16.1</version>
+            <version>2.17.0</version>
         </dependency>
         <dependency>
             <artifactId>truth</artifactId>
