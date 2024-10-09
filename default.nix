@@ -8,7 +8,7 @@
   litterboxMlVersion = "1.0-SNAPSHOT";
 in
   maven.buildMavenPackage rec {
-    pname = "litterbox-ml";
+    pname = "embedded-kittens";
     version = litterboxMlVersion;
 
     src = ./.;
@@ -19,10 +19,10 @@ in
 
     installPhase = ''
       mkdir -p $out/share/java
-      install -Dm644 target/litterbox-ml-${version}.full.jar $out/share/java/litterbox-ml-${version}.jar
+      install -Dm644 target/embedded-kittens-${version}.full.jar $out/share/java/embedded-kittens-${version}.jar
 
-      makeWrapper ${jre}/bin/java $out/bin/litterbox-ml \
-        --add-flags "-jar $out/share/java/litterbox-ml-${version}.jar"
+      makeWrapper ${jre}/bin/java $out/bin/embedded-kittens \
+        --add-flags "-jar $out/share/java/embedded-kittens-${version}.jar"
     '';
 
     meta = with lib; {
