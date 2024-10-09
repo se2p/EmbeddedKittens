@@ -22,7 +22,7 @@
 
 # Container image for building the project
 FROM docker.io/library/maven:3-eclipse-temurin-17 AS build
-LABEL maintainer="Sebastian Schweikl"
+LABEL maintainer="Benedikt Fein <fein@fim.uni-passau.de>"
 
 # Parameter for skipping the tests in the build process
 ARG SKIP_TESTS=true
@@ -36,22 +36,24 @@ COPY src ./src
 # Build the project
 # The -e flag is to show errors and -B to run in non-interactive aka “batch” mode
 # Lastly, make build-artifact naming version-independent
-RUN mvn -e -B package -DskipTests=${SKIP_TESTS} && \
-    mkdir -p /build/bin && \
-    mv target/Litterbox-*-SNAPSHOT.jar bin/Litterbox.jar && \
-    mv target/original-Litterbox-*-SNAPSHOT.jar bin/original-Litterbox.jar
+RUN : \
+    && mvn -e -B package -DskipTests=${SKIP_TESTS} \
+    && mkdir -p /build/bin \
+    && mv target/embedded-kittens-*.full.jar bin/embedded-kittens.jar \
+    && :
 
-# Slim container image for running LitterBox
+# Slim container image for running EmbeddedKittens
 FROM docker.io/library/eclipse-temurin:17-jre
+LABEL maintainer="Benedikt Fein <fein@fim.uni-passau.de>"
 
-WORKDIR /litterbox
-VOLUME /litterbox
+WORKDIR /embedded-kittens
+VOLUME /embedded-kittens
 
-# Copy the evosuite jar from the builder to this container
-COPY --from=build /build/bin /litterbox-bin
+# Copy the jar from the builder to this container
+COPY --from=build /build/bin /embedded-kittens-bin
 
-# The executable is Litterbox
-ENTRYPOINT ["java", "-jar", "/litterbox-bin/Litterbox.jar"]
+# The executable is EmbeddedKittens
+ENTRYPOINT ["java", "-jar", "/embedded-kittens-bin/embedded-kittens.jar"]
 
 # The default argument is the help menu
 # This can be overidden on the command line
