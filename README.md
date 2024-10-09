@@ -24,6 +24,18 @@ To produce an executable JAR file, run the following command:
 mvn package
 ```
 
+> [!NOTE]
+> Until LitterBox is published on Maven Central you have to install it from the local Maven cache:
+> 
+> ```bash
+> # clone LitterBox in version 1.9
+> git clone -b 1.9 https://github.com/se2p/LitterBox
+> cd LitterBox
+> # install the LitterBox JAR into the local Maven Cache so it can be found in this project
+> mvn install -DskipTests
+> ```
+> Now, the `package` command above should work in this repository.
+
 This will produce `target/embedded-kittens-1.0.full.jar`
 
 Pre-built JARs are also available for each release on GitHub.
@@ -46,7 +58,16 @@ java -jar embedded-kittens-1.0.full.jar code2vec --help
 
 ## Output formats
 
-### Code2vec output
+The currently supported formats are suitable for the following models:
+
+- [ASTNN](https://doi.org/10.1109/ICSE.2019.00086)
+- [code2vec](https://doi.org/10.1145/3291636)
+- [code2seq](https://arxiv.org/abs/1808.01400)
+- [GGNN](https://arxiv.org/abs/1711.00740)
+- and tokenised sequences for Transformers/LSTM/…
+
+
+### Example: code2vec output
 
 To be able to use the code2vec model with the programming language Scratch, a scratch parser is needed to generate the required input representation.
 According to the description on https://github.com/tech-srl/code2vec#extending-to-other-languages,
