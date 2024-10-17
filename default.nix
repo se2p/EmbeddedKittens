@@ -5,7 +5,7 @@
   makeWrapper,
   maven,
 }: let
-  litterboxMlVersion = "1.0-SNAPSHOT";
+  litterboxMlVersion = "1.0";
 in
   maven.buildMavenPackage rec {
     pname = "embedded-kittens";
