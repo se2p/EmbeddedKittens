@@ -1,5 +1,10 @@
 ![License GPL v3](https://img.shields.io/github/license/se2p/LitterBox?color=blue&style=flat-square)
 
+> [!IMPORTANT]
+> As of [LitterBox](https://github.com/se2p/litterbox) version [1.12](https://github.com/se2p/LitterBox/releases/tag/v1.12), EmbeddedKittens has been directly integrated into LitterBox as the `embedded-kittens` subcommand. All future development will continue as part of LitterBox. Please submit bugs/issues/pull requests to the LitterBox repository instead.
+
+---
+
 > Code embeddings are used in machine learning to map source code into a dense vector space.
 > Various models have been proposed to learn this mapping.
 > They use different information from the code (eg just tokens, AST, control/data flow, …) as model input.
@@ -8,9 +13,6 @@
 EmbeddedKittens[^1] is developed at the
 [Chair of Software Engineering II](https://www.fim.uni-passau.de/lehrstuhl-fuer-software-engineering-ii/)
 of the [University of Passau](https://www.uni-passau.de).
-
-It originally started as a fork/extension of the Scratch static code analysis tool [LitterBox](https://github.com/se2p/LitterBox).
-Internally, it uses the parser, AST and data flow information as obtained from LitterBox.
 
 
 # Getting started
